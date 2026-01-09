@@ -2,22 +2,22 @@ import { Star } from 'lucide-react';
 
 const testimonials = [
   {
-    text: "Best juice bar in the area! The Green Goddess is my daily go-to. You can taste the freshness in every sip.",
-    name: "Sarah M.",
-    role: "Fitness Instructor",
-    initials: "SM",
+    text: "10/10 recommend imPRESSive Juice Bar. I absolutely love their juices. It's so hard to pick a favorite!",
+    name: "Deidra",
+    role: "Loyal Customer",
+    initials: "D",
   },
   {
-    text: "Finally, a juice bar that understands nutrition. The immunity shots got me through cold season without a single sick day!",
-    name: "Michael R.",
-    role: "Teacher",
-    initials: "MR",
+    text: "So glad I found imPRESSive Juice Bar. The juices were fresh, delicious and the 3 day detox was definitely Effective!",
+    name: "Sharyn",
+    role: "Detox Enthusiast",
+    initials: "S",
   },
   {
-    text: "The 3-day cleanse was life-changing. I felt energized, lighter, and my skin was glowing. Highly recommend!",
-    name: "Jennifer L.",
-    role: "Busy Mom",
-    initials: "JL",
+    text: "These juices bless every time! My favorite juice is the Pomegranate PEARadise! Always fresh tasting and I love they don't add anything extra.",
+    name: "Janelle",
+    role: "Regular Customer",
+    initials: "J",
   },
 ];
 
