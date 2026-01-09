@@ -9,18 +9,19 @@ export function FeaturedProducts() {
   const { data: products, isLoading } = useFeaturedProducts();
 
   return (
-    <section className="py-20 bg-background">
+    <section className="py-20 bg-card">
       <div className="container px-4">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-12">
           <div>
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-2">
+            <span className="font-script text-2xl text-brand-mustard mb-2 block">Customer Favorites</span>
+            <h2 className="text-3xl md:text-4xl font-heading font-bold text-brand-brown mb-2">
               Best Sellers
             </h2>
             <p className="text-muted-foreground text-lg">
               Our most loved juices, crafted for your wellness journey
             </p>
           </div>
-          <Button asChild variant="outline">
+          <Button asChild variant="outline" className="border-brand-terracotta text-brand-terracotta hover:bg-brand-terracotta hover:text-white">
             <Link to="/products">
               View All
               <ArrowRight className="ml-2 h-4 w-4" />

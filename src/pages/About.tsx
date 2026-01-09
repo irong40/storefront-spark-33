@@ -1,7 +1,8 @@
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Leaf, Heart, Users, Droplets, Recycle, Award } from 'lucide-react';
+import { Leaf, Heart, Users, Droplets, Recycle, Award, MapPin, Clock } from 'lucide-react';
+import brandLogo from '@/assets/brand-logo.png';
 
 const values = [
   {
@@ -32,104 +33,169 @@ const values = [
   {
     icon: Award,
     title: 'Quality Guaranteed',
-    description: 'Not satisfied? We\'ll make it right. Your wellness journey is our priority.',
+    description: "Not satisfied? We'll make it right. Your wellness journey is our priority.",
   },
 ];
 
 export default function About() {
   return (
     <Layout>
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary/10 via-secondary to-accent/10 py-20">
-        <div className="container px-4">
+      {/* Hero Section - Kraft Paper Style */}
+      <section className="relative py-20 overflow-hidden bg-brand-kraft">
+        {/* Watercolor decorative elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-20 -right-20 w-64 h-64 bg-brand-berry/20 rounded-full blur-3xl" />
+          <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-brand-mustard/20 rounded-full blur-3xl" />
+          <div className="absolute top-1/3 right-1/4 w-32 h-32 bg-brand-olive/15 rounded-full blur-2xl" />
+        </div>
+
+        <div className="container px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
-            <span className="text-primary font-medium mb-4 block">Our Story</span>
-            <h1 className="text-4xl md:text-5xl font-display font-bold text-foreground mb-6">
+            <span className="font-script text-3xl text-brand-berry mb-2 block">Our Story</span>
+            <h1 className="text-4xl md:text-5xl font-heading font-bold text-brand-brown mb-6">
               Crafted with Love, Pressed with Purpose
             </h1>
             <p className="text-muted-foreground text-lg">
-              From a small kitchen to your community's favorite juice bar, 
+              From a trip to NYC to your community's favorite juice bar — 
               here's how imPRESSive came to be.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Story Section */}
-      <section className="py-20">
+      {/* Founder Story Section */}
+      <section className="py-20 bg-card">
         <div className="container px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="order-2 lg:order-1">
-              <h2 className="text-3xl font-display font-bold text-foreground mb-6">
-                It Started with a Simple Question
+              <span className="font-script text-2xl text-brand-terracotta mb-2 block">Meet the Founder</span>
+              <h2 className="text-3xl font-heading font-bold text-brand-brown mb-6">
+                Hi, I'm Delisea Jackson
               </h2>
-              <div className="space-y-4 text-muted-foreground">
-                <p>
-                  "Why is it so hard to find truly fresh, healthy juice?" That question led 
-                  our founder on a journey that would eventually become imPRESSive Juice Bar.
+              <div className="space-y-4 text-muted-foreground leading-relaxed">
+                <p className="text-lg font-medium text-brand-olive">
+                  And the benefits of juicing are nothing short of imPRESSive.
                 </p>
                 <p>
-                  After years of struggling with energy levels and digestive issues, discovering 
-                  the power of fresh, cold-pressed juice was life-changing. But finding high-quality 
-                  juice locally was nearly impossible.
+                  One trip with lousy eating habits put me on this path. Now I'm here to hand you healthy choices in a bottle.
                 </p>
                 <p>
-                  So in 2020, armed with a single cold-press machine and a passion for wellness, 
-                  imPRESSive was born in a tiny kitchen. What started as juices for friends and 
-                  family quickly grew into a beloved community staple.
+                  Eating on the run every day can be terrible for your body, even worse when you take a trip out of town. No stove and those tiny refrigerators are a recipe for disaster. I was in New York City on a work trip, which is the Mecca of eating on the run.
                 </p>
                 <p>
-                  Today, we press hundreds of bottles daily, but our commitment remains the same: 
-                  fresh, organic, delicious juice that makes you feel amazing.
+                  With my eating habits at an all-time low, my stomach declared its disappointment with me loud and clear. I was extremely bloated and feeling blah, so eventually, I came to my good senses and decided to stop pushing down junk food and try a juice cleanse.
+                </p>
+                <p>
+                  I'd heard of juice cleanses and had never tried one, but I knew I'd have to try something since I hit rock bottom. Desperation turned to curiosity which led to tons of research about the health benefits of various vegetables, fruits, herbs, and spices.
                 </p>
               </div>
             </div>
             <div className="order-1 lg:order-2">
-              <div className="aspect-square rounded-3xl bg-gradient-to-br from-primary/20 via-secondary to-accent/20 flex items-center justify-center">
-                <div className="text-center p-8">
-                  <div className="text-7xl mb-6">🍃</div>
-                  <p className="text-2xl font-display font-bold text-foreground">
-                    Est. 2020
-                  </p>
+              <div className="relative">
+                <div className="aspect-square rounded-3xl bg-brand-kraft border-4 border-brand-terracotta/30 shadow-xl overflow-hidden flex items-center justify-center p-8">
+                  <img 
+                    src={brandLogo} 
+                    alt="imPRESSive Juice Bar Brand" 
+                    className="w-full h-full object-contain"
+                  />
                 </div>
+                <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-brand-berry/20 rounded-full blur-xl" />
+                <div className="absolute -top-4 -left-4 w-20 h-20 bg-brand-mustard/20 rounded-full blur-xl" />
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Mission Section */}
-      <section className="py-20 bg-secondary/30">
+      {/* The Journey Continues */}
+      <section className="py-20 bg-brand-kraft/50">
         <div className="container px-4">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl font-display font-bold text-foreground mb-6">
-              Our Mission
+          <div className="max-w-3xl mx-auto">
+            <h2 className="text-3xl font-heading font-bold text-brand-brown text-center mb-8">
+              <span className="font-script text-brand-berry">My Quest to</span>{' '}
+              imPRESS
             </h2>
-            <p className="text-xl text-muted-foreground mb-8">
-              To make healthy living delicious and accessible. We believe everyone deserves 
-              access to nutrient-rich, fresh-pressed juice that tastes as good as it makes you feel.
-            </p>
-            <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary/10 text-primary">
-              <Leaf className="h-5 w-5" />
-              <span className="font-medium">"Feel the Difference"</span>
+            <div className="space-y-4 text-muted-foreground leading-relaxed">
+              <p>
+                I then performed a three-day nine-juice detox. I even recruited a few friends to join in, and after the third day, our bodies felt terrific! I'd bragged so much about how good I felt that other friends asked me to make juices for their detox.
+              </p>
+              <p>
+                We at imPRESSive Juice Bar exist to provide quality organic cold-pressed juice while delivering an easy way to make a healthy choice. It brings us great joy to see customers pleased with imPRESSive's fresh taste and the detoxifying effect provided by the replenishing nutrients we place in every bottle.
+              </p>
+              <p className="text-lg font-medium text-brand-olive italic border-l-4 border-brand-berry pl-6">
+                "We leave no stone unturned, ensuring an imPRESSive taste from the first sip to the last."
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Local Availability Card */}
+      <section className="py-20 bg-card">
+        <div className="container px-4">
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-brand-kraft rounded-3xl p-8 md:p-12 border-2 border-brand-terracotta/30 shadow-lg relative overflow-hidden">
+              {/* Decorative elements */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-brand-berry/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-brand-mustard/10 rounded-full translate-y-1/2 -translate-x-1/2" />
+              
+              <div className="relative z-10">
+                <h3 className="font-script text-3xl text-brand-berry mb-2 text-center">
+                  Want your juices while on the go?
+                </h3>
+                <p className="text-center text-muted-foreground mb-8">
+                  Our juices are also available locally!
+                </p>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-full bg-brand-olive/20 text-brand-olive flex items-center justify-center shrink-0">
+                      <MapPin className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-brand-brown">Bloom Market</h4>
+                      <p className="text-muted-foreground text-sm">
+                        719 High St.<br />
+                        Portsmouth, VA 23703
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-full bg-brand-olive/20 text-brand-olive flex items-center justify-center shrink-0">
+                      <Clock className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-brand-brown">Hours of Operation</h4>
+                      <p className="text-muted-foreground text-sm">
+                        Tue - Fri: 10am - 6pm<br />
+                        Saturday: 10am - 4pm
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Values Grid */}
-      <section className="py-20">
+      <section className="py-20 bg-background">
         <div className="container px-4">
-          <h2 className="text-3xl font-display font-bold text-foreground text-center mb-12">
+          <h2 className="text-3xl font-heading font-bold text-brand-brown text-center mb-4">
             What We Stand For
           </h2>
+          <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
+            Every bottle of imPRESSive juice is crafted with intention and care.
+          </p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {values.map((value, index) => (
-              <div key={index} className="text-center">
-                <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4">
+              <div key={index} className="text-center group">
+                <div className="w-16 h-16 rounded-2xl bg-brand-olive/10 text-brand-olive flex items-center justify-center mx-auto mb-4 group-hover:bg-brand-olive group-hover:text-white transition-colors">
                   <value.icon className="h-8 w-8" />
                 </div>
-                <h3 className="text-xl font-semibold text-foreground mb-2">
+                <h3 className="text-xl font-heading font-semibold text-brand-brown mb-2">
                   {value.title}
                 </h3>
                 <p className="text-muted-foreground">
@@ -142,74 +208,44 @@ export default function About() {
       </section>
 
       {/* Cold Press Process */}
-      <section className="py-20 bg-secondary/30">
+      <section className="py-20 bg-brand-kraft/50">
         <div className="container px-4">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-3xl font-display font-bold text-foreground text-center mb-12">
-              The Cold-Press Difference
+            <h2 className="text-3xl font-heading font-bold text-brand-brown text-center mb-12">
+              <span className="font-script text-brand-terracotta">The</span> Cold-Press Difference
             </h2>
             <div className="space-y-8">
-              <div className="flex gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 font-bold">
-                  1
+              {[
+                { step: 1, title: 'Source the Best', desc: 'We work with local organic farms to source the freshest, highest-quality produce available.' },
+                { step: 2, title: 'Wash & Prep', desc: 'Every ingredient is thoroughly washed and carefully prepared by our trained team.' },
+                { step: 3, title: 'Cold Press', desc: 'Our hydraulic press applies thousands of pounds of pressure without heat, extracting maximum nutrients while preserving delicate enzymes.' },
+                { step: 4, title: 'Bottle Fresh', desc: 'Immediately bottled and refrigerated, our juices reach you at peak freshness. Best enjoyed within 3-5 days.' },
+              ].map((item) => (
+                <div key={item.step} className="flex gap-4">
+                  <div className="w-12 h-12 rounded-full bg-brand-berry text-white flex items-center justify-center shrink-0 font-heading font-bold shadow-lg">
+                    {item.step}
+                  </div>
+                  <div>
+                    <h3 className="font-heading font-semibold text-lg text-brand-brown mb-2">{item.title}</h3>
+                    <p className="text-muted-foreground">{item.desc}</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-lg mb-2">Source the Best</h3>
-                  <p className="text-muted-foreground">
-                    We work with local organic farms to source the freshest, highest-quality produce available.
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 font-bold">
-                  2
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg mb-2">Wash & Prep</h3>
-                  <p className="text-muted-foreground">
-                    Every ingredient is thoroughly washed and carefully prepared by our trained team.
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 font-bold">
-                  3
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg mb-2">Cold Press</h3>
-                  <p className="text-muted-foreground">
-                    Our hydraulic press applies thousands of pounds of pressure without heat, 
-                    extracting maximum nutrients while preserving delicate enzymes.
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 font-bold">
-                  4
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg mb-2">Bottle Fresh</h3>
-                  <p className="text-muted-foreground">
-                    Immediately bottled and refrigerated, our juices reach you at peak freshness. 
-                    Best enjoyed within 3-5 days.
-                  </p>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="py-20 bg-primary text-primary-foreground">
+      <section className="py-20 bg-brand-berry text-white">
         <div className="container px-4 text-center">
-          <h2 className="text-3xl font-display font-bold mb-4">
+          <h2 className="text-3xl font-heading font-bold mb-4">
             Ready to Taste the Difference?
           </h2>
-          <p className="text-primary-foreground/80 text-lg max-w-2xl mx-auto mb-8">
+          <p className="text-white/80 text-lg max-w-2xl mx-auto mb-8">
             Join thousands of customers who have made fresh juice a daily ritual.
           </p>
-          <Button asChild size="lg" variant="secondary">
+          <Button asChild size="lg" className="bg-white text-brand-berry hover:bg-brand-cream">
             <Link to="/products">Shop Our Juices</Link>
           </Button>
         </div>

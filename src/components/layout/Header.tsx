@@ -27,12 +27,14 @@ export function Header() {
 
   return (
     <header className={`sticky top-0 z-50 w-full transition-all duration-300 ${
-      isScrolled ? 'bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-sm' : 'bg-transparent'
+      isScrolled ? 'bg-brand-kraft/95 backdrop-blur supports-[backdrop-filter]:bg-brand-kraft/80 shadow-sm border-b border-brand-terracotta/10' : 'bg-transparent'
     }`}>
       <div className="container flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 font-heading text-xl font-bold text-primary">
-          <Leaf className="h-6 w-6" />
-          <span>imPRESSive</span>
+        <Link to="/" className="flex items-center gap-2">
+          <Leaf className="h-6 w-6 text-brand-olive" />
+          <span className="font-heading text-xl font-bold text-brand-brown">
+            im<span className="text-brand-berry">PRESS</span>ive
+          </span>
         </Link>
 
         {/* Desktop Nav */}
@@ -41,7 +43,7 @@ export function Header() {
             <Link
               key={link.href}
               to={link.href}
-              className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+              className="text-sm font-medium text-muted-foreground hover:text-brand-berry transition-colors"
             >
               {link.label}
             </Link>
@@ -49,16 +51,21 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="relative" onClick={openCart}>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="relative text-brand-olive hover:text-brand-berry hover:bg-brand-olive/10" 
+            onClick={openCart}
+          >
             <ShoppingCart className="h-5 w-5" />
             {itemCount > 0 && (
-              <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-brand-berry text-white text-xs flex items-center justify-center">
                 {itemCount > 99 ? '99+' : itemCount}
               </span>
             )}
           </Button>
 
-          <Button variant="ghost" size="icon" asChild>
+          <Button variant="ghost" size="icon" asChild className="text-brand-olive hover:text-brand-berry hover:bg-brand-olive/10">
             <Link to={user ? '/account' : '/auth'}>
               <User className="h-5 w-5" />
             </Link>
@@ -67,24 +74,24 @@ export function Header() {
           {/* Mobile Menu */}
           <Sheet>
             <SheetTrigger asChild className="md:hidden">
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="text-brand-olive hover:text-brand-berry hover:bg-brand-olive/10">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px]">
+            <SheetContent side="right" className="w-[300px] bg-brand-kraft">
               <nav className="flex flex-col gap-4 mt-8">
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
                     to={link.href}
-                    className="text-lg font-medium text-foreground hover:text-primary transition-colors"
+                    className="text-lg font-medium text-brand-brown hover:text-brand-berry transition-colors"
                   >
                     {link.label}
                   </Link>
                 ))}
                 <Link
                   to={user ? '/account' : '/auth'}
-                  className="text-lg font-medium text-foreground hover:text-primary transition-colors"
+                  className="text-lg font-medium text-brand-brown hover:text-brand-berry transition-colors"
                 >
                   {user ? 'My Account' : 'Sign In'}
                 </Link>
