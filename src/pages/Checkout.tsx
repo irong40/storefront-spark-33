@@ -89,8 +89,8 @@ export default function Checkout() {
     setIsSubmitting(true);
 
     try {
-      // Generate order number
-      const orderNumber = `IMP-${Date.now().toString(36).toUpperCase()}`;
+      // Generate order number (also handled by database trigger as fallback)
+      const orderNumber = `ORD-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
       
       const { data: order, error: orderError } = await supabase
         .from('orders')
