@@ -3,6 +3,7 @@ import { PaymentForm, CreditCard, ApplePay, GooglePay } from 'react-square-web-p
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, CreditCard as CreditCardIcon, Lock } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { SQUARE_CONFIG } from '@/config/square';
 
 interface SquarePaymentFormProps {
   amountInCents: number;
@@ -30,19 +31,8 @@ export function SquarePaymentForm({
 }: SquarePaymentFormProps) {
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Get Square credentials from environment
-  const applicationId = import.meta.env.VITE_SQUARE_APPLICATION_ID;
-  const locationId = import.meta.env.VITE_SQUARE_LOCATION_ID;
-
-  if (!applicationId || !locationId) {
-    return (
-      <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-xl text-center">
-        <p className="text-destructive text-sm">
-          Payment configuration error. Please contact support.
-        </p>
-      </div>
-    );
-  }
+  // Get Square credentials from config
+  const { applicationId, locationId } = SQUARE_CONFIG;
 
   const processPayment = async (token: string, walletType: 'apple_pay' | 'google_pay' | 'card' = 'card') => {
     if (disabled || isProcessing) return;
