@@ -49,7 +49,6 @@ export function Footer() {
               <li><Link to="/products" className="text-white/70 hover:text-brand-berry transition-colors">All Products</Link></li>
               <li><Link to="/products?category=cold-pressed-juices" className="text-white/70 hover:text-brand-berry transition-colors">Cold-Pressed Juices</Link></li>
               <li><Link to="/products?category=wellness-shots" className="text-white/70 hover:text-brand-berry transition-colors">Wellness Shots</Link></li>
-              <li><Link to="/products?category=smoothies" className="text-white/70 hover:text-brand-berry transition-colors">Smoothies</Link></li>
               <li><Link to="/products?category=detox-programs" className="text-white/70 hover:text-brand-berry transition-colors">Cleanse Programs</Link></li>
             </ul>
           </div>
@@ -61,7 +60,6 @@ export function Footer() {
               <li><Link to="/about" className="text-white/70 hover:text-brand-berry transition-colors">Our Story</Link></li>
               <li><Link to="/contact" className="text-white/70 hover:text-brand-berry transition-colors">Contact Us</Link></li>
               <li><a href="#" className="text-white/70 hover:text-brand-berry transition-colors">Locations</a></li>
-              <li><a href="#" className="text-white/70 hover:text-brand-berry transition-colors">Wholesale</a></li>
             </ul>
           </div>
 
