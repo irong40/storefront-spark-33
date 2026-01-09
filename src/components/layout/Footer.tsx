@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Instagram, Facebook } from 'lucide-react';
 import { useBusinessSettings } from '@/hooks/use-business';
+import logo from '@/assets/logo.jpg';
 
 export function Footer() {
   const { data: business } = useBusinessSettings();
@@ -11,13 +12,12 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* Brand */}
           <div className="lg:col-span-1">
-            <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="w-12 h-12 bg-brand-berry rounded-xl flex items-center justify-center font-script text-xl">
-                iJ
-              </div>
-              <span className="font-display text-xl font-semibold">
-                imPRESSive
-              </span>
+            <Link to="/" className="flex items-center mb-4">
+              <img 
+                src={logo} 
+                alt="imPRESSive Juice Bar" 
+                className="h-16 w-auto object-contain brightness-0 invert"
+              />
             </Link>
             <p className="font-script text-lg text-brand-mustard mb-4">
               Cold-Pressed Happiness
