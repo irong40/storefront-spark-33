@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, ShoppingCart, User, Leaf } from 'lucide-react';
+import { Menu, ShoppingCart, User, Leaf, Settings } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsAdmin } from '@/hooks/use-admin';
 import { useState, useEffect } from 'react';
 
 const navLinks = [
@@ -15,6 +16,7 @@ const navLinks = [
 export function Header() {
   const { itemCount, openCart } = useCart();
   const { user } = useAuth();
+  const { data: isAdmin } = useIsAdmin();
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -65,6 +67,14 @@ export function Header() {
             )}
           </Button>
 
+          {isAdmin && (
+            <Button variant="ghost" size="icon" asChild className="text-brand-olive hover:text-brand-berry hover:bg-brand-olive/10">
+              <Link to="/admin">
+                <Settings className="h-5 w-5" />
+              </Link>
+            </Button>
+          )}
+
           <Button variant="ghost" size="icon" asChild className="text-brand-olive hover:text-brand-berry hover:bg-brand-olive/10">
             <Link to={user ? '/account' : '/auth'}>
               <User className="h-5 w-5" />
@@ -95,6 +105,14 @@ export function Header() {
                 >
                   {user ? 'My Account' : 'Sign In'}
                 </Link>
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    className="text-lg font-medium text-brand-brown hover:text-brand-berry transition-colors"
+                  >
+                    Admin
+                  </Link>
+                )}
               </nav>
             </SheetContent>
           </Sheet>
