@@ -1,15 +1,15 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, ShoppingCart, User, Leaf, Settings } from 'lucide-react';
+import { Menu, ShoppingCart, User, Settings } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/use-admin';
 import { useState, useEffect } from 'react';
 
 const navLinks = [
-  { href: '/products', label: 'Products' },
-  { href: '/about', label: 'About' },
+  { href: '/products', label: 'Menu' },
+  { href: '/about', label: 'Our Story' },
   { href: '/contact', label: 'Contact' },
 ];
 
@@ -18,6 +18,7 @@ export function Header() {
   const { user } = useAuth();
   const { data: isAdmin } = useIsAdmin();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -28,91 +29,117 @@ export function Header() {
   }, []);
 
   return (
-    <header className={`sticky top-0 z-50 w-full transition-all duration-300 ${
-      isScrolled ? 'bg-brand-kraft/95 backdrop-blur supports-[backdrop-filter]:bg-brand-kraft/80 shadow-sm border-b border-brand-terracotta/10' : 'bg-transparent'
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      isScrolled 
+        ? 'bg-background/95 backdrop-blur-xl shadow-soft' 
+        : 'bg-transparent'
     }`}>
       <div className="container flex h-16 items-center justify-between">
+        {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
-          <Leaf className="h-6 w-6 text-brand-olive" />
-          <span className="font-heading text-xl font-bold text-brand-brown">
+          <div className="w-11 h-11 bg-gradient-to-br from-brand-berry to-brand-berry-dark rounded-xl flex items-center justify-center text-white font-script text-xl shadow-berry">
+            iJ
+          </div>
+          <span className="font-display text-xl font-semibold text-brand-brown">
             im<span className="text-brand-berry">PRESS</span>ive
           </span>
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               to={link.href}
-              className="text-sm font-medium text-muted-foreground hover:text-brand-berry transition-colors"
+              className="relative text-[15px] font-medium text-brand-brown py-1 group"
             >
               {link.label}
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-brand-berry rounded-full transition-all duration-300 group-hover:w-full" />
             </Link>
           ))}
         </nav>
 
+        {/* Actions */}
         <div className="flex items-center gap-2">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="relative text-brand-olive hover:text-brand-berry hover:bg-brand-olive/10" 
+          {/* Cart */}
+          <button
             onClick={openCart}
+            className="relative w-11 h-11 rounded-full bg-brand-cream-dark flex items-center justify-center transition-all hover:bg-brand-terracotta hover:text-white"
           >
             <ShoppingCart className="h-5 w-5" />
             {itemCount > 0 && (
-              <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-brand-berry text-white text-xs flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-brand-berry text-white text-xs font-bold flex items-center justify-center">
                 {itemCount > 99 ? '99+' : itemCount}
               </span>
             )}
-          </Button>
+          </button>
 
+          {/* Admin */}
           {isAdmin && (
-            <Button variant="ghost" size="icon" asChild className="text-brand-olive hover:text-brand-berry hover:bg-brand-olive/10">
+            <Button variant="ghost" size="icon" asChild className="rounded-full hover:bg-brand-cream-dark">
               <Link to="/admin">
-                <Settings className="h-5 w-5" />
+                <Settings className="h-5 w-5 text-brand-olive" />
               </Link>
             </Button>
           )}
 
-          <Button variant="ghost" size="icon" asChild className="text-brand-olive hover:text-brand-berry hover:bg-brand-olive/10">
+          {/* User */}
+          <Button variant="ghost" size="icon" asChild className="rounded-full hover:bg-brand-cream-dark hidden sm:flex">
             <Link to={user ? '/account' : '/auth'}>
-              <User className="h-5 w-5" />
+              <User className="h-5 w-5 text-brand-olive" />
             </Link>
           </Button>
 
+          {/* Order Now CTA - Desktop */}
+          <Button asChild className="hidden md:inline-flex rounded-full px-6 bg-brand-berry hover:bg-brand-berry-dark shadow-berry font-semibold">
+            <Link to="/products">Order Now</Link>
+          </Button>
+
           {/* Mobile Menu */}
-          <Sheet>
+          <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
             <SheetTrigger asChild className="md:hidden">
-              <Button variant="ghost" size="icon" className="text-brand-olive hover:text-brand-berry hover:bg-brand-olive/10">
-                <Menu className="h-5 w-5" />
-              </Button>
+              <button className="flex flex-col gap-1.5 p-2">
+                <span className={`block w-6 h-0.5 bg-brand-brown rounded-full transition-all ${isMobileOpen ? 'rotate-45 translate-y-2' : ''}`} />
+                <span className={`block w-6 h-0.5 bg-brand-brown rounded-full transition-all ${isMobileOpen ? 'opacity-0' : ''}`} />
+                <span className={`block w-6 h-0.5 bg-brand-brown rounded-full transition-all ${isMobileOpen ? '-rotate-45 -translate-y-2' : ''}`} />
+              </button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] bg-brand-kraft">
-              <nav className="flex flex-col gap-4 mt-8">
+            <SheetContent side="right" className="w-full bg-background p-8 pt-24">
+              <nav className="flex flex-col gap-6">
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
                     to={link.href}
-                    className="text-lg font-medium text-brand-brown hover:text-brand-berry transition-colors"
+                    onClick={() => setIsMobileOpen(false)}
+                    className="font-display text-3xl font-medium text-brand-brown hover:text-brand-berry transition-colors pb-4 border-b border-brand-cream-dark"
                   >
                     {link.label}
                   </Link>
                 ))}
                 <Link
                   to={user ? '/account' : '/auth'}
-                  className="text-lg font-medium text-brand-brown hover:text-brand-berry transition-colors"
+                  onClick={() => setIsMobileOpen(false)}
+                  className="font-display text-3xl font-medium text-brand-brown hover:text-brand-berry transition-colors pb-4 border-b border-brand-cream-dark"
                 >
                   {user ? 'My Account' : 'Sign In'}
                 </Link>
                 {isAdmin && (
                   <Link
                     to="/admin"
-                    className="text-lg font-medium text-brand-brown hover:text-brand-berry transition-colors"
+                    onClick={() => setIsMobileOpen(false)}
+                    className="font-display text-3xl font-medium text-brand-brown hover:text-brand-berry transition-colors pb-4 border-b border-brand-cream-dark"
                   >
                     Admin
                   </Link>
                 )}
+                <Button 
+                  asChild 
+                  size="lg" 
+                  className="mt-4 rounded-full bg-brand-berry hover:bg-brand-berry-dark shadow-berry font-semibold"
+                  onClick={() => setIsMobileOpen(false)}
+                >
+                  <Link to="/products">Order Now</Link>
+                </Button>
               </nav>
             </SheetContent>
           </Sheet>

@@ -1,58 +1,98 @@
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Leaf, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 export function Hero() {
   return (
-    <section className="relative min-h-[80vh] flex items-center justify-center bg-brand-kraft overflow-hidden">
-      {/* Watercolor decorative elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-brand-berry/15 rounded-full blur-3xl animate-float" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-brand-mustard/20 rounded-full blur-3xl" />
-        <div className="absolute top-1/4 left-1/3 w-64 h-64 bg-brand-olive/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-brand-terracotta/15 rounded-full blur-2xl" />
-      </div>
+    <section className="relative min-h-screen flex items-center pt-20 overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-brand-cream-dark to-brand-kraft" />
+      
+      {/* Decorative circles */}
+      <div className="absolute -top-[20%] -right-[10%] w-[800px] h-[800px] rounded-full bg-gradient-radial from-brand-berry/[0.08] to-transparent pointer-events-none" />
+      <div className="absolute -bottom-[30%] -left-[10%] w-[600px] h-[600px] rounded-full bg-gradient-radial from-brand-olive/[0.08] to-transparent pointer-events-none" />
 
-      <div className="container relative z-10 px-4 py-20 text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-olive/10 text-brand-olive border border-brand-olive/20 mb-6 animate-fade-in">
-          <Leaf className="h-4 w-4" />
-          <span className="text-sm font-medium">100% Organic Cold-Pressed Juices</span>
-        </div>
+      <div className="container relative z-10">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+          {/* Content */}
+          <div className="max-w-xl animate-fade-in-up">
+            {/* Tagline */}
+            <div className="flex items-center gap-4 mb-6">
+              <span className="w-10 h-0.5 bg-brand-berry rounded-full" />
+              <span className="font-script text-xl md:text-2xl text-brand-berry">
+                Cold-Pressed Happiness
+              </span>
+            </div>
 
-        <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading font-bold text-brand-brown mb-4 animate-slide-up">
-          <span className="font-script text-brand-berry text-5xl md:text-7xl lg:text-8xl block mb-2">imPRESSive</span>
-          Juice Bar
-        </h1>
+            {/* Title */}
+            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-medium text-brand-brown mb-6 leading-tight">
+              Nourish Your Body,{' '}
+              <span className="relative inline-block text-brand-olive">
+                Elevate Your Day
+                <span className="absolute bottom-1 left-0 right-0 h-3 bg-brand-mustard/40 -z-10 rounded-full" />
+              </span>
+            </h1>
 
-        <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8 animate-slide-up">
-          Fuel your body with nature's best. Our juices are made fresh every morning 
-          with 100% organic ingredients, cold-pressed to preserve maximum nutrients.
-        </p>
+            {/* Description */}
+            <p className="text-lg text-brand-warm-gray mb-8 max-w-md">
+              Fresh, organic, cold-pressed juices crafted daily with love. No additives, no preservatives — just pure, vibrant nutrition in every sip.
+            </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up">
-          <Button asChild size="lg" className="text-lg px-8 bg-brand-berry hover:bg-brand-berry/90 shadow-lg">
-            <Link to="/products">
-              Shop Juices
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
-          </Button>
-          <Button asChild variant="outline" size="lg" className="text-lg px-8 border-brand-terracotta text-brand-terracotta hover:bg-brand-terracotta hover:text-white">
-            <Link to="/about">Our Story</Link>
-          </Button>
-        </div>
+            {/* Actions */}
+            <div className="flex flex-wrap gap-4 mb-12">
+              <Button asChild size="lg" className="rounded-full px-8 bg-brand-berry hover:bg-brand-berry-dark shadow-berry text-base font-semibold tracking-wide transition-all hover:-translate-y-1 hover:shadow-lg">
+                <Link to="/products">
+                  Explore Menu
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="rounded-full px-8 border-2 border-brand-olive text-brand-olive hover:bg-brand-olive hover:text-white text-base font-semibold tracking-wide transition-all hover:-translate-y-1">
+                <Link to="/about">Our Story</Link>
+              </Button>
+            </div>
 
-        <div className="mt-16 grid grid-cols-3 gap-8 max-w-md mx-auto animate-fade-in">
-          <div className="text-center">
-            <div className="text-3xl font-heading font-bold text-brand-berry">100%</div>
-            <div className="text-sm text-muted-foreground">Organic</div>
+            {/* Stats */}
+            <div className="flex gap-12">
+              <div className="text-center">
+                <div className="font-display text-3xl md:text-4xl font-semibold text-brand-brown">100%</div>
+                <div className="text-sm text-brand-warm-gray mt-1">Organic Produce</div>
+              </div>
+              <div className="text-center">
+                <div className="font-display text-3xl md:text-4xl font-semibold text-brand-brown">24</div>
+                <div className="text-sm text-brand-warm-gray mt-1">Unique Blends</div>
+              </div>
+              <div className="text-center">
+                <div className="font-display text-3xl md:text-4xl font-semibold text-brand-brown">5K+</div>
+                <div className="text-sm text-brand-warm-gray mt-1">Happy Customers</div>
+              </div>
+            </div>
           </div>
-          <div className="text-center">
-            <div className="text-3xl font-heading font-bold text-brand-olive">Fresh</div>
-            <div className="text-sm text-muted-foreground">Daily</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-heading font-bold text-brand-mustard">Local</div>
-            <div className="text-sm text-muted-foreground">Sourced</div>
+
+          {/* Visual */}
+          <div className="relative flex items-center justify-center">
+            <div className="relative w-full max-w-lg aspect-square">
+              {/* Background circle */}
+              <div className="absolute inset-[10%] rounded-full bg-gradient-to-br from-brand-cream-dark to-brand-terracotta opacity-30" />
+
+              {/* Floating juice cards */}
+              <div className="absolute top-[10%] left-[5%] bg-card rounded-2xl p-5 shadow-lifted animate-float z-10">
+                <div className="text-4xl mb-2">🥬</div>
+                <div className="font-display text-base font-semibold text-brand-brown">Green Goddess</div>
+                <div className="text-xs text-brand-warm-gray">Kale • Spinach • Apple</div>
+              </div>
+
+              <div className="absolute top-[45%] right-0 bg-card rounded-2xl p-5 shadow-lifted animate-float-delayed z-10">
+                <div className="text-4xl mb-2">🍊</div>
+                <div className="font-display text-base font-semibold text-brand-brown">Citrus Sunrise</div>
+                <div className="text-xs text-brand-warm-gray">Orange • Grapefruit • Ginger</div>
+              </div>
+
+              <div className="absolute bottom-[10%] left-[15%] bg-card rounded-2xl p-5 shadow-lifted animate-float-slow z-10">
+                <div className="text-4xl mb-2">🫐</div>
+                <div className="font-display text-base font-semibold text-brand-brown">Berry Bliss</div>
+                <div className="text-xs text-brand-warm-gray">Blueberry • Acai • Banana</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
