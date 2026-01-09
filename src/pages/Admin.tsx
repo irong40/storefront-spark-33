@@ -141,7 +141,7 @@ export default function Admin() {
 
   return (
     <Layout>
-      <div className="container py-8">
+      <div className="container pt-24 pb-8">
         <h1 className="text-3xl font-heading font-bold text-brand-brown mb-6">Admin Dashboard</h1>
 
         <Tabs defaultValue="analytics" className="space-y-6">
