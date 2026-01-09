@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, ShoppingCart, User, Settings } from 'lucide-react';
+import { ShoppingCart, User, Settings } from 'lucide-react';
+import logo from '@/assets/logo.jpg';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/use-admin';
@@ -36,13 +37,12 @@ export function Header() {
     }`}>
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2">
-          <div className="w-11 h-11 bg-gradient-to-br from-brand-berry to-brand-berry-dark rounded-xl flex items-center justify-center text-white font-script text-xl shadow-berry">
-            iJ
-          </div>
-          <span className="font-display text-xl font-semibold text-brand-brown">
-            im<span className="text-brand-berry">PRESS</span>ive
-          </span>
+        <Link to="/" className="flex items-center">
+          <img 
+            src={logo} 
+            alt="imPRESSive Juice Bar" 
+            className="h-14 w-auto object-contain"
+          />
         </Link>
 
         {/* Desktop Nav */}
