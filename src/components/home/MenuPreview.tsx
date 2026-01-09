@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 
-const categories = ['All', 'Juices', 'Shots', 'Smoothies', 'Bowls'];
+const categories = ['All', 'Juices', 'Shots', 'Cleanses'];
 
 const menuItems = [
   { emoji: '🥬', name: 'Green Goddess', desc: 'Kale, Spinach, Apple, Cucumber', price: 9.5, cal: 120 },
