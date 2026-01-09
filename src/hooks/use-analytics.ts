@@ -61,24 +61,24 @@ function getDateRange(period: TimePeriod): { start: Date; end: Date; previousSta
   switch (period) {
     case 'week':
       return {
-        start: subDays(today, 7),
-        end: today,
-        previousStart: subDays(today, 14),
-        previousEnd: subDays(today, 7),
+        start: subDays(today, 6), // Include today in the 7 days
+        end: now, // Use current time to include today's orders
+        previousStart: subDays(today, 13),
+        previousEnd: subDays(today, 6),
       };
     case 'month':
       return {
-        start: subDays(today, 30),
-        end: today,
-        previousStart: subDays(today, 60),
-        previousEnd: subDays(today, 30),
+        start: subDays(today, 29), // Include today in the 30 days
+        end: now, // Use current time to include today's orders
+        previousStart: subDays(today, 59),
+        previousEnd: subDays(today, 29),
       };
     case 'year':
       return {
-        start: subDays(today, 365),
-        end: today,
-        previousStart: subDays(today, 730),
-        previousEnd: subDays(today, 365),
+        start: subDays(today, 364), // Include today in the 365 days
+        end: now, // Use current time to include today's orders
+        previousStart: subDays(today, 729),
+        previousEnd: subDays(today, 364),
       };
   }
 }
