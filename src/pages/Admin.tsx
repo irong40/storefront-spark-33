@@ -15,7 +15,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProductForm } from '@/components/admin/ProductForm';
 import { OrdersTable } from '@/components/admin/OrdersTable';
+import { AnalyticsDashboard } from '@/components/admin/analytics/AnalyticsDashboard';
 import { useToast } from '@/hooks/use-toast';
+import { BarChart3 } from 'lucide-react';
 import { Plus, Pencil, Trash2, Wand2, Loader2, Image, Package, ShoppingBag } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -142,8 +144,12 @@ export default function Admin() {
       <div className="container py-8">
         <h1 className="text-3xl font-heading font-bold text-brand-brown mb-6">Admin Dashboard</h1>
 
-        <Tabs defaultValue="orders" className="space-y-6">
+        <Tabs defaultValue="analytics" className="space-y-6">
           <TabsList>
+            <TabsTrigger value="analytics" className="gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Analytics
+            </TabsTrigger>
             <TabsTrigger value="orders" className="gap-2">
               <ShoppingBag className="h-4 w-4" />
               Orders
@@ -153,6 +159,10 @@ export default function Admin() {
               Products
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="analytics">
+            <AnalyticsDashboard />
+          </TabsContent>
 
           <TabsContent value="orders">
             <Card>
