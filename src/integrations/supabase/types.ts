@@ -150,6 +150,7 @@ export type Database = {
           name: string
           slug: string
           sort_order: number | null
+          square_category_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -161,6 +162,7 @@ export type Database = {
           name: string
           slug: string
           sort_order?: number | null
+          square_category_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -172,6 +174,7 @@ export type Database = {
           name?: string
           slug?: string
           sort_order?: number | null
+          square_category_id?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -382,6 +385,7 @@ export type Database = {
           ingredients: string | null
           is_available: boolean | null
           is_featured: boolean | null
+          last_synced_at: string | null
           low_stock_threshold: number | null
           name: string
           nutrition_info: Json | null
@@ -390,6 +394,8 @@ export type Database = {
           sku: string | null
           slug: string
           sort_order: number | null
+          square_catalog_id: string | null
+          square_variation_id: string | null
           stock_quantity: number | null
           updated_at: string | null
         }
@@ -406,6 +412,7 @@ export type Database = {
           ingredients?: string | null
           is_available?: boolean | null
           is_featured?: boolean | null
+          last_synced_at?: string | null
           low_stock_threshold?: number | null
           name: string
           nutrition_info?: Json | null
@@ -414,6 +421,8 @@ export type Database = {
           sku?: string | null
           slug: string
           sort_order?: number | null
+          square_catalog_id?: string | null
+          square_variation_id?: string | null
           stock_quantity?: number | null
           updated_at?: string | null
         }
@@ -430,6 +439,7 @@ export type Database = {
           ingredients?: string | null
           is_available?: boolean | null
           is_featured?: boolean | null
+          last_synced_at?: string | null
           low_stock_threshold?: number | null
           name?: string
           nutrition_info?: Json | null
@@ -438,6 +448,8 @@ export type Database = {
           sku?: string | null
           slug?: string
           sort_order?: number | null
+          square_catalog_id?: string | null
+          square_variation_id?: string | null
           stock_quantity?: number | null
           updated_at?: string | null
         }

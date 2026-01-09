@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/use-admin';
 import { useProducts, Product } from '@/hooks/use-products';
 import { useCategories } from '@/hooks/use-categories';
+import { useSquareSync } from '@/hooks/use-square-sync';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,7 +19,7 @@ import { OrdersTable } from '@/components/admin/OrdersTable';
 import { AnalyticsDashboard } from '@/components/admin/analytics/AnalyticsDashboard';
 import { BusinessSettingsForm } from '@/components/admin/BusinessSettingsForm';
 import { useToast } from '@/hooks/use-toast';
-import { BarChart3, Settings } from 'lucide-react';
+import { BarChart3, Settings, RefreshCw } from 'lucide-react';
 import { Plus, Pencil, Trash2, Wand2, Loader2, Image, Package, ShoppingBag } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -29,11 +30,25 @@ export default function Admin() {
   const { data: categories } = useCategories();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { 
+    syncCatalog, 
+    syncInventory, 
+    isSyncingCatalog, 
+    isSyncingInventory,
+    lastCatalogSync,
+  } = useSquareSync();
 
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [generatingAll, setGeneratingAll] = useState(false);
   const [generatingProductId, setGeneratingProductId] = useState<string | null>(null);
+
+  const handleSyncFromSquare = async () => {
+    await syncCatalog();
+    await syncInventory();
+    queryClient.invalidateQueries({ queryKey: ['products'] });
+    queryClient.invalidateQueries({ queryKey: ['categories'] });
+  };
 
   if (authLoading || adminLoading) {
     return (
@@ -181,25 +196,44 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="products">
-            <div className="flex justify-end mb-4 gap-2">
-              {productsWithoutImages > 0 && (
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                {lastCatalogSync && (
+                  <span>Last synced: {lastCatalogSync.toLocaleTimeString()}</span>
+                )}
+              </div>
+              <div className="flex gap-2 flex-wrap">
                 <Button
                   variant="outline"
-                  onClick={handleGenerateAllImages}
-                  disabled={generatingAll}
+                  onClick={handleSyncFromSquare}
+                  disabled={isSyncingCatalog || isSyncingInventory}
                 >
-                  {generatingAll ? (
+                  {isSyncingCatalog || isSyncingInventory ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
-                    <Wand2 className="h-4 w-4 mr-2" />
+                    <RefreshCw className="h-4 w-4 mr-2" />
                   )}
-                  Generate All Images ({productsWithoutImages})
+                  Sync from Square
                 </Button>
-              )}
-              <Button onClick={() => { setEditingProduct(null); setIsFormOpen(true); }}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Product
-              </Button>
+                {productsWithoutImages > 0 && (
+                  <Button
+                    variant="outline"
+                    onClick={handleGenerateAllImages}
+                    disabled={generatingAll}
+                  >
+                    {generatingAll ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Wand2 className="h-4 w-4 mr-2" />
+                    )}
+                    Generate All Images ({productsWithoutImages})
+                  </Button>
+                )}
+                <Button onClick={() => { setEditingProduct(null); setIsFormOpen(true); }}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Product
+                </Button>
+              </div>
             </div>
 
             <Card>
