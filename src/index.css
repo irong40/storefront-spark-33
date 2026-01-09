@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Dancing+Script:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,103 +6,107 @@
 
 @layer base {
   :root {
-    /* Base colors - warm and inviting */
-    --background: 60 9% 98%;
-    --foreground: 24 10% 10%;
+    /* New Earthy Brand Palette */
+    /* Cream - backgrounds, cards */
+    --background: 34 33% 93%;
+    --foreground: 30 22% 17%;
     
-    --card: 0 0% 100%;
-    --card-foreground: 24 10% 10%;
+    /* Card surfaces */
+    --card: 34 33% 96%;
+    --card-foreground: 30 22% 17%;
     
-    --popover: 0 0% 100%;
-    --popover-foreground: 24 10% 10%;
+    --popover: 34 33% 96%;
+    --popover-foreground: 30 22% 17%;
     
-    /* Primary - Fresh Green */
-    --primary: 142 76% 36%;
+    /* Primary - Berry Pink for CTAs */
+    --primary: 340 62% 56%;
     --primary-foreground: 0 0% 100%;
     
-    /* Secondary - Warm Cream */
-    --secondary: 39 77% 94%;
-    --secondary-foreground: 28 73% 26%;
+    /* Secondary - Terracotta warmth */
+    --secondary: 27 45% 64%;
+    --secondary-foreground: 30 22% 17%;
     
     /* Muted - Subdued elements */
-    --muted: 30 14% 96%;
-    --muted-foreground: 24 10% 40%;
+    --muted: 34 20% 88%;
+    --muted-foreground: 30 15% 40%;
     
-    /* Accent - Vibrant Orange */
-    --accent: 25 95% 53%;
-    --accent-foreground: 0 0% 100%;
+    /* Accent - Mustard Gold highlights */
+    --accent: 43 66% 56%;
+    --accent-foreground: 30 22% 17%;
     
     /* Destructive - Errors */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     
-    /* Border and input */
-    --border: 30 17% 91%;
-    --input: 30 17% 91%;
-    --ring: 142 76% 36%;
+    /* Border and input - Terracotta tint */
+    --border: 27 30% 80%;
+    --input: 27 30% 80%;
+    --ring: 340 62% 56%;
     
     /* Border radius */
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
     /* Brand-specific tokens */
-    --brand-green: 142 76% 36%;
-    --brand-green-light: 142 69% 58%;
-    --brand-cream: 39 77% 94%;
-    --brand-orange: 25 95% 53%;
-    --brand-berry: 329 86% 70%;
-    --brand-brown: 28 73% 26%;
+    --brand-cream: 34 33% 93%;
+    --brand-terracotta: 27 45% 64%;
+    --brand-olive: 80 25% 39%;
+    --brand-mustard: 43 66% 56%;
+    --brand-berry: 340 62% 56%;
+    --brand-brown: 30 22% 17%;
+    --brand-kraft: 30 30% 82%;
 
     /* Sidebar */
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 34 33% 96%;
+    --sidebar-foreground: 30 22% 17%;
+    --sidebar-primary: 340 62% 56%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 43 66% 56%;
+    --sidebar-accent-foreground: 30 22% 17%;
+    --sidebar-border: 27 30% 80%;
+    --sidebar-ring: 340 62% 56%;
   }
 
   .dark {
-    --background: 24 10% 8%;
-    --foreground: 60 9% 98%;
+    /* Dark mode with earthy warmth */
+    --background: 30 22% 10%;
+    --foreground: 34 33% 93%;
     
-    --card: 24 10% 10%;
-    --card-foreground: 60 9% 98%;
+    --card: 30 20% 14%;
+    --card-foreground: 34 33% 93%;
     
-    --popover: 24 10% 10%;
-    --popover-foreground: 60 9% 98%;
+    --popover: 30 20% 14%;
+    --popover-foreground: 34 33% 93%;
     
-    --primary: 142 76% 45%;
+    --primary: 340 62% 60%;
     --primary-foreground: 0 0% 100%;
     
-    --secondary: 28 73% 15%;
-    --secondary-foreground: 39 77% 94%;
+    --secondary: 27 35% 30%;
+    --secondary-foreground: 34 33% 93%;
     
-    --muted: 24 10% 15%;
-    --muted-foreground: 24 10% 65%;
+    --muted: 30 15% 20%;
+    --muted-foreground: 30 15% 60%;
     
-    --accent: 25 95% 55%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 43 60% 50%;
+    --accent-foreground: 30 22% 10%;
     
     --destructive: 0 62% 45%;
     --destructive-foreground: 0 0% 100%;
     
-    --border: 24 10% 18%;
-    --input: 24 10% 18%;
-    --ring: 142 76% 45%;
+    --border: 30 15% 22%;
+    --input: 30 15% 22%;
+    --ring: 340 62% 60%;
 
-    --brand-green: 142 76% 45%;
-    --brand-green-light: 142 69% 65%;
+    --brand-cream: 34 20% 20%;
+    --brand-berry: 340 62% 60%;
 
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-background: 30 22% 12%;
+    --sidebar-foreground: 34 33% 93%;
+    --sidebar-primary: 340 62% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 43 60% 45%;
+    --sidebar-accent-foreground: 34 33% 93%;
+    --sidebar-border: 30 15% 22%;
+    --sidebar-ring: 340 62% 60%;
   }
 }
 
@@ -117,16 +121,47 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Poppins', system-ui, sans-serif;
+    font-family: 'Playfair Display', Georgia, serif;
   }
 }
 
 @layer utilities {
   .font-heading {
-    font-family: 'Poppins', system-ui, sans-serif;
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+
+  .font-script {
+    font-family: 'Dancing Script', cursive;
   }
 
   .font-body {
     font-family: 'Lato', system-ui, sans-serif;
+  }
+
+  /* Kraft paper texture effect */
+  .kraft-texture {
+    background-color: hsl(var(--brand-kraft));
+    background-image: 
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    background-blend-mode: multiply;
+  }
+
+  /* Watercolor splash effect */
+  .watercolor-accent {
+    position: relative;
+  }
+
+  .watercolor-accent::before {
+    content: '';
+    position: absolute;
+    width: 120%;
+    height: 120%;
+    top: -10%;
+    left: -10%;
+    background: radial-gradient(ellipse at 30% 70%, hsl(var(--brand-berry) / 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 30%, hsl(var(--brand-mustard) / 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, hsl(var(--brand-olive) / 0.1) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
   }
 }

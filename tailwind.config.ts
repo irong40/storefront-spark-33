@@ -15,7 +15,8 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Lato', 'system-ui', 'sans-serif'],
-        heading: ['Poppins', 'system-ui', 'sans-serif'],
+        heading: ['Playfair Display', 'Georgia', 'serif'],
+        script: ['Dancing Script', 'cursive'],
         body: ['Lato', 'system-ui', 'sans-serif'],
       },
       colors: {
@@ -53,12 +54,13 @@ export default {
           foreground: "hsl(var(--card-foreground))",
         },
         brand: {
-          green: "hsl(var(--brand-green))",
-          "green-light": "hsl(var(--brand-green-light))",
           cream: "hsl(var(--brand-cream))",
-          orange: "hsl(var(--brand-orange))",
+          terracotta: "hsl(var(--brand-terracotta))",
+          olive: "hsl(var(--brand-olive))",
+          mustard: "hsl(var(--brand-mustard))",
           berry: "hsl(var(--brand-berry))",
           brown: "hsl(var(--brand-brown))",
+          kraft: "hsl(var(--brand-kraft))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
@@ -101,6 +103,10 @@ export default {
           "0%": { opacity: "0", transform: "scale(0.95)" },
           "100%": { opacity: "1", transform: "scale(1)" },
         },
+        "float": {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-10px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -109,6 +115,7 @@ export default {
         "fade-in-up": "fade-in-up 0.6s ease-out",
         "slide-up": "slide-up 0.5s ease-out",
         "scale-in": "scale-in 0.3s ease-out",
+        "float": "float 3s ease-in-out infinite",
       },
     },
   },
