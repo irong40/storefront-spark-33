@@ -124,6 +124,20 @@ export function SquarePaymentForm({
         {/* Credit Card Form */}
         <div className="relative">
           <CreditCard 
+            buttonProps={{
+              css: {
+                backgroundColor: 'hsl(142, 76%, 36%)',
+                color: 'white',
+                fontSize: '16px',
+                fontWeight: '600',
+                padding: '16px',
+                borderRadius: '0.75rem',
+                width: '100%',
+                marginTop: '16px',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s',
+              },
+            }}
             style={{
               '.input-container': {
                 borderColor: 'hsl(var(--border))',
