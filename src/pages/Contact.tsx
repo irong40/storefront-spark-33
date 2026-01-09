@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useBusinessSettings } from '@/hooks/use-business';
 import { supabase } from '@/integrations/supabase/client';
 import { Mail, Phone, MapPin, Clock, Loader2, Send } from 'lucide-react';
+import { formatHoursLines } from '@/lib/format-hours';
 
 export default function Contact() {
   const { toast } = useToast();
@@ -200,7 +201,7 @@ export default function Contact() {
                   <div>
                     <h3 className="font-semibold mb-1">Phone</h3>
                     <a 
-                      href={`tel:${business?.phone || '555-123-5847'}`}
+                      href={`tel:${business?.phone?.replace(/[^0-9]/g, '') || ''}`}
                       className="text-muted-foreground hover:text-primary"
                     >
                       {business?.phone || '(555) 123-JUICE'}
@@ -228,8 +229,9 @@ export default function Contact() {
                   <div>
                     <h3 className="font-semibold mb-1">Hours</h3>
                     <div className="text-muted-foreground text-sm space-y-1">
-                      <p>Monday - Friday: 7am - 7pm</p>
-                      <p>Saturday - Sunday: 8am - 5pm</p>
+                      {formatHoursLines(business?.hours as Record<string, string> | null).map((line, i) => (
+                        <p key={i}>{line}</p>
+                      ))}
                     </div>
                   </div>
                 </div>

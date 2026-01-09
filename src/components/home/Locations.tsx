@@ -1,5 +1,6 @@
 import { MapPin, Clock, Phone } from 'lucide-react';
 import { useBusinessSettings } from '@/hooks/use-business';
+import { formatHoursLines } from '@/lib/format-hours';
 
 export function Locations() {
   const { data: business } = useBusinessSettings();
@@ -33,15 +34,19 @@ export function Locations() {
                 <div className="flex items-start gap-3">
                   <MapPin className="h-5 w-5 text-brand-olive mt-0.5 flex-shrink-0" />
                   <span>
-                    719 High St.<br />
-                    Portsmouth, VA 23703
+                    {business?.address_line1 || '719 High St.'}<br />
+                    {business?.city || 'Portsmouth'}, {business?.state || 'VA'} {business?.zip || '23703'}
                   </span>
                 </div>
                 <div className="flex items-start gap-3">
                   <Clock className="h-5 w-5 text-brand-olive mt-0.5 flex-shrink-0" />
                   <span>
-                    Tue - Fri: 10am - 6pm<br />
-                    Sat: 10am - 4pm
+                    {formatHoursLines(business?.hours as Record<string, string> | null).map((line, i) => (
+                      <span key={i}>
+                        {line}
+                        {i < formatHoursLines(business?.hours as Record<string, string> | null).length - 1 && <br />}
+                      </span>
+                    ))}
                   </span>
                 </div>
                 {business?.phone && (
