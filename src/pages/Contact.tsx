@@ -5,13 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { useBusiness } from '@/hooks/use-business';
+import { useBusinessSettings } from '@/hooks/use-business';
 import { supabase } from '@/integrations/supabase/client';
 import { Mail, Phone, MapPin, Clock, Loader2, Send } from 'lucide-react';
 
 export default function Contact() {
   const { toast } = useToast();
-  const { data: business } = useBusiness();
+  const { data: business } = useBusinessSettings();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
