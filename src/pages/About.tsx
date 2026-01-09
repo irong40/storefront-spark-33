@@ -49,7 +49,7 @@ export default function About() {
   return (
     <Layout>
       {/* Hero Section - Kraft Paper Style */}
-      <section className="relative py-20 overflow-hidden bg-brand-kraft">
+      <section className="relative pt-8 pb-20 overflow-hidden bg-brand-kraft">
         {/* Watercolor decorative elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-20 -right-20 w-64 h-64 bg-brand-berry/20 rounded-full blur-3xl" />
