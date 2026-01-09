@@ -36,11 +36,11 @@ export default function ProductDetail() {
     return (
       <Layout>
         <div className="container px-4 py-12 text-center">
-          <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
+          <h1 className="text-2xl font-heading font-bold text-brand-brown mb-4">Product Not Found</h1>
           <p className="text-muted-foreground mb-6">
             The product you're looking for doesn't exist or has been removed.
           </p>
-          <Button asChild>
+          <Button asChild className="bg-brand-berry hover:bg-brand-berry/90">
             <Link to="/products">Back to Products</Link>
           </Button>
         </div>
@@ -53,7 +53,7 @@ export default function ProductDetail() {
   return (
     <Layout>
       <div className="container px-4 py-8">
-        <Button variant="ghost" asChild className="mb-6">
+        <Button variant="ghost" asChild className="mb-6 text-brand-olive hover:text-brand-berry hover:bg-brand-olive/10">
           <Link to="/products">
             <ChevronLeft className="h-4 w-4 mr-2" />
             Back to Products
@@ -63,7 +63,7 @@ export default function ProductDetail() {
         <div className="grid lg:grid-cols-2 gap-12">
           {/* Product Image */}
           <div className="relative">
-            <div className="aspect-square rounded-2xl bg-gradient-to-br from-primary/10 via-secondary to-accent/10 flex items-center justify-center overflow-hidden">
+            <div className="aspect-square rounded-3xl bg-brand-kraft border-2 border-brand-terracotta/20 shadow-lg flex items-center justify-center overflow-hidden">
               {product.image_url ? (
                 <img 
                   src={product.image_url} 
@@ -71,19 +71,24 @@ export default function ProductDetail() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="text-8xl">🍹</div>
+                <div className="text-8xl bg-gradient-to-br from-brand-olive/10 via-brand-kraft to-brand-mustard/10 w-full h-full flex items-center justify-center">
+                  🍹
+                </div>
               )}
             </div>
             {product.is_featured && (
-              <Badge className="absolute top-4 left-4 bg-accent text-accent-foreground">
-                Best Seller
+              <Badge className="absolute top-4 left-4 bg-brand-mustard text-brand-brown border-0 font-medium shadow-lg">
+                ✨ Best Seller
               </Badge>
             )}
             {hasDiscount && (
-              <Badge className="absolute top-4 right-4 bg-destructive text-destructive-foreground">
+              <Badge className="absolute top-4 right-4 bg-brand-berry text-white border-0 font-medium shadow-lg">
                 Sale
               </Badge>
             )}
+            {/* Decorative elements */}
+            <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-brand-berry/15 rounded-full blur-xl -z-10" />
+            <div className="absolute -top-4 -left-4 w-20 h-20 bg-brand-mustard/15 rounded-full blur-xl -z-10" />
           </div>
 
           {/* Product Info */}
@@ -91,18 +96,18 @@ export default function ProductDetail() {
             {product.category && (
               <Link 
                 to={`/products?category=${product.category.slug}`}
-                className="text-primary font-medium hover:underline"
+                className="inline-block text-brand-terracotta font-medium hover:text-brand-berry transition-colors"
               >
                 {product.category.name}
               </Link>
             )}
             
-            <h1 className="text-3xl md:text-4xl font-display font-bold text-foreground mt-2 mb-4">
+            <h1 className="text-3xl md:text-4xl font-heading font-bold text-brand-brown mt-2 mb-4">
               {product.name}
             </h1>
 
             <div className="flex items-baseline gap-3 mb-6">
-              <span className="text-3xl font-bold text-primary">
+              <span className="text-3xl font-heading font-bold text-brand-berry">
                 ${Number(product.price).toFixed(2)}
               </span>
               {hasDiscount && (
@@ -112,27 +117,29 @@ export default function ProductDetail() {
               )}
             </div>
 
-            <p className="text-muted-foreground text-lg mb-6">
+            <p className="text-muted-foreground text-lg mb-6 leading-relaxed">
               {product.description || product.short_description}
             </p>
 
             {/* Quantity Selector */}
             <div className="flex items-center gap-4 mb-6">
-              <span className="font-medium">Quantity:</span>
+              <span className="font-medium text-brand-brown">Quantity:</span>
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   disabled={quantity <= 1}
+                  className="border-brand-terracotta/30 text-brand-olive hover:bg-brand-olive hover:text-white hover:border-brand-olive"
                 >
                   <Minus className="h-4 w-4" />
                 </Button>
-                <span className="w-12 text-center font-medium">{quantity}</span>
+                <span className="w-12 text-center font-heading font-medium text-brand-brown">{quantity}</span>
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={() => setQuantity(quantity + 1)}
+                  className="border-brand-terracotta/30 text-brand-olive hover:bg-brand-olive hover:text-white hover:border-brand-olive"
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -142,18 +149,20 @@ export default function ProductDetail() {
             <AddToCartButton 
               productId={product.id} 
               quantity={quantity}
-              className="w-full md:w-auto mb-8"
+              className="w-full md:w-auto mb-8 bg-brand-berry hover:bg-brand-berry/90 shadow-lg"
               size="lg"
             />
 
             {/* Features */}
             {product.features && product.features.length > 0 && (
               <div className="mb-8">
-                <h3 className="font-semibold text-lg mb-3">Benefits</h3>
+                <h3 className="font-heading font-semibold text-lg text-brand-brown mb-3">Benefits</h3>
                 <ul className="space-y-2">
                   {product.features.map((feature, index) => (
                     <li key={index} className="flex items-start gap-2">
-                      <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                      <div className="w-5 h-5 rounded-full bg-brand-olive/10 text-brand-olive flex items-center justify-center shrink-0 mt-0.5">
+                        <Check className="h-3 w-3" />
+                      </div>
                       <span className="text-muted-foreground">{feature}</span>
                     </li>
                   ))}
@@ -163,12 +172,14 @@ export default function ProductDetail() {
 
             {/* Ingredients */}
             {product.ingredients && (
-              <div className="p-4 rounded-xl bg-secondary/50 border border-border">
+              <div className="p-5 rounded-2xl bg-brand-kraft/50 border-2 border-brand-olive/20">
                 <div className="flex items-center gap-2 mb-2">
-                  <Leaf className="h-5 w-5 text-primary" />
-                  <h3 className="font-semibold">Ingredients</h3>
+                  <div className="w-8 h-8 rounded-full bg-brand-olive/10 text-brand-olive flex items-center justify-center">
+                    <Leaf className="h-4 w-4" />
+                  </div>
+                  <h3 className="font-heading font-semibold text-brand-brown">Ingredients</h3>
                 </div>
-                <p className="text-muted-foreground text-sm">
+                <p className="text-muted-foreground text-sm leading-relaxed">
                   {product.ingredients}
                 </p>
               </div>
