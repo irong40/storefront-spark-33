@@ -137,6 +137,33 @@ export default function Checkout() {
 
       if (itemsError) throw itemsError;
 
+      // Send order confirmation email (non-blocking)
+      supabase.functions.invoke('send-order-confirmation', {
+        body: {
+          email: formData.email,
+          customerName: formData.customerName || undefined,
+          orderNumber: order.order_number,
+          items: orderItems.map(item => ({
+            product_name: item.product_name,
+            quantity: item.quantity,
+            product_price: item.product_price,
+            total: item.total,
+          })),
+          subtotal,
+          tax,
+          shipping,
+          total,
+          fulfillmentType,
+          paymentStatus: 'completed',
+        },
+      }).then(({ error }) => {
+        if (error) {
+          console.error('Failed to send order confirmation email:', error);
+        } else {
+          console.log('Order confirmation email sent successfully');
+        }
+      });
+
       // Clear cart
       await clearCart();
 
