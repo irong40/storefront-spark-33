@@ -16,8 +16,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProductForm } from '@/components/admin/ProductForm';
 import { OrdersTable } from '@/components/admin/OrdersTable';
 import { AnalyticsDashboard } from '@/components/admin/analytics/AnalyticsDashboard';
+import { BusinessSettingsForm } from '@/components/admin/BusinessSettingsForm';
 import { useToast } from '@/hooks/use-toast';
-import { BarChart3 } from 'lucide-react';
+import { BarChart3, Settings } from 'lucide-react';
 import { Plus, Pencil, Trash2, Wand2, Loader2, Image, Package, ShoppingBag } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -158,6 +159,10 @@ export default function Admin() {
               <Package className="h-4 w-4" />
               Products
             </TabsTrigger>
+            <TabsTrigger value="settings" className="gap-2">
+              <Settings className="h-4 w-4" />
+              Settings
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="analytics">
@@ -284,6 +289,17 @@ export default function Admin() {
                     </TableBody>
                   </Table>
                 )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <Card>
+              <CardHeader>
+                <CardTitle>Business Settings</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <BusinessSettingsForm />
               </CardContent>
             </Card>
           </TabsContent>
