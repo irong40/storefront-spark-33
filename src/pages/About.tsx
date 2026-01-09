@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { MapPin, Clock } from 'lucide-react';
 import brandLogo from '@/assets/brand-logo.png';
+import { useBusinessSettings } from '@/hooks/use-business';
+import { formatHoursLines } from '@/lib/format-hours';
 
 // Import value illustrations
 import valueOrganic from '@/assets/value-organic.png';
@@ -46,6 +48,7 @@ const values = [
 ];
 
 export default function About() {
+  const { data: business } = useBusinessSettings();
   return (
     <Layout>
       {/* Hero Section - Kraft Paper Style */}
@@ -163,8 +166,8 @@ export default function About() {
                     <div>
                       <h4 className="font-semibold text-brand-brown">Bloom Market</h4>
                       <p className="text-muted-foreground text-sm">
-                        719 High St.<br />
-                        Portsmouth, VA 23703
+                        {business?.address_line1 || '719 High St.'}<br />
+                        {business?.city || 'Portsmouth'}, {business?.state || 'VA'} {business?.zip || '23703'}
                       </p>
                     </div>
                   </div>
@@ -176,8 +179,12 @@ export default function About() {
                     <div>
                       <h4 className="font-semibold text-brand-brown">Hours of Operation</h4>
                       <p className="text-muted-foreground text-sm">
-                        Tue - Fri: 10am - 6pm<br />
-                        Saturday: 10am - 4pm
+                        {formatHoursLines(business?.hours as Record<string, string> | null).map((line, i) => (
+                          <span key={i}>
+                            {line}
+                            {i < formatHoursLines(business?.hours as Record<string, string> | null).length - 1 && <br />}
+                          </span>
+                        ))}
                       </p>
                     </div>
                   </div>
