@@ -1,10 +1,12 @@
 import { Link } from 'react-router-dom';
 import { Instagram, Facebook } from 'lucide-react';
 import { useBusinessSettings } from '@/hooks/use-business';
+import { useCategories } from '@/hooks/use-categories';
 import logo from '@/assets/logo.jpg';
 
 export function Footer() {
   const { data: business } = useBusinessSettings();
+  const { data: categories } = useCategories();
 
   return (
     <footer className="bg-brand-brown text-white py-16">
@@ -47,9 +49,16 @@ export function Footer() {
             <h4 className="text-sm font-semibold uppercase tracking-widest mb-6">Menu</h4>
             <ul className="space-y-3">
               <li><Link to="/products" className="text-white/70 hover:text-brand-berry transition-colors">All Products</Link></li>
-              <li><Link to="/products?category=cold-pressed-juices" className="text-white/70 hover:text-brand-berry transition-colors">Cold-Pressed Juices</Link></li>
-              <li><Link to="/products?category=wellness-shots" className="text-white/70 hover:text-brand-berry transition-colors">Wellness Shots</Link></li>
-              <li><Link to="/products?category=detox-programs" className="text-white/70 hover:text-brand-berry transition-colors">Cleanse Programs</Link></li>
+              {categories?.slice(0, 4).map((category) => (
+                <li key={category.id}>
+                  <Link 
+                    to={`/products?category=${category.slug}`} 
+                    className="text-white/70 hover:text-brand-berry transition-colors"
+                  >
+                    {category.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
