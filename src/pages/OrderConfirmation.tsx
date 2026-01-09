@@ -1,0 +1,207 @@
+import { useEffect, useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { Layout } from '@/components/layout/Layout';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
+import { supabase } from '@/integrations/supabase/client';
+import { CheckCircle, Package, Mail, ArrowRight } from 'lucide-react';
+
+interface OrderItem {
+  id: string;
+  product_name: string;
+  product_price: number;
+  quantity: number;
+  total: number;
+}
+
+interface Order {
+  id: string;
+  order_number: string;
+  email: string;
+  customer_name: string | null;
+  status: string;
+  subtotal: number;
+  tax: number;
+  shipping: number;
+  total: number;
+  fulfillment_type: string;
+  created_at: string;
+}
+
+export default function OrderConfirmation() {
+  const { id } = useParams<{ id: string }>();
+  const [order, setOrder] = useState<Order | null>(null);
+  const [items, setItems] = useState<OrderItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchOrder() {
+      if (!id) return;
+
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (!orderError && orderData) {
+        setOrder(orderData);
+
+        const { data: itemsData } = await supabase
+          .from('order_items')
+          .select('*')
+          .eq('order_id', id);
+
+        if (itemsData) {
+          setItems(itemsData);
+        }
+      }
+
+      setIsLoading(false);
+    }
+
+    fetchOrder();
+  }, [id]);
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="container px-4 py-12 max-w-2xl mx-auto">
+          <Skeleton className="h-16 w-16 rounded-full mx-auto mb-6" />
+          <Skeleton className="h-8 w-64 mx-auto mb-4" />
+          <Skeleton className="h-4 w-48 mx-auto mb-8" />
+          <Skeleton className="h-64 rounded-xl" />
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!order) {
+    return (
+      <Layout>
+        <div className="container px-4 py-20 text-center">
+          <h1 className="text-2xl font-bold mb-4">Order Not Found</h1>
+          <p className="text-muted-foreground mb-6">
+            We couldn't find this order. Please check your order number.
+          </p>
+          <Button asChild>
+            <Link to="/">Return Home</Link>
+          </Button>
+        </div>
+      </Layout>
+    );
+  }
+
+  return (
+    <Layout>
+      <div className="container px-4 py-12 max-w-2xl mx-auto">
+        {/* Success Header */}
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4">
+            <CheckCircle className="h-8 w-8" />
+          </div>
+          <h1 className="text-3xl font-display font-bold text-foreground mb-2">
+            Thank You!
+          </h1>
+          <p className="text-muted-foreground">
+            Your order has been placed successfully.
+          </p>
+        </div>
+
+        {/* Order Info */}
+        <div className="bg-secondary/30 rounded-2xl p-6 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Order Number</p>
+              <p className="text-lg font-semibold">{order.order_number}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-muted-foreground">Status</p>
+              <p className="text-lg font-semibold capitalize">{order.status}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Mail className="h-4 w-4" />
+            <span>Confirmation sent to {order.email}</span>
+          </div>
+        </div>
+
+        {/* Order Details */}
+        <div className="bg-card rounded-2xl border border-border p-6 mb-8">
+          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Package className="h-5 w-5" />
+            Order Details
+          </h2>
+
+          <div className="space-y-4 mb-6">
+            {items.map((item) => (
+              <div key={item.id} className="flex justify-between">
+                <div>
+                  <p className="font-medium">{item.product_name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Qty: {item.quantity} × ${Number(item.product_price).toFixed(2)}
+                  </p>
+                </div>
+                <p className="font-medium">${Number(item.total).toFixed(2)}</p>
+              </div>
+            ))}
+          </div>
+
+          <Separator className="my-4" />
+
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Subtotal</span>
+              <span>${Number(order.subtotal).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Tax</span>
+              <span>${Number(order.tax).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Shipping</span>
+              <span>
+                {Number(order.shipping) === 0 ? 'Free' : `$${Number(order.shipping).toFixed(2)}`}
+              </span>
+            </div>
+          </div>
+
+          <Separator className="my-4" />
+
+          <div className="flex justify-between text-lg font-semibold">
+            <span>Total</span>
+            <span>${Number(order.total).toFixed(2)}</span>
+          </div>
+        </div>
+
+        {/* Fulfillment Info */}
+        <div className="bg-primary/5 rounded-2xl p-6 mb-8 border border-primary/20">
+          <h3 className="font-semibold mb-2">
+            {order.fulfillment_type === 'pickup' ? '📍 Pickup' : '🚚 Delivery'}
+          </h3>
+          <p className="text-muted-foreground text-sm">
+            {order.fulfillment_type === 'pickup' 
+              ? "We'll notify you when your order is ready for pickup at our store."
+              : "We'll notify you when your order is out for delivery."
+            }
+          </p>
+        </div>
+
+        {/* Actions */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Button asChild className="flex-1">
+            <Link to="/products">
+              Continue Shopping
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="flex-1">
+            <Link to="/account/orders">View All Orders</Link>
+          </Button>
+        </div>
+      </div>
+    </Layout>
+  );
+}
