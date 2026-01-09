@@ -1,18 +1,24 @@
 import { Layout } from '@/components/layout/Layout';
 import { Hero } from '@/components/home/Hero';
+import { BenefitsBar } from '@/components/home/BenefitsBar';
 import { FeaturedProducts } from '@/components/home/FeaturedProducts';
-import { Categories } from '@/components/home/Categories';
 import { Story } from '@/components/home/Story';
-import { CTA } from '@/components/home/CTA';
+import { MenuPreview } from '@/components/home/MenuPreview';
+import { Testimonials } from '@/components/home/Testimonials';
+import { Newsletter } from '@/components/home/Newsletter';
+import { Locations } from '@/components/home/Locations';
 
 export default function Home() {
   return (
     <Layout>
       <Hero />
+      <BenefitsBar />
       <FeaturedProducts />
-      <Categories />
       <Story />
-      <CTA />
+      <MenuPreview />
+      <Testimonials />
+      <Newsletter />
+      <Locations />
     </Layout>
   );
 }
