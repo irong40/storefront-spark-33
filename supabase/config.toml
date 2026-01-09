@@ -1,1 +1,19 @@
 project_id = "qgaprpdwdvfttraqhydc"
+
+[functions.generate-product-image]
+verify_jwt = false
+
+[functions.process-payment]
+verify_jwt = false
+
+[functions.send-order-confirmation]
+verify_jwt = false
+
+[functions.sync-square-catalog]
+verify_jwt = false
+
+[functions.sync-square-inventory]
+verify_jwt = false
+
+[functions.square-webhook]
+verify_jwt = false
