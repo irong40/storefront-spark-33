@@ -1,57 +1,47 @@
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Leaf, Heart, Users, Droplets, Recycle, Award, MapPin, Clock } from 'lucide-react';
+import { MapPin, Clock } from 'lucide-react';
 import brandLogo from '@/assets/brand-logo.png';
+
+// Import value illustrations
+import valueOrganic from '@/assets/value-organic.png';
+import valueColdpressed from '@/assets/value-coldpressed.png';
+import valueFresh from '@/assets/value-fresh.png';
+import valueCommunity from '@/assets/value-community.png';
+import valueEco from '@/assets/value-eco.png';
+import valueQuality from '@/assets/value-quality.png';
 
 const values = [
   {
-    icon: Leaf,
+    image: valueOrganic,
     title: '100% Organic',
     description: 'Certified organic ingredients, sourced responsibly for purity and taste.',
-    gradient: 'from-brand-olive/20 to-brand-olive/5',
-    iconBg: 'bg-brand-olive/15',
-    iconColor: 'text-brand-olive',
   },
   {
-    icon: Droplets,
+    image: valueColdpressed,
     title: 'Cold-Pressed',
     description: 'Nutrient-rich extraction using hydraulic pressure, preserving vitamins and enzymes.',
-    gradient: 'from-brand-terracotta/20 to-brand-terracotta/5',
-    iconBg: 'bg-brand-terracotta/15',
-    iconColor: 'text-brand-terracotta',
   },
   {
-    icon: Heart,
+    image: valueFresh,
     title: 'Made Fresh Daily',
     description: 'Small batches crafted every morning to ensure peak freshness and flavor.',
-    gradient: 'from-brand-mustard/20 to-brand-mustard/5',
-    iconBg: 'bg-brand-mustard/15',
-    iconColor: 'text-brand-mustard',
   },
   {
-    icon: Users,
+    image: valueCommunity,
     title: 'Community First',
     description: 'Committed to supporting local farms, partners, and fostering a healthy community.',
-    gradient: 'from-brand-berry/20 to-brand-berry/5',
-    iconBg: 'bg-brand-berry/15',
-    iconColor: 'text-brand-berry',
   },
   {
-    icon: Recycle,
+    image: valueEco,
     title: 'Eco-Friendly',
     description: 'Sustainable practices, from recyclable packaging to waste reduction initiatives.',
-    gradient: 'from-brand-olive/20 to-brand-olive/5',
-    iconBg: 'bg-brand-olive/15',
-    iconColor: 'text-brand-olive',
   },
   {
-    icon: Award,
+    image: valueQuality,
     title: 'Quality Guaranteed',
     description: 'Uncompromising standards, ensuring every bottle meets our rigorous quality criteria.',
-    gradient: 'from-brand-terracotta/20 to-brand-terracotta/5',
-    iconBg: 'bg-brand-terracotta/15',
-    iconColor: 'text-brand-terracotta',
   },
 ];
 
@@ -211,26 +201,26 @@ export default function About() {
             {values.map((value, index) => (
               <div 
                 key={index} 
-                className="bg-card rounded-2xl p-6 shadow-soft hover:shadow-medium transition-all duration-300 hover:-translate-y-1 group"
+                className="bg-card rounded-2xl overflow-hidden shadow-soft hover:shadow-medium transition-all duration-300 hover:-translate-y-1 group"
               >
-                {/* Icon area with gradient background */}
-                <div className={`w-full aspect-[4/3] rounded-xl bg-gradient-to-br ${value.gradient} flex items-center justify-center mb-5 relative overflow-hidden`}>
-                  {/* Decorative circles */}
-                  <div className={`absolute -top-6 -right-6 w-20 h-20 rounded-full ${value.iconBg} opacity-50`} />
-                  <div className={`absolute -bottom-4 -left-4 w-16 h-16 rounded-full ${value.iconBg} opacity-30`} />
-                  {/* Icon */}
-                  <div className={`w-20 h-20 rounded-full ${value.iconBg} ${value.iconColor} flex items-center justify-center relative z-10 group-hover:scale-110 transition-transform duration-300`}>
-                    <value.icon className="h-10 w-10" strokeWidth={1.5} />
-                  </div>
+                {/* Illustration */}
+                <div className="w-full aspect-[4/3] overflow-hidden bg-brand-cream/50">
+                  <img 
+                    src={value.image} 
+                    alt={value.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
                 </div>
                 
                 {/* Text content */}
-                <h3 className="text-xl font-heading font-semibold text-brand-terracotta mb-2 text-center">
-                  {value.title}
-                </h3>
-                <p className="text-muted-foreground text-sm text-center leading-relaxed">
-                  {value.description}
-                </p>
+                <div className="p-5">
+                  <h3 className="text-xl font-heading font-semibold text-brand-terracotta mb-2 text-center">
+                    {value.title}
+                  </h3>
+                  <p className="text-muted-foreground text-sm text-center leading-relaxed">
+                    {value.description}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
