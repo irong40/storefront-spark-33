@@ -9,6 +9,7 @@ import { useBusinessSettings } from '@/hooks/use-business';
 import { supabase } from '@/integrations/supabase/client';
 import { Mail, Phone, MapPin, Clock, Loader2, Send } from 'lucide-react';
 import { formatHoursLines } from '@/lib/format-hours';
+import { GoogleMapEmbed } from '@/components/ui/google-map-embed';
 
 export default function Contact() {
   const { toast } = useToast();
@@ -237,12 +238,11 @@ export default function Contact() {
                 </div>
               </div>
 
-              {/* Map Placeholder */}
-              <div className="aspect-video rounded-2xl bg-secondary/50 flex items-center justify-center border border-border">
-                <div className="text-center text-muted-foreground">
-                  <MapPin className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                  <p>Map coming soon</p>
-                </div>
+              {/* Map */}
+              <div className="aspect-video rounded-2xl overflow-hidden border border-border">
+                <GoogleMapEmbed 
+                  address={`${business?.address_line1 || '719 High St.'}, ${business?.city || 'Portsmouth'}, ${business?.state || 'VA'} ${business?.zip || '23703'}`}
+                />
               </div>
             </div>
           </div>
