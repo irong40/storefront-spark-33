@@ -27,6 +27,8 @@ interface Order {
   total: number;
   fulfillment_type: string;
   created_at: string;
+  payment_id: string | null;
+  payment_status: string | null;
 }
 
 export default function OrderConfirmation() {
@@ -176,8 +178,22 @@ export default function OrderConfirmation() {
           </div>
         </div>
 
+        {/* Payment Info */}
+        {order.payment_status && (
+          <div className="bg-primary/10 rounded-2xl p-6 mb-8 border border-primary/20">
+            <h3 className="font-semibold mb-2 flex items-center gap-2">
+              💳 Payment {order.payment_status === 'completed' ? 'Successful' : order.payment_status}
+            </h3>
+            {order.payment_id && (
+              <p className="text-muted-foreground text-sm">
+                Payment ID: {order.payment_id}
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Fulfillment Info */}
-        <div className="bg-primary/5 rounded-2xl p-6 mb-8 border border-primary/20">
+        <div className="bg-secondary/50 rounded-2xl p-6 mb-8 border border-border">
           <h3 className="font-semibold mb-2">
             {order.fulfillment_type === 'pickup' ? '📍 Pickup' : '🚚 Delivery'}
           </h3>

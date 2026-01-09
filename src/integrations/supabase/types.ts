@@ -310,6 +310,8 @@ export type Database = {
           id: string
           notes: string | null
           order_number: string
+          payment_id: string | null
+          payment_status: string | null
           phone: string | null
           shipping: number | null
           shipping_address: Json | null
@@ -330,6 +332,8 @@ export type Database = {
           id?: string
           notes?: string | null
           order_number: string
+          payment_id?: string | null
+          payment_status?: string | null
           phone?: string | null
           shipping?: number | null
           shipping_address?: Json | null
@@ -350,6 +354,8 @@ export type Database = {
           id?: string
           notes?: string | null
           order_number?: string
+          payment_id?: string | null
+          payment_status?: string | null
           phone?: string | null
           shipping?: number | null
           shipping_address?: Json | null
