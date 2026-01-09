@@ -62,9 +62,13 @@ export default function Checkout() {
 
     try {
       // Create order
+      // Generate order number
+      const orderNumber = `IMP-${Date.now().toString(36).toUpperCase()}`;
+      
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
+          order_number: orderNumber,
           user_id: user?.id || null,
           email: formData.email,
           phone: formData.phone || null,

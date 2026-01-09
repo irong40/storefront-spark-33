@@ -5,19 +5,20 @@ import { useState } from 'react';
 
 interface AddToCartButtonProps {
   productId: string;
+  quantity?: number;
   disabled?: boolean;
   className?: string;
   size?: 'default' | 'sm' | 'lg' | 'icon';
 }
 
-export function AddToCartButton({ productId, disabled, className, size = 'default' }: AddToCartButtonProps) {
+export function AddToCartButton({ productId, quantity = 1, disabled, className, size = 'default' }: AddToCartButtonProps) {
   const { addItem } = useCart();
   const [isAdding, setIsAdding] = useState(false);
 
   async function handleAdd() {
     setIsAdding(true);
     try {
-      await addItem(productId);
+      await addItem(productId, quantity);
     } finally {
       setIsAdding(false);
     }
