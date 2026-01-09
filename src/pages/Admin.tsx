@@ -12,9 +12,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProductForm } from '@/components/admin/ProductForm';
+import { OrdersTable } from '@/components/admin/OrdersTable';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, Wand2, Loader2, Image } from 'lucide-react';
+import { Plus, Pencil, Trash2, Wand2, Loader2, Image, Package, ShoppingBag } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 
 export default function Admin() {
@@ -138,119 +140,144 @@ export default function Admin() {
   return (
     <Layout>
       <div className="container py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-heading font-bold text-brand-brown">Product Management</h1>
-          <div className="flex gap-2">
-            {productsWithoutImages > 0 && (
-              <Button
-                variant="outline"
-                onClick={handleGenerateAllImages}
-                disabled={generatingAll}
-              >
-                {generatingAll ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Wand2 className="h-4 w-4 mr-2" />
-                )}
-                Generate All Images ({productsWithoutImages})
-              </Button>
-            )}
-            <Button onClick={() => { setEditingProduct(null); setIsFormOpen(true); }}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Product
-            </Button>
-          </div>
-        </div>
+        <h1 className="text-3xl font-heading font-bold text-brand-brown mb-6">Admin Dashboard</h1>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Products ({products?.length || 0})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {productsLoading ? (
-              <div className="space-y-2">
-                {[...Array(5)].map((_, i) => (
-                  <Skeleton key={i} className="h-16 w-full" />
-                ))}
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-16">Image</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {products?.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableCell>
-                        {product.image_url ? (
-                          <img
-                            src={product.image_url}
-                            alt={product.name}
-                            className="w-12 h-12 object-cover rounded"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
-                            <Image className="h-5 w-5 text-muted-foreground" />
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="font-medium">{product.name}</TableCell>
-                      <TableCell>
-                        {categories?.find(c => c.id === product.category_id)?.name || '-'}
-                      </TableCell>
-                      <TableCell>${product.price.toFixed(2)}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-1 flex-wrap">
-                          {product.is_featured && <Badge variant="secondary">Featured</Badge>}
-                          {!product.is_available && <Badge variant="destructive">Unavailable</Badge>}
-                          {!product.active && <Badge variant="outline">Inactive</Badge>}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex gap-1 justify-end">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleGenerateImage(product)}
-                            disabled={generatingProductId === product.id}
-                            title="Generate AI image"
-                          >
-                            {generatingProductId === product.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
+        <Tabs defaultValue="orders" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="orders" className="gap-2">
+              <ShoppingBag className="h-4 w-4" />
+              Orders
+            </TabsTrigger>
+            <TabsTrigger value="products" className="gap-2">
+              <Package className="h-4 w-4" />
+              Products
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="orders">
+            <Card>
+              <CardHeader>
+                <CardTitle>Order Management</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <OrdersTable />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="products">
+            <div className="flex justify-end mb-4 gap-2">
+              {productsWithoutImages > 0 && (
+                <Button
+                  variant="outline"
+                  onClick={handleGenerateAllImages}
+                  disabled={generatingAll}
+                >
+                  {generatingAll ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Wand2 className="h-4 w-4 mr-2" />
+                  )}
+                  Generate All Images ({productsWithoutImages})
+                </Button>
+              )}
+              <Button onClick={() => { setEditingProduct(null); setIsFormOpen(true); }}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Product
+              </Button>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Products ({products?.length || 0})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {productsLoading ? (
+                  <div className="space-y-2">
+                    {[...Array(5)].map((_, i) => (
+                      <Skeleton key={i} className="h-16 w-full" />
+                    ))}
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-16">Image</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Category</TableHead>
+                        <TableHead>Price</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {products?.map((product) => (
+                        <TableRow key={product.id}>
+                          <TableCell>
+                            {product.image_url ? (
+                              <img
+                                src={product.image_url}
+                                alt={product.name}
+                                className="w-12 h-12 object-cover rounded"
+                              />
                             ) : (
-                              <Wand2 className="h-4 w-4" />
+                              <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
+                                <Image className="h-5 w-5 text-muted-foreground" />
+                              </div>
                             )}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => { setEditingProduct(product); setIsFormOpen(true); }}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleDelete(product)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+                          </TableCell>
+                          <TableCell className="font-medium">{product.name}</TableCell>
+                          <TableCell>
+                            {categories?.find(c => c.id === product.category_id)?.name || '-'}
+                          </TableCell>
+                          <TableCell>${product.price.toFixed(2)}</TableCell>
+                          <TableCell>
+                            <div className="flex gap-1 flex-wrap">
+                              {product.is_featured && <Badge variant="secondary">Featured</Badge>}
+                              {!product.is_available && <Badge variant="destructive">Unavailable</Badge>}
+                              {!product.active && <Badge variant="outline">Inactive</Badge>}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex gap-1 justify-end">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleGenerateImage(product)}
+                                disabled={generatingProductId === product.id}
+                                title="Generate AI image"
+                              >
+                                {generatingProductId === product.id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Wand2 className="h-4 w-4" />
+                                )}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => { setEditingProduct(product); setIsFormOpen(true); }}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleDelete(product)}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
 
         <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
