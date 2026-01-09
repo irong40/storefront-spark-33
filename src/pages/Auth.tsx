@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsAdmin } from '@/hooks/use-admin';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,6 +13,7 @@ import { Loader2, Leaf } from 'lucide-react';
 export default function Auth() {
   const navigate = useNavigate();
   const { user, signIn, signUp, isLoading: authLoading } = useAuth();
+  const { data: isAdmin, isLoading: isAdminLoading } = useIsAdmin();
   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -25,12 +27,16 @@ export default function Auth() {
     fullName: '' 
   });
 
-  // Redirect if already logged in
+  // Redirect if already logged in - admins go to /admin, others to /account
   useEffect(() => {
-    if (user && !authLoading) {
-      navigate('/account');
+    if (user && !authLoading && !isAdminLoading) {
+      if (isAdmin) {
+        navigate('/admin');
+      } else {
+        navigate('/account');
+      }
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, isAdmin, isAdminLoading, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,9 +48,8 @@ export default function Auth() {
     if (error) {
       setError(error.message);
       setIsLoading(false);
-    } else {
-      navigate('/account');
     }
+    // Let useEffect handle the redirect after admin status is checked
   };
 
   const handleSignup = async (e: React.FormEvent) => {
