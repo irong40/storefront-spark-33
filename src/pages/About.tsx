@@ -8,32 +8,50 @@ const values = [
   {
     icon: Leaf,
     title: '100% Organic',
-    description: 'We source only certified organic produce, ensuring every sip is free from pesticides and harmful chemicals.',
+    description: 'Certified organic ingredients, sourced responsibly for purity and taste.',
+    gradient: 'from-brand-olive/20 to-brand-olive/5',
+    iconBg: 'bg-brand-olive/15',
+    iconColor: 'text-brand-olive',
   },
   {
     icon: Droplets,
     title: 'Cold-Pressed',
-    description: 'Our hydraulic press extracts juice without heat, preserving vital enzymes and nutrients.',
+    description: 'Nutrient-rich extraction using hydraulic pressure, preserving vitamins and enzymes.',
+    gradient: 'from-brand-terracotta/20 to-brand-terracotta/5',
+    iconBg: 'bg-brand-terracotta/15',
+    iconColor: 'text-brand-terracotta',
   },
   {
     icon: Heart,
     title: 'Made Fresh Daily',
-    description: 'Every juice is pressed fresh each morning. No preservatives, no pasteurization, just pure goodness.',
+    description: 'Small batches crafted every morning to ensure peak freshness and flavor.',
+    gradient: 'from-brand-mustard/20 to-brand-mustard/5',
+    iconBg: 'bg-brand-mustard/15',
+    iconColor: 'text-brand-mustard',
   },
   {
     icon: Users,
     title: 'Community First',
-    description: 'We partner with local farmers and give back to wellness programs in our community.',
+    description: 'Committed to supporting local farms, partners, and fostering a healthy community.',
+    gradient: 'from-brand-berry/20 to-brand-berry/5',
+    iconBg: 'bg-brand-berry/15',
+    iconColor: 'text-brand-berry',
   },
   {
     icon: Recycle,
     title: 'Eco-Friendly',
-    description: 'Our bottles are 100% recyclable and we offer a bottle return program for discounts.',
+    description: 'Sustainable practices, from recyclable packaging to waste reduction initiatives.',
+    gradient: 'from-brand-olive/20 to-brand-olive/5',
+    iconBg: 'bg-brand-olive/15',
+    iconColor: 'text-brand-olive',
   },
   {
     icon: Award,
     title: 'Quality Guaranteed',
-    description: "Not satisfied? We'll make it right. Your wellness journey is our priority.",
+    description: 'Uncompromising standards, ensuring every bottle meets our rigorous quality criteria.',
+    gradient: 'from-brand-terracotta/20 to-brand-terracotta/5',
+    iconBg: 'bg-brand-terracotta/15',
+    iconColor: 'text-brand-terracotta',
   },
 ];
 
@@ -181,24 +199,36 @@ export default function About() {
       </section>
 
       {/* Values Grid */}
-      <section className="py-20 bg-background">
+      <section className="py-20 bg-brand-cream">
         <div className="container px-4">
-          <h2 className="text-3xl font-heading font-bold text-brand-brown text-center mb-4">
+          <h2 className="text-3xl md:text-4xl font-heading font-bold text-brand-brown text-center mb-4">
             What We Stand For
           </h2>
           <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
             Every bottle of imPRESSive juice is crafted with intention and care.
           </p>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {values.map((value, index) => (
-              <div key={index} className="text-center group">
-                <div className="w-16 h-16 rounded-2xl bg-brand-olive/10 text-brand-olive flex items-center justify-center mx-auto mb-4 group-hover:bg-brand-olive group-hover:text-white transition-colors">
-                  <value.icon className="h-8 w-8" />
+              <div 
+                key={index} 
+                className="bg-card rounded-2xl p-6 shadow-soft hover:shadow-medium transition-all duration-300 hover:-translate-y-1 group"
+              >
+                {/* Icon area with gradient background */}
+                <div className={`w-full aspect-[4/3] rounded-xl bg-gradient-to-br ${value.gradient} flex items-center justify-center mb-5 relative overflow-hidden`}>
+                  {/* Decorative circles */}
+                  <div className={`absolute -top-6 -right-6 w-20 h-20 rounded-full ${value.iconBg} opacity-50`} />
+                  <div className={`absolute -bottom-4 -left-4 w-16 h-16 rounded-full ${value.iconBg} opacity-30`} />
+                  {/* Icon */}
+                  <div className={`w-20 h-20 rounded-full ${value.iconBg} ${value.iconColor} flex items-center justify-center relative z-10 group-hover:scale-110 transition-transform duration-300`}>
+                    <value.icon className="h-10 w-10" strokeWidth={1.5} />
+                  </div>
                 </div>
-                <h3 className="text-xl font-heading font-semibold text-brand-brown mb-2">
+                
+                {/* Text content */}
+                <h3 className="text-xl font-heading font-semibold text-brand-terracotta mb-2 text-center">
                   {value.title}
                 </h3>
-                <p className="text-muted-foreground">
+                <p className="text-muted-foreground text-sm text-center leading-relaxed">
                   {value.description}
                 </p>
               </div>
