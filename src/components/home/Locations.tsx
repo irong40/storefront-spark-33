@@ -1,6 +1,7 @@
 import { MapPin, Clock, Phone } from 'lucide-react';
 import { useBusinessSettings } from '@/hooks/use-business';
 import { formatHoursLines } from '@/lib/format-hours';
+import { GoogleMapEmbed } from '@/components/ui/google-map-embed';
 
 export function Locations() {
   const { data: business } = useBusinessSettings();
@@ -20,9 +21,12 @@ export function Locations() {
         <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           {/* Main Location */}
           <div className="bg-background rounded-3xl overflow-hidden transition-all hover:shadow-lifted hover:-translate-y-1">
-            {/* Map placeholder */}
-            <div className="h-48 bg-gradient-to-br from-brand-olive-light to-brand-olive flex items-center justify-center">
-              <MapPin className="h-16 w-16 text-white/30" />
+            {/* Map */}
+            <div className="h-48 overflow-hidden">
+              <GoogleMapEmbed 
+                address={`${business?.address_line1 || '719 High St.'}, ${business?.city || 'Portsmouth'}, ${business?.state || 'VA'} ${business?.zip || '23703'}`}
+                className="rounded-none rounded-t-3xl"
+              />
             </div>
             
             {/* Content */}
