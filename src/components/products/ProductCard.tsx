@@ -12,9 +12,9 @@ export function ProductCard({ product }: ProductCardProps) {
   const hasDiscount = product.compare_at_price && product.compare_at_price > product.price;
 
   return (
-    <Card className="group overflow-hidden hover:shadow-lg transition-shadow">
+    <Card className="group overflow-hidden border-2 border-brand-terracotta/10 hover:border-brand-berry/30 hover:shadow-lg transition-all duration-300 bg-card">
       <Link to={`/products/${product.slug}`}>
-        <div className="aspect-square overflow-hidden bg-secondary relative">
+        <div className="aspect-square overflow-hidden bg-brand-kraft relative">
           {product.image_url ? (
             <img
               src={product.image_url}
@@ -22,17 +22,17 @@ export function ProductCard({ product }: ProductCardProps) {
               className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
           ) : (
-            <div className="h-full w-full flex items-center justify-center text-6xl">
+            <div className="h-full w-full flex items-center justify-center text-6xl bg-gradient-to-br from-brand-olive/10 via-brand-kraft to-brand-mustard/10">
               🧃
             </div>
           )}
           {product.is_featured && (
-            <Badge className="absolute top-2 left-2 bg-accent text-accent-foreground">
-              Best Seller
+            <Badge className="absolute top-3 left-3 bg-brand-mustard text-brand-brown border-0 font-medium shadow-md">
+              ✨ Best Seller
             </Badge>
           )}
           {hasDiscount && (
-            <Badge className="absolute top-2 right-2 bg-destructive text-destructive-foreground">
+            <Badge className="absolute top-3 right-3 bg-brand-berry text-white border-0 font-medium shadow-md">
               Sale
             </Badge>
           )}
@@ -40,7 +40,7 @@ export function ProductCard({ product }: ProductCardProps) {
       </Link>
       <CardContent className="p-4">
         <Link to={`/products/${product.slug}`}>
-          <h3 className="font-heading font-semibold text-lg mb-1 hover:text-primary transition-colors">
+          <h3 className="font-heading font-semibold text-lg text-brand-brown mb-1 group-hover:text-brand-berry transition-colors">
             {product.name}
           </h3>
         </Link>
@@ -51,7 +51,7 @@ export function ProductCard({ product }: ProductCardProps) {
         )}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-lg">${Number(product.price).toFixed(2)}</span>
+            <span className="font-heading font-bold text-lg text-brand-berry">${Number(product.price).toFixed(2)}</span>
             {hasDiscount && (
               <span className="text-sm text-muted-foreground line-through">
                 ${Number(product.compare_at_price).toFixed(2)}
