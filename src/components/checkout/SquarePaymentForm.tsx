@@ -94,10 +94,21 @@ export function SquarePaymentForm({
           if (token.status !== 'OK' || !token.token) {
             console.error('Card tokenization failed:', token);
             const errorResult = token as { errors?: Array<{ message?: string }> };
-            onError(errorResult.errors?.[0]?.message || 'Card tokenization failed. Please check your card details.');
+            onError(errorResult.errors?.[0]?.message || 'Payment failed. Please try again.');
             return;
           }
-          await processPayment(token.token, 'card');
+          
+          // Detect wallet type from token details
+          const tokenDetails = token as { details?: { method?: string } };
+          let walletType: 'apple_pay' | 'google_pay' | 'card' = 'card';
+          
+          if (tokenDetails.details?.method === 'Apple Pay') {
+            walletType = 'apple_pay';
+          } else if (tokenDetails.details?.method === 'Google Pay') {
+            walletType = 'google_pay';
+          }
+          
+          await processPayment(token.token, walletType);
         }}
         createPaymentRequest={() => ({
           countryCode: 'US',
