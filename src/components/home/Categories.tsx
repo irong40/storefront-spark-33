@@ -1,14 +1,15 @@
 import { useCategories } from '@/hooks/use-categories';
 import { Link } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Leaf, Cherry, Citrus, Zap, Package } from 'lucide-react';
+import { Leaf, Heart, Zap, Flame, Package, Repeat } from 'lucide-react';
 
 const categoryIcons: Record<string, React.ReactNode> = {
-  'green-juices': <Leaf className="h-8 w-8" />,
-  'red-berry': <Cherry className="h-8 w-8" />,
-  'citrus-tropical': <Citrus className="h-8 w-8" />,
+  'detox-packages': <Package className="h-8 w-8" />,
+  'sweet-treats': <Heart className="h-8 w-8" />,
   'wellness-shots': <Zap className="h-8 w-8" />,
-  'bundles-cleanses': <Package className="h-8 w-8" />,
+  'energy-immunity-booster': <Flame className="h-8 w-8" />,
+  'detox-fat-burners': <Leaf className="h-8 w-8" />,
+  'subscriptions': <Repeat className="h-8 w-8" />,
 };
 
 export function Categories() {
@@ -42,16 +43,16 @@ export function Categories() {
                 className="group relative bg-card rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 border-2 border-brand-terracotta/10 hover:border-brand-berry/30 overflow-hidden"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-brand-berry/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                
+
                 <div className="relative z-10">
                   <div className="w-16 h-16 rounded-xl bg-brand-olive/10 text-brand-olive flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-brand-berry group-hover:text-white transition-all">
                     {categoryIcons[category.slug] || <Leaf className="h-8 w-8" />}
                   </div>
-                  
+
                   <h3 className="text-xl font-heading font-semibold text-brand-brown mb-2 group-hover:text-brand-berry transition-colors">
                     {category.name}
                   </h3>
-                  
+
                   <p className="text-muted-foreground text-sm line-clamp-2">
                     {category.description}
                   </p>

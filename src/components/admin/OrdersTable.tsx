@@ -90,7 +90,7 @@ export function OrdersTable() {
                 {order.order_number}
               </TableCell>
               <TableCell className="text-muted-foreground">
-                {format(new Date(order.created_at!), 'MMM d, yyyy h:mm a')}
+                {format(new Date(order.created_at ?? new Date()), 'MMM d, yyyy h:mm a')}
               </TableCell>
               <TableCell>
                 <div>
@@ -161,7 +161,7 @@ function OrderDetails({ order }: { order: OrderWithItems }) {
         <div>
           <h3 className="font-semibold mb-2">Order Info</h3>
           <div className="text-sm space-y-1">
-            <p><span className="text-muted-foreground">Date:</span> {format(new Date(order.created_at!), 'PPpp')}</p>
+            <p><span className="text-muted-foreground">Date:</span> {format(new Date(order.created_at ?? new Date()), 'PPpp')}</p>
             <p><span className="text-muted-foreground">Status:</span> {getStatusBadge(order.status || 'pending')}</p>
             <p><span className="text-muted-foreground">Fulfillment:</span> {order.fulfillment_type || 'pickup'}</p>
             {order.payment_id && (

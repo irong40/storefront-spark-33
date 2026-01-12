@@ -10,6 +10,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -30,10 +40,10 @@ export default function Admin() {
   const { data: categories } = useCategories();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { 
-    syncCatalog, 
-    syncInventory, 
-    isSyncingCatalog, 
+  const {
+    syncCatalog,
+    syncInventory,
+    isSyncingCatalog,
     isSyncingInventory,
     lastCatalogSync,
   } = useSquareSync();
@@ -42,6 +52,7 @@ export default function Admin() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [generatingAll, setGeneratingAll] = useState(false);
   const [generatingProductId, setGeneratingProductId] = useState<string | null>(null);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
   const handleSyncFromSquare = async () => {
     await syncCatalog();
@@ -77,8 +88,6 @@ export default function Admin() {
   }
 
   const handleDelete = async (product: Product) => {
-    if (!confirm(`Delete "${product.name}"? This cannot be undone.`)) return;
-
     const { error } = await supabase
       .from('products')
       .delete()
@@ -90,6 +99,7 @@ export default function Admin() {
       toast({ title: 'Product deleted' });
       queryClient.invalidateQueries({ queryKey: ['products'] });
     }
+    setProductToDelete(null);
   };
 
   const handleGenerateImage = async (product: Product) => {
@@ -312,7 +322,7 @@ export default function Admin() {
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                onClick={() => handleDelete(product)}
+                                onClick={() => setProductToDelete(product)}
                               >
                                 <Trash2 className="h-4 w-4 text-destructive" />
                               </Button>
@@ -353,6 +363,26 @@ export default function Admin() {
             />
           </DialogContent>
         </Dialog>
+
+        <AlertDialog open={!!productToDelete} onOpenChange={() => setProductToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Product</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete "{productToDelete?.name}"? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => productToDelete && handleDelete(productToDelete)}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </Layout>
   );

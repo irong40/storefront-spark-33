@@ -6,7 +6,10 @@ interface CartItem {
   id: string;
   product_id: string;
   quantity: number;
+  size_id: string | null;
+  addon_ids: string[];
   product: Pick<Product, 'id' | 'name' | 'slug' | 'price' | 'image_url' | 'is_available'>;
+  size?: { id: string; name: string; price: number } | null;
 }
 
 interface CartContextType {
@@ -17,7 +20,7 @@ interface CartContextType {
   isOpen: boolean;
   openCart: () => void;
   closeCart: () => void;
-  addItem: (productId: string, quantity?: number) => Promise<void>;
+  addItem: (productId: string, quantity?: number, sizeId?: string, addonIds?: string[]) => Promise<void>;
   updateQuantity: (itemId: string, quantity: number) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
   clearCart: () => Promise<void>;
@@ -43,7 +46,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const sessionId = getSessionId();
 
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
-  const subtotal = items.reduce((sum, item) => sum + (Number(item.product.price) * item.quantity), 0);
+  const subtotal = items.reduce((sum, item) => {
+    // Use size price if available, otherwise use product base price
+    const itemPrice = item.size ? Number(item.size.price) : Number(item.product.price);
+    return sum + (itemPrice * item.quantity);
+  }, 0);
 
   useEffect(() => {
     async function initCart() {
@@ -85,7 +92,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
         id,
         product_id,
         quantity,
-        product:products(id, name, slug, price, image_url, is_available)
+        size_id,
+        addon_ids,
+        product:products(id, name, slug, price, image_url, is_available),
+        size:product_sizes(id, name, price)
       `)
       .eq('cart_id', id);
 
@@ -95,60 +105,81 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  async function addItem(productId: string, quantity = 1) {
+  async function addItem(productId: string, quantity = 1, sizeId?: string, addonIds?: string[]) {
     if (!cartId) return;
 
-    const existingItem = items.find(item => item.product_id === productId);
-
-    if (existingItem) {
-      await updateQuantity(existingItem.id, existingItem.quantity + quantity);
-    } else {
-      await supabase
+    try {
+      // For items with variants, always create a new cart item (don't merge)
+      const { error } = await supabase
         .from('cart_items')
-        .insert({ cart_id: cartId, product_id: productId, quantity });
-      
-      await fetchCartItems(cartId);
-    }
+        .insert({
+          cart_id: cartId,
+          product_id: productId,
+          quantity,
+          size_id: sizeId || null,
+          addon_ids: addonIds || []
+        });
 
-    setIsOpen(true);
+      if (error) throw error;
+      await fetchCartItems(cartId);
+
+      setIsOpen(true);
+    } catch (error) {
+      console.error('Failed to add item to cart:', error);
+    }
   }
 
   async function updateQuantity(itemId: string, quantity: number) {
     if (!cartId) return;
 
-    if (quantity <= 0) {
-      await removeItem(itemId);
-      return;
+    try {
+      if (quantity <= 0) {
+        await removeItem(itemId);
+        return;
+      }
+
+      const { error } = await supabase
+        .from('cart_items')
+        .update({ quantity })
+        .eq('id', itemId);
+
+      if (error) throw error;
+      await fetchCartItems(cartId);
+    } catch (error) {
+      console.error('Failed to update cart item quantity:', error);
     }
-
-    await supabase
-      .from('cart_items')
-      .update({ quantity })
-      .eq('id', itemId);
-
-    await fetchCartItems(cartId);
   }
 
   async function removeItem(itemId: string) {
     if (!cartId) return;
 
-    await supabase
-      .from('cart_items')
-      .delete()
-      .eq('id', itemId);
+    try {
+      const { error } = await supabase
+        .from('cart_items')
+        .delete()
+        .eq('id', itemId);
 
-    await fetchCartItems(cartId);
+      if (error) throw error;
+      await fetchCartItems(cartId);
+    } catch (error) {
+      console.error('Failed to remove item from cart:', error);
+    }
   }
 
   async function clearCart() {
     if (!cartId) return;
 
-    await supabase
-      .from('cart_items')
-      .delete()
-      .eq('cart_id', cartId);
+    try {
+      const { error } = await supabase
+        .from('cart_items')
+        .delete()
+        .eq('cart_id', cartId);
 
-    setItems([]);
+      if (error) throw error;
+      setItems([]);
+    } catch (error) {
+      console.error('Failed to clear cart:', error);
+    }
   }
 
   return (

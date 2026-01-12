@@ -23,40 +23,53 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const squareAccessToken = Deno.env.get('SQUARE_ACCESS_TOKEN')!;
     const squareLocationId = Deno.env.get('SQUARE_LOCATION_ID')!;
+    const cronSecret = Deno.env.get('CRON_SECRET');
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Verify admin authorization
-    const authHeader = req.headers.get('Authorization');
-    if (authHeader) {
-      const token = authHeader.replace('Bearer ', '');
-      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-      
-      if (authError || !user) {
-        console.error('Auth error:', authError);
+    // Check for scheduled job secret (for cron calls)
+    const cronHeader = req.headers.get('X-Cron-Secret');
+    const isScheduledCall = cronSecret && cronHeader === cronSecret;
+
+    // Verify authorization (unless it's a scheduled call)
+    if (!isScheduledCall) {
+      const authHeader = req.headers.get('Authorization');
+      if (authHeader) {
+        const token = authHeader.replace('Bearer ', '');
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+        if (authError || !user) {
+          console.error('Auth error:', authError);
+          return new Response(
+            JSON.stringify({ error: 'Unauthorized' }),
+            { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        // Check admin role
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .eq('role', 'admin')
+          .single();
+
+        if (!roleData) {
+          return new Response(
+            JSON.stringify({ error: 'Admin access required' }),
+            { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      } else {
         return new Response(
           JSON.stringify({ error: 'Unauthorized' }),
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-
-      // Check admin role
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('role', 'admin')
-        .single();
-
-      if (!roleData) {
-        return new Response(
-          JSON.stringify({ error: 'Admin access required' }),
-          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
     }
 
-    console.log('Starting Square inventory sync...');
+    console.log(`Starting Square inventory sync... (scheduled: ${isScheduledCall})`);
+
 
     // Get all products with Square variation IDs
     const { data: products, error: productsError } = await supabase
@@ -70,10 +83,10 @@ serve(async (req) => {
 
     if (!products || products.length === 0) {
       return new Response(
-        JSON.stringify({ 
-          success: true, 
+        JSON.stringify({
+          success: true,
           message: 'No products with Square IDs found. Run catalog sync first.',
-          updated: 0 
+          updated: 0
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -92,7 +105,7 @@ serve(async (req) => {
 
     for (let i = 0; i < catalogObjectIds.length; i += batchSize) {
       const batch = catalogObjectIds.slice(i, i + batchSize);
-      
+
       const inventoryResponse = await fetch(
         'https://connect.squareup.com/v2/inventory/counts/batch-retrieve',
         {
@@ -158,8 +171,8 @@ serve(async (req) => {
     console.log(`Inventory sync completed. Updated ${updated} products.`);
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         updated,
         errors: errors.length > 0 ? errors : undefined,
       }),

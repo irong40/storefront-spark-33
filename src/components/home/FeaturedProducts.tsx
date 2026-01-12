@@ -6,13 +6,36 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useCart } from '@/contexts/CartContext';
 
 const productEmojis: Record<string, string> = {
-  'green-goddess': '🥬',
-  'golden-hour': '🥕',
-  'berry-bliss': '🫐',
-  'citrus-sunrise': '🍊',
-  'tropical-thunder': '🥭',
-  'immunity-shot': '🧡',
-  'ginger-snap': '🫚',
+  // Sweet Treats
+  'kiwi-kwencher': '🥝',
+  'pomegranate-pearadise': '🍐',
+  'apple-mango-tango': '🥭',
+  'very-very-green-goddess': '🥬',
+  // Wellness Shots
+  'wellness-shot-turmeric': '🧡',
+  'wellness-shot-kale': '🥗',
+  'wellness-shot-ginger': '🫚',
+  'wellness-shot-beet': '🔴',
+  // Energy & Immunity
+  'glowin': '✨',
+  'immunity-boost': '🛡️',
+  'ginger-ale': '🫚',
+  'bleeding-heart': '❤️',
+  'beets-me': '💜',
+  // Detox & Fat Burners
+  'morning-detox': '🌅',
+  'pineapple-express': '🍍',
+  'oh-sht': '💥',
+  'kale-yea': '🥬',
+  'lemon-drop': '🍋',
+  'the-cure': '💊',
+  // Detox Packages
+  '1-day-detox': '📦',
+  '3-day-detox': '📦',
+  // Subscriptions
+  'wellness-shot-subscription': '💉',
+  'gallon-subscription': '🥛',
+  '3-pack-subscription': '🎁',
 };
 
 export function FeaturedProducts() {
@@ -98,7 +121,7 @@ export function FeaturedProducts() {
                     ${product.price.toFixed(2)}
                     <span className="text-sm text-brand-warm-gray font-normal"> / 16oz</span>
                   </div>
-                <Button
+                  <Button
                     size="icon"
                     className="rounded-full bg-brand-berry hover:bg-brand-berry-dark hover:scale-110 transition-all"
                     onClick={() => addItem(product.id)}

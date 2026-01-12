@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Loader2, ShoppingBag, MapPin, Truck, CreditCard } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { SquarePaymentForm, PaymentResult } from '@/components/checkout/SquarePaymentForm';
+import { CHECKOUT_CONFIG } from '@/config/checkout';
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -24,7 +25,7 @@ export default function Checkout() {
   const [fulfillmentType, setFulfillmentType] = useState('pickup');
   const [paymentComplete, setPaymentComplete] = useState(false);
   const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
-  
+
   const [formData, setFormData] = useState({
     email: profile?.email || user?.email || '',
     phone: profile?.phone || '',
@@ -38,8 +39,8 @@ export default function Checkout() {
     zip: '',
   });
 
-  const tax = subtotal * 0.08; // 8% tax
-  const shipping = fulfillmentType === 'delivery' ? 5.99 : 0;
+  const tax = subtotal * CHECKOUT_CONFIG.TAX_RATE;
+  const shipping = fulfillmentType === 'delivery' ? CHECKOUT_CONFIG.DELIVERY_FEE : 0;
   const total = subtotal + tax + shipping;
   const totalInCents = Math.round(total * 100);
 
@@ -63,7 +64,7 @@ export default function Checkout() {
   const handlePaymentSuccess = async (result: PaymentResult) => {
     setPaymentResult(result);
     setPaymentComplete(true);
-    
+
     // Now create the order with payment info
     await createOrder(result);
   };
@@ -91,7 +92,7 @@ export default function Checkout() {
     try {
       // Generate order number (also handled by database trigger as fallback)
       const orderNumber = `ORD-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-      
+
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -159,8 +160,6 @@ export default function Checkout() {
       }).then(({ error }) => {
         if (error) {
           console.error('Failed to send order confirmation email:', error);
-        } else {
-          console.log('Order confirmation email sent successfully');
         }
       });
 
@@ -261,11 +260,10 @@ export default function Checkout() {
               >
                 <Label
                   htmlFor="pickup"
-                  className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-colors ${
-                    fulfillmentType === 'pickup' 
-                      ? 'border-primary bg-primary/5' 
-                      : 'border-border hover:border-primary/50'
-                  } ${(isSubmitting || paymentComplete) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-colors ${fulfillmentType === 'pickup'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:border-primary/50'
+                    } ${(isSubmitting || paymentComplete) ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <RadioGroupItem value="pickup" id="pickup" />
                   <div className="flex items-center gap-3">
@@ -278,11 +276,10 @@ export default function Checkout() {
                 </Label>
                 <Label
                   htmlFor="delivery"
-                  className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-colors ${
-                    fulfillmentType === 'delivery' 
-                      ? 'border-primary bg-primary/5' 
-                      : 'border-border hover:border-primary/50'
-                  } ${(isSubmitting || paymentComplete) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-colors ${fulfillmentType === 'delivery'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:border-primary/50'
+                    } ${(isSubmitting || paymentComplete) ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <RadioGroupItem value="delivery" id="delivery" />
                   <div className="flex items-center gap-3">
@@ -381,7 +378,7 @@ export default function Checkout() {
                 <CreditCard className="h-5 w-5" />
                 Payment
               </h2>
-              
+
               {!isFormValid() ? (
                 <div className="p-4 bg-muted rounded-xl text-center">
                   <p className="text-muted-foreground text-sm">
@@ -417,14 +414,14 @@ export default function Checkout() {
           <div>
             <div className="bg-secondary/30 rounded-2xl p-6 sticky top-24">
               <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
-              
+
               <div className="space-y-4 mb-6">
                 {items.map((item) => (
                   <div key={item.id} className="flex gap-4">
                     <div className="w-16 h-16 rounded-lg bg-secondary flex items-center justify-center shrink-0">
                       {item.product.image_url ? (
-                        <img 
-                          src={item.product.image_url} 
+                        <img
+                          src={item.product.image_url}
                           alt={item.product.name}
                           className="w-full h-full object-cover rounded-lg"
                         />

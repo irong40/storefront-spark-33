@@ -7,6 +7,7 @@ interface CartItemProps {
   item: {
     id: string;
     quantity: number;
+    size_id: string | null;
     product: {
       id: string;
       name: string;
@@ -14,12 +15,21 @@ interface CartItemProps {
       price: number;
       image_url: string | null;
     };
+    size?: {
+      id: string;
+      name: string;
+      price: number;
+    } | null;
   };
 }
 
 export function CartItem({ item }: CartItemProps) {
   const { updateQuantity, removeItem } = useCart();
-  const { product, quantity } = item;
+  const { product, quantity, size } = item;
+
+  // Use size price if available, otherwise use product base price
+  const itemPrice = size ? Number(size.price) : Number(product.price);
+  const lineTotal = itemPrice * quantity;
 
   return (
     <div className="flex gap-4">
@@ -34,14 +44,19 @@ export function CartItem({ item }: CartItemProps) {
       </Link>
 
       <div className="flex-1 min-w-0">
-        <Link 
+        <Link
           to={`/products/${product.slug}`}
           className="font-medium hover:text-primary truncate block"
         >
           {product.name}
         </Link>
+        {size && (
+          <p className="text-xs text-muted-foreground">
+            Size: {size.name}
+          </p>
+        )}
         <p className="text-sm text-muted-foreground">
-          ${Number(product.price).toFixed(2)}
+          ${itemPrice.toFixed(2)}
         </p>
 
         <div className="flex items-center gap-2 mt-2">
@@ -75,7 +90,7 @@ export function CartItem({ item }: CartItemProps) {
 
       <div className="text-right">
         <p className="font-medium">
-          ${(Number(product.price) * quantity).toFixed(2)}
+          ${lineTotal.toFixed(2)}
         </p>
       </div>
     </div>

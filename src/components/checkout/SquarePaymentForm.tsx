@@ -40,7 +40,7 @@ export function SquarePaymentForm({
     setIsProcessing(true);
     
     try {
-      console.log(`Processing ${walletType} payment...`);
+
 
       const { data, error } = await supabase.functions.invoke('process-payment', {
         body: {
@@ -60,7 +60,7 @@ export function SquarePaymentForm({
       }
 
       if (data?.success && data?.payment) {
-        console.log('Payment successful:', data.payment.id);
+
         onSuccess({
           paymentId: data.payment.id,
           status: data.payment.status,
