@@ -29,8 +29,9 @@ import { OrdersTable } from '@/components/admin/OrdersTable';
 import { AnalyticsDashboard } from '@/components/admin/analytics/AnalyticsDashboard';
 import { BusinessSettingsForm } from '@/components/admin/BusinessSettingsForm';
 import { ProductVariantsPanel } from '@/components/admin/ProductVariantsPanel';
+import { GiftCardsPanel } from '@/components/admin/GiftCardsPanel';
 import { useToast } from '@/hooks/use-toast';
-import { BarChart3, Settings, RefreshCw, Sliders } from 'lucide-react';
+import { BarChart3, Settings, RefreshCw, Sliders, Gift } from 'lucide-react';
 import { Plus, Pencil, Trash2, Wand2, Loader2, Image, Package, ShoppingBag } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -188,6 +189,10 @@ export default function Admin() {
             <TabsTrigger value="variants" className="gap-2">
               <Sliders className="h-4 w-4" />
               Variants
+            </TabsTrigger>
+            <TabsTrigger value="gift-cards" className="gap-2">
+              <Gift className="h-4 w-4" />
+              Gift Cards
             </TabsTrigger>
             <TabsTrigger value="settings" className="gap-2">
               <Settings className="h-4 w-4" />
@@ -353,6 +358,17 @@ export default function Admin() {
               </CardHeader>
               <CardContent>
                 <BusinessSettingsForm />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="gift-cards">
+            <Card>
+              <CardHeader>
+                <CardTitle>Gift Cards</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <GiftCardsPanel />
               </CardContent>
             </Card>
           </TabsContent>

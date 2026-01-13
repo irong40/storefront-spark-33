@@ -1,35 +1,30 @@
 import { Button } from '@/components/ui/button';
-import { useCart } from '@/contexts/CartContext';
-import { Minus, Plus, Trash2 } from 'lucide-react';
+import { useCart, CartItem as CartItemType } from '@/contexts/CartContext';
+import { Minus, Plus, Trash2, Gift } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface CartItemProps {
-  item: {
-    id: string;
-    quantity: number;
-    size_id: string | null;
-    product: {
-      id: string;
-      name: string;
-      slug: string;
-      price: number;
-      image_url: string | null;
-    };
-    size?: {
-      id: string;
-      name: string;
-      price: number;
-    } | null;
-  };
+  item: CartItemType;
 }
 
 export function CartItem({ item }: CartItemProps) {
   const { updateQuantity, removeItem } = useCart();
-  const { product, quantity, size } = item;
+  const { product, quantity, size, size_override, addons, flavors, gift_card_data } = item;
 
-  // Use size price if available, otherwise use product base price
-  const itemPrice = size ? Number(size.price) : Number(product.price);
+  // Calculate item price: variant override > standard size > base price
+  let basePrice = Number(product.price);
+  if (size_override) {
+    basePrice = Number(size_override.price);
+  } else if (size) {
+    basePrice = Number(size.price);
+  }
+
+  // Add addon prices
+  const addonsTotal = addons?.reduce((sum, addon) => sum + Number(addon.price), 0) || 0;
+  const itemPrice = basePrice + addonsTotal;
   const lineTotal = itemPrice * quantity;
+
+  const isGiftCard = !!gift_card_data;
 
   return (
     <div className="flex gap-4">
@@ -37,6 +32,8 @@ export function CartItem({ item }: CartItemProps) {
         <div className="h-20 w-20 rounded-lg bg-secondary flex items-center justify-center overflow-hidden">
           {product.image_url ? (
             <img src={product.image_url} alt={product.name} className="h-full w-full object-cover" />
+          ) : isGiftCard ? (
+            <Gift className="h-8 w-8 text-muted-foreground" />
           ) : (
             <span className="text-2xl">🧃</span>
           )}
@@ -50,13 +47,48 @@ export function CartItem({ item }: CartItemProps) {
         >
           {product.name}
         </Link>
-        {size && (
+        
+        {/* Size info */}
+        {size_override && (
+          <p className="text-xs text-muted-foreground">
+            {size_override.size_name}
+          </p>
+        )}
+        {size && !size_override && (
           <p className="text-xs text-muted-foreground">
             Size: {size.name}
           </p>
         )}
-        <p className="text-sm text-muted-foreground">
-          ${itemPrice.toFixed(2)}
+
+        {/* Flavors */}
+        {flavors && flavors.length > 0 && (
+          <p className="text-xs text-muted-foreground">
+            Flavors: {flavors.map(f => f.name).join(', ')}
+          </p>
+        )}
+
+        {/* Add-ons */}
+        {addons && addons.length > 0 && (
+          <p className="text-xs text-muted-foreground">
+            Add-ons: {addons.map(a => a.display_name).join(', ')} (+${addonsTotal.toFixed(2)})
+          </p>
+        )}
+
+        {/* Gift card info */}
+        {isGiftCard && gift_card_data && (
+          <div className="text-xs text-muted-foreground space-y-0.5 mt-1">
+            <p className="flex items-center gap-1">
+              <Gift className="h-3 w-3" />
+              To: {gift_card_data.recipientName || gift_card_data.recipientEmail}
+            </p>
+            {gift_card_data.deliveryDate && (
+              <p>Deliver: {new Date(gift_card_data.deliveryDate).toLocaleDateString()}</p>
+            )}
+          </div>
+        )}
+
+        <p className="text-sm text-muted-foreground mt-1">
+          ${itemPrice.toFixed(2)} each
         </p>
 
         <div className="flex items-center gap-2 mt-2">

@@ -1,15 +1,16 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Product } from '@/hooks/use-products';
+import { toast } from 'sonner';
 
-interface GiftCardData {
+export interface GiftCardData {
   recipientEmail: string;
   recipientName?: string;
   message?: string;
   deliveryDate?: string;
 }
 
-interface CartItem {
+export interface CartItem {
   id: string;
   product_id: string;
   quantity: number;
@@ -21,6 +22,8 @@ interface CartItem {
   product: Pick<Product, 'id' | 'name' | 'slug' | 'price' | 'image_url' | 'is_available'>;
   size?: { id: string; name: string; price: number } | null;
   size_override?: { id: string; size_name: string; price: number } | null;
+  addons?: { id: string; display_name: string; price: number }[];
+  flavors?: { id: string; name: string }[];
 }
 
 interface CartContextType {
@@ -65,6 +68,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const sessionId = getSessionId();
 
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  
   const subtotal = items.reduce((sum, item) => {
     // Prioritize variant override price, then standard size price, then base price
     let itemPrice = Number(item.product.price);
@@ -72,6 +76,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
       itemPrice = Number(item.size_override.price);
     } else if (item.size) {
       itemPrice = Number(item.size.price);
+    }
+    // Add addon prices
+    if (item.addons && item.addons.length > 0) {
+      itemPrice += item.addons.reduce((addonSum, addon) => addonSum + Number(addon.price), 0);
     }
     return sum + (itemPrice * item.quantity);
   }, 0);
@@ -110,34 +118,84 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [sessionId]);
 
   async function fetchCartItems(id: string) {
-    // Note: cart_items table only has basic columns (id, cart_id, product_id, quantity)
-    // Additional variant columns need to be added via migration
     const { data, error } = await supabase
       .from('cart_items')
       .select(`
         id,
         product_id,
         quantity,
+        size_id,
+        size_override_id,
+        addon_ids,
+        selected_flavor_ids,
+        gift_card_data,
         product:products(id, name, slug, price, image_url, is_available)
       `)
       .eq('cart_id', id);
 
-    if (!error && data) {
-      // Map to CartItem interface with default values for missing columns
-      const validItems = data
-        .filter(item => item.product !== null)
-        .map(item => ({
-          ...item,
-          size_id: null,
-          size_override_id: null,
-          addon_ids: [],
-          selected_flavor_ids: [],
-          gift_card_data: null,
-          size: null,
-          size_override: null,
-        })) as unknown as CartItem[];
-      setItems(validItems);
+    if (error) {
+      console.error('Error fetching cart items:', error);
+      return;
     }
+
+    if (!data) {
+      setItems([]);
+      return;
+    }
+
+    // Fetch related data for sizes, overrides, addons, and flavors
+    const validItems = data.filter(item => item.product !== null);
+    
+    // Collect all IDs we need to fetch
+    const sizeIds = validItems.map(i => i.size_id).filter(Boolean) as string[];
+    const overrideIds = validItems.map(i => i.size_override_id).filter(Boolean) as string[];
+    const allAddonIds = validItems.flatMap(i => (i.addon_ids as string[]) || []);
+    const allFlavorIds = validItems.flatMap(i => (i.selected_flavor_ids as string[]) || []);
+
+    // Fetch all related data in parallel
+    const [sizesResult, overridesResult, addonsResult, flavorsResult] = await Promise.all([
+      sizeIds.length > 0 
+        ? supabase.from('product_sizes').select('id, name, price').in('id', sizeIds)
+        : { data: [] },
+      overrideIds.length > 0
+        ? supabase.from('product_size_overrides').select('id, size_name, price').in('id', overrideIds)
+        : { data: [] },
+      allAddonIds.length > 0
+        ? supabase.from('product_addons').select('id, display_name, price').in('id', allAddonIds)
+        : { data: [] },
+      allFlavorIds.length > 0
+        ? supabase.from('products').select('id, name').in('id', allFlavorIds)
+        : { data: [] },
+    ]);
+
+    // Create lookup maps
+    const sizesMap = new Map((sizesResult.data || []).map(s => [s.id, s]));
+    const overridesMap = new Map((overridesResult.data || []).map(o => [o.id, o]));
+    const addonsMap = new Map((addonsResult.data || []).map(a => [a.id, a]));
+    const flavorsMap = new Map((flavorsResult.data || []).map(f => [f.id, f]));
+
+    // Map items with their related data
+    const enrichedItems: CartItem[] = validItems.map(item => ({
+      id: item.id,
+      product_id: item.product_id,
+      quantity: item.quantity,
+      size_id: item.size_id,
+      size_override_id: item.size_override_id,
+      addon_ids: (item.addon_ids as string[]) || [],
+      selected_flavor_ids: (item.selected_flavor_ids as string[]) || [],
+      gift_card_data: item.gift_card_data as unknown as GiftCardData | null,
+      product: item.product as CartItem['product'],
+      size: item.size_id ? sizesMap.get(item.size_id) || null : null,
+      size_override: item.size_override_id ? overridesMap.get(item.size_override_id) || null : null,
+      addons: ((item.addon_ids as string[]) || [])
+        .map(id => addonsMap.get(id))
+        .filter(Boolean) as CartItem['addons'],
+      flavors: ((item.selected_flavor_ids as string[]) || [])
+        .map(id => flavorsMap.get(id))
+        .filter(Boolean) as CartItem['flavors'],
+    }));
+
+    setItems(enrichedItems);
   }
 
   async function addItem(
@@ -145,29 +203,36 @@ export function CartProvider({ children }: { children: ReactNode }) {
     quantity = 1,
     sizeId?: string,
     sizeOverrideId?: string,
-    addonIds?: string[],
+    addonIds: string[] = [],
     giftCardData?: GiftCardData,
-    selectedFlavorIds?: string[]
+    selectedFlavorIds: string[] = []
   ) {
     if (!cartId) return;
 
     try {
-      // Note: Only inserting columns that exist in the database
-      // Variant columns (size_id, addon_ids, etc.) need migration to be added
+      const insertData: Record<string, unknown> = {
+        cart_id: cartId,
+        product_id: productId,
+        quantity,
+        size_id: sizeId || null,
+        size_override_id: sizeOverrideId || null,
+        addon_ids: addonIds,
+        selected_flavor_ids: selectedFlavorIds,
+        gift_card_data: giftCardData || null,
+      };
+
       const { error } = await supabase
         .from('cart_items')
-        .insert({
-          cart_id: cartId,
-          product_id: productId,
-          quantity,
-        });
+        .insert(insertData);
 
       if (error) throw error;
+      
       await fetchCartItems(cartId);
-
+      toast.success('Added to cart');
       setIsOpen(true);
     } catch (error) {
       console.error('Failed to add item to cart:', error);
+      toast.error('Failed to add item to cart');
     }
   }
 
@@ -189,6 +254,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       await fetchCartItems(cartId);
     } catch (error) {
       console.error('Failed to update cart item quantity:', error);
+      toast.error('Failed to update quantity');
     }
   }
 
@@ -203,8 +269,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error;
       await fetchCartItems(cartId);
+      toast.success('Item removed from cart');
     } catch (error) {
       console.error('Failed to remove item from cart:', error);
+      toast.error('Failed to remove item');
     }
   }
 
