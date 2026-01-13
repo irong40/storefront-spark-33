@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { Layout } from '@/components/layout/Layout';
 import { useProduct, Product, useAddons } from '@/hooks/use-products';
 import { AddToCartButton } from '@/components/cart/AddToCartButton';
@@ -13,15 +12,8 @@ import { Label } from '@/components/ui/label';
 import { ChevronLeft, Minus, Plus, Check, Leaf } from 'lucide-react';
 
 export default function ProductDetail() {
-  // Fetch global sizes for mapping
-  const [globalSizes, setGlobalSizes] = useState<{ id: string, name: string, price: number }[]>([]);
-  useEffect(() => {
-    async function fetchSizes() {
-      const { data } = await supabase.from('product_sizes').select('*').eq('active', true).order('sort_order');
-      if (data) setGlobalSizes(data.map(s => ({ ...s, price: Number(s.price) })));
-    }
-    fetchSizes();
-  }, []);
+  // Global sizes are stubbed until product_sizes table exists
+  const [globalSizes] = useState<{ id: string, name: string, price: number }[]>([]);
 
   // Flavor Selection Configuration
   const getFlavorSelectionLimit = (slug: string) => {

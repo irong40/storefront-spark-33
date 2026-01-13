@@ -110,26 +110,32 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [sessionId]);
 
   async function fetchCartItems(id: string) {
+    // Note: cart_items table only has basic columns (id, cart_id, product_id, quantity)
+    // Additional variant columns need to be added via migration
     const { data, error } = await supabase
       .from('cart_items')
       .select(`
         id,
         product_id,
         quantity,
-        size_id,
-        size_override_id,
-        addon_ids,
-        selected_flavor_ids,
-        gift_card_data,
-        product:products(id, name, slug, price, image_url, is_available),
-        size:product_sizes(id, name, price),
-        size_override:product_size_overrides(id, size_name, price)
+        product:products(id, name, slug, price, image_url, is_available)
       `)
       .eq('cart_id', id);
 
     if (!error && data) {
-      // Manual type casting or mapping might be needed if Supabase return types aren't perfectly inferred
-      const validItems = data.filter(item => item.product !== null) as unknown as CartItem[];
+      // Map to CartItem interface with default values for missing columns
+      const validItems = data
+        .filter(item => item.product !== null)
+        .map(item => ({
+          ...item,
+          size_id: null,
+          size_override_id: null,
+          addon_ids: [],
+          selected_flavor_ids: [],
+          gift_card_data: null,
+          size: null,
+          size_override: null,
+        })) as unknown as CartItem[];
       setItems(validItems);
     }
   }
@@ -146,17 +152,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (!cartId) return;
 
     try {
+      // Note: Only inserting columns that exist in the database
+      // Variant columns (size_id, addon_ids, etc.) need migration to be added
       const { error } = await supabase
         .from('cart_items')
         .insert({
           cart_id: cartId,
           product_id: productId,
           quantity,
-          size_id: sizeId || null,
-          size_override_id: sizeOverrideId || null,
-          addon_ids: addonIds || [],
-          gift_card_data: giftCardData || null,
-          selected_flavor_ids: selectedFlavorIds || []
         });
 
       if (error) throw error;

@@ -55,7 +55,7 @@ export function ProductVariantSelector({ productId, productName, disabled }: Pro
 
         setIsAdding(true);
         try {
-            await addItem(productId, 1, selectedSize.id, selectedAddons.map(a => a.id));
+            await addItem(productId, 1, selectedSize.id, undefined, selectedAddons.map(a => a.id));
         } finally {
             setIsAdding(false);
         }

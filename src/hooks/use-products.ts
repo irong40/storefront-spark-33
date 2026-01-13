@@ -49,8 +49,7 @@ export function useProducts(categorySlug?: string) {
         .from('products')
         .select(`
           *,
-          category:categories(id, name, slug),
-          variants:product_size_overrides(*)
+          category:categories(id, name, slug)
         `)
         .eq('active', true)
         .eq('is_available', true)
@@ -65,14 +64,13 @@ export function useProducts(categorySlug?: string) {
         );
       }
 
-      // Sort variants by sort_order
-      filteredData.forEach(product => {
-        if (product.variants && Array.isArray(product.variants)) {
-          product.variants.sort((a: ProductVariant, b: ProductVariant) => a.sort_order - b.sort_order);
-        }
-      });
+      // Add empty variants array (table doesn't exist yet)
+      const productsWithVariants = filteredData.map(product => ({
+        ...product,
+        variants: [] as ProductVariant[],
+      }));
 
-      return filteredData as Product[];
+      return productsWithVariants as Product[];
     },
   });
 }
@@ -85,8 +83,7 @@ export function useProduct(slug: string) {
         .from('products')
         .select(`
           *,
-          category:categories(id, name, slug),
-          variants:product_size_overrides(*)
+          category:categories(id, name, slug)
         `)
         .eq('slug', slug)
         .eq('active', true)
@@ -94,12 +91,11 @@ export function useProduct(slug: string) {
 
       if (error) throw error;
 
-      // Sort variants
-      if (data.variants && Array.isArray(data.variants)) {
-        data.variants.sort((a: ProductVariant, b: ProductVariant) => a.sort_order - b.sort_order);
-      }
-
-      return data as Product;
+      // Add empty variants array (table doesn't exist yet)
+      return {
+        ...data,
+        variants: [] as ProductVariant[],
+      } as Product;
     },
     enabled: !!slug,
   });
@@ -121,10 +117,16 @@ export function useFeaturedProducts() {
         .limit(4);
 
       if (error) throw error;
-      return data as Product[];
+      
+      // Add empty variants array
+      return (data || []).map(p => ({
+        ...p,
+        variants: [] as ProductVariant[],
+      })) as Product[];
     },
   });
 }
+
 export interface ProductAddon {
   id: string;
   name: string;
@@ -136,15 +138,9 @@ export interface ProductAddon {
 export function useAddons() {
   return useQuery({
     queryKey: ['addons'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('product_addons')
-        .select('*')
-        .eq('active', true)
-        .order('sort_order', { ascending: true });
-
-      if (error) throw error;
-      return data as ProductAddon[];
+    queryFn: async (): Promise<ProductAddon[]> => {
+      // TODO: Implement when product_addons table exists
+      return [];
     },
   });
 }
