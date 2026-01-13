@@ -1,15 +1,15 @@
 import { useCategories } from '@/hooks/use-categories';
 import { Link } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Leaf, Heart, Zap, Flame, Package, Repeat } from 'lucide-react';
+import { Cherry, Zap, Flame, RefreshCw, Gift, Package } from 'lucide-react';
 
 const categoryIcons: Record<string, React.ReactNode> = {
-  'detox-packages': <Package className="h-8 w-8" />,
-  'sweet-treats': <Heart className="h-8 w-8" />,
-  'wellness-shots': <Zap className="h-8 w-8" />,
-  'energy-immunity-booster': <Flame className="h-8 w-8" />,
-  'detox-fat-burners': <Leaf className="h-8 w-8" />,
-  'subscriptions': <Repeat className="h-8 w-8" />,
+  'sweet-treats': <Cherry className="h-8 w-8" />,
+  'energy-immunity-boosters': <Zap className="h-8 w-8" />,
+  'detox-fat-burners': <Flame className="h-8 w-8" />,
+  'subscriptions': <RefreshCw className="h-8 w-8" />,
+  'gift-cards': <Gift className="h-8 w-8" />,
+  'sample-boxes': <Package className="h-8 w-8" />,
 };
 
 export function Categories() {
@@ -46,7 +46,7 @@ export function Categories() {
 
                 <div className="relative z-10">
                   <div className="w-16 h-16 rounded-xl bg-brand-olive/10 text-brand-olive flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-brand-berry group-hover:text-white transition-all">
-                    {categoryIcons[category.slug] || <Leaf className="h-8 w-8" />}
+                    {categoryIcons[category.slug] || <Package className="h-8 w-8" />}
                   </div>
 
                   <h3 className="text-xl font-heading font-semibold text-brand-brown mb-2 group-hover:text-brand-berry transition-colors">
