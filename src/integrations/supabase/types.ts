@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -76,45 +76,27 @@ export type Database = {
       }
       cart_items: {
         Row: {
-          addon_ids: string[] | null
           cart_id: string | null
           created_at: string | null
-          gift_card_data: Json | null
           id: string
-          is_subscription: boolean | null
           product_id: string | null
           quantity: number
-          selected_flavor_ids: string[] | null
-          size_id: string | null
-          size_override_id: string | null
           updated_at: string | null
         }
         Insert: {
-          addon_ids?: string[] | null
           cart_id?: string | null
           created_at?: string | null
-          gift_card_data?: Json | null
           id?: string
-          is_subscription?: boolean | null
           product_id?: string | null
           quantity?: number
-          selected_flavor_ids?: string[] | null
-          size_id?: string | null
-          size_override_id?: string | null
           updated_at?: string | null
         }
         Update: {
-          addon_ids?: string[] | null
           cart_id?: string | null
           created_at?: string | null
-          gift_card_data?: Json | null
           id?: string
-          is_subscription?: boolean | null
           product_id?: string | null
           quantity?: number
-          selected_flavor_ids?: string[] | null
-          size_id?: string | null
-          size_override_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -130,20 +112,6 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "cart_items_size_id_fkey"
-            columns: ["size_id"]
-            isOneToOne: false
-            referencedRelation: "product_sizes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "cart_items_size_override_id_fkey"
-            columns: ["size_override_id"]
-            isOneToOne: false
-            referencedRelation: "product_size_overrides"
             referencedColumns: ["id"]
           },
         ]
@@ -286,331 +254,35 @@ export type Database = {
         }
         Relationships: []
       }
-      gift_cards: {
-        Row: {
-          amount: number
-          balance: number
-          code: string
-          created_at: string | null
-          delivered: boolean | null
-          delivered_at: string | null
-          delivery_date: string | null
-          expires_at: string | null
-          id: string
-          is_for_self: boolean | null
-          order_id: string | null
-          personal_message: string | null
-          purchaser_email: string
-          recipient_email: string | null
-          recipient_name: string | null
-          redeemed_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          amount: number
-          balance: number
-          code: string
-          created_at?: string | null
-          delivered?: boolean | null
-          delivered_at?: string | null
-          delivery_date?: string | null
-          expires_at?: string | null
-          id?: string
-          is_for_self?: boolean | null
-          order_id?: string | null
-          personal_message?: string | null
-          purchaser_email: string
-          recipient_email?: string | null
-          recipient_name?: string | null
-          redeemed_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          amount?: number
-          balance?: number
-          code?: string
-          created_at?: string | null
-          delivered?: boolean | null
-          delivered_at?: string | null
-          delivery_date?: string | null
-          expires_at?: string | null
-          id?: string
-          is_for_self?: boolean | null
-          order_id?: string | null
-          personal_message?: string | null
-          purchaser_email?: string
-          recipient_email?: string | null
-          recipient_name?: string | null
-          redeemed_at?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "gift_cards_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "orders"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      inventory_sync_logs: {
-        Row: {
-          completed_at: string | null
-          error_message: string | null
-          id: string
-          products_updated: number | null
-          started_at: string | null
-          status: string
-        }
-        Insert: {
-          completed_at?: string | null
-          error_message?: string | null
-          id?: string
-          products_updated?: number | null
-          started_at?: string | null
-          status: string
-        }
-        Update: {
-          completed_at?: string | null
-          error_message?: string | null
-          id?: string
-          products_updated?: number | null
-          started_at?: string | null
-          status?: string
-        }
-        Relationships: []
-      }
-      loyalty_members: {
-        Row: {
-          id: string
-          joined_at: string | null
-          lifetime_points: number | null
-          points_balance: number | null
-          tier: string | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          id?: string
-          joined_at?: string | null
-          lifetime_points?: number | null
-          points_balance?: number | null
-          tier?: string | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          id?: string
-          joined_at?: string | null
-          lifetime_points?: number | null
-          points_balance?: number | null
-          tier?: string | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      loyalty_redemptions: {
-        Row: {
-          code: string
-          created_at: string | null
-          expires_at: string | null
-          id: string
-          member_id: string
-          order_id: string | null
-          points_spent: number
-          reward_id: string
-          status: string | null
-          used_at: string | null
-        }
-        Insert: {
-          code: string
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string
-          member_id: string
-          order_id?: string | null
-          points_spent: number
-          reward_id: string
-          status?: string | null
-          used_at?: string | null
-        }
-        Update: {
-          code?: string
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string
-          member_id?: string
-          order_id?: string | null
-          points_spent?: number
-          reward_id?: string
-          status?: string | null
-          used_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "loyalty_redemptions_member_id_fkey"
-            columns: ["member_id"]
-            isOneToOne: false
-            referencedRelation: "loyalty_members"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "loyalty_redemptions_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "orders"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "loyalty_redemptions_reward_id_fkey"
-            columns: ["reward_id"]
-            isOneToOne: false
-            referencedRelation: "loyalty_rewards"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      loyalty_rewards: {
-        Row: {
-          active: boolean | null
-          created_at: string | null
-          description: string | null
-          id: string
-          min_order_amount: number | null
-          name: string
-          points_required: number
-          product_id: string | null
-          reward_type: string
-          reward_value: number | null
-          sort_order: number | null
-        }
-        Insert: {
-          active?: boolean | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          min_order_amount?: number | null
-          name: string
-          points_required: number
-          product_id?: string | null
-          reward_type: string
-          reward_value?: number | null
-          sort_order?: number | null
-        }
-        Update: {
-          active?: boolean | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          min_order_amount?: number | null
-          name?: string
-          points_required?: number
-          product_id?: string | null
-          reward_type?: string
-          reward_value?: number | null
-          sort_order?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "loyalty_rewards_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      loyalty_transactions: {
-        Row: {
-          created_at: string | null
-          description: string
-          id: string
-          member_id: string
-          order_id: string | null
-          points: number
-          type: string
-        }
-        Insert: {
-          created_at?: string | null
-          description: string
-          id?: string
-          member_id: string
-          order_id?: string | null
-          points: number
-          type: string
-        }
-        Update: {
-          created_at?: string | null
-          description?: string
-          id?: string
-          member_id?: string
-          order_id?: string | null
-          points?: number
-          type?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "loyalty_transactions_member_id_fkey"
-            columns: ["member_id"]
-            isOneToOne: false
-            referencedRelation: "loyalty_members"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "loyalty_transactions_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "orders"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       order_items: {
         Row: {
-          addons: Json | null
           created_at: string | null
           id: string
-          is_subscription: boolean | null
           order_id: string | null
           product_id: string | null
           product_name: string
           product_price: number
           quantity: number
-          selected_flavors: Json | null
-          size_name: string | null
-          size_price: number | null
           total: number
         }
         Insert: {
-          addons?: Json | null
           created_at?: string | null
           id?: string
-          is_subscription?: boolean | null
           order_id?: string | null
           product_id?: string | null
           product_name: string
           product_price: number
           quantity: number
-          selected_flavors?: Json | null
-          size_name?: string | null
-          size_price?: number | null
           total: number
         }
         Update: {
-          addons?: Json | null
           created_at?: string | null
           id?: string
-          is_subscription?: boolean | null
           order_id?: string | null
           product_id?: string | null
           product_name?: string
           product_price?: number
           quantity?: number
-          selected_flavors?: Json | null
-          size_name?: string | null
-          size_price?: number | null
           total?: number
         }
         Relationships: [
@@ -696,113 +368,6 @@ export type Database = {
           total?: number
           updated_at?: string | null
           user_id?: string | null
-        }
-        Relationships: []
-      }
-      product_addons: {
-        Row: {
-          active: boolean | null
-          created_at: string | null
-          display_name: string
-          id: string
-          name: string
-          price: number | null
-          sort_order: number | null
-        }
-        Insert: {
-          active?: boolean | null
-          created_at?: string | null
-          display_name: string
-          id?: string
-          name: string
-          price?: number | null
-          sort_order?: number | null
-        }
-        Update: {
-          active?: boolean | null
-          created_at?: string | null
-          display_name?: string
-          id?: string
-          name?: string
-          price?: number | null
-          sort_order?: number | null
-        }
-        Relationships: []
-      }
-      product_size_overrides: {
-        Row: {
-          active: boolean | null
-          created_at: string | null
-          id: string
-          is_subscription: boolean | null
-          price: number
-          product_id: string
-          size_name: string
-          size_oz: number | null
-          sort_order: number | null
-          subscription_interval: string | null
-        }
-        Insert: {
-          active?: boolean | null
-          created_at?: string | null
-          id?: string
-          is_subscription?: boolean | null
-          price: number
-          product_id: string
-          size_name: string
-          size_oz?: number | null
-          sort_order?: number | null
-          subscription_interval?: string | null
-        }
-        Update: {
-          active?: boolean | null
-          created_at?: string | null
-          id?: string
-          is_subscription?: boolean | null
-          price?: number
-          product_id?: string
-          size_name?: string
-          size_oz?: number | null
-          sort_order?: number | null
-          subscription_interval?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "product_size_overrides_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      product_sizes: {
-        Row: {
-          active: boolean | null
-          created_at: string | null
-          id: string
-          name: string
-          price: number
-          size_oz: number | null
-          sort_order: number | null
-        }
-        Insert: {
-          active?: boolean | null
-          created_at?: string | null
-          id?: string
-          name: string
-          price: number
-          size_oz?: number | null
-          sort_order?: number | null
-        }
-        Update: {
-          active?: boolean | null
-          created_at?: string | null
-          id?: string
-          name?: string
-          price?: number
-          size_oz?: number | null
-          sort_order?: number | null
         }
         Relationships: []
       }
@@ -921,9 +486,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      cleanup_old_sync_logs: { Args: never; Returns: undefined }
-      generate_gift_card_code: { Args: never; Returns: string }
-      generate_reward_code: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -931,7 +493,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      trigger_inventory_sync: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
