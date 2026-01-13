@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { useProduct, Product, useAddons } from '@/hooks/use-products';
+import { useEffectiveProductSizes } from '@/hooks/use-product-variants';
 import { AddToCartButton } from '@/components/cart/AddToCartButton';
 import { Button } from '@/components/ui/button';
 import { FlavorSelector } from '@/components/products/FlavorSelector';
@@ -12,8 +13,12 @@ import { Label } from '@/components/ui/label';
 import { ChevronLeft, Minus, Plus, Check, Leaf } from 'lucide-react';
 
 export default function ProductDetail() {
-  // Global sizes are stubbed until product_sizes table exists
-  const [globalSizes] = useState<{ id: string, name: string, price: number }[]>([]);
+  const { slug } = useParams<{ slug: string }>();
+  const { data: product, isLoading, error } = useProduct(slug || '');
+  const { data: addons } = useAddons();
+  
+  // Use effective sizes (product overrides or global sizes)
+  const { sizes: globalSizes, isLoading: sizesLoading } = useEffectiveProductSizes(product?.id || '');
 
   // Flavor Selection Configuration
   const getFlavorSelectionLimit = (slug: string) => {
@@ -27,9 +32,6 @@ export default function ProductDetail() {
     }
   };
 
-  const { slug } = useParams<{ slug: string }>();
-  const { data: product, isLoading, error } = useProduct(slug || '');
-  const { data: addons } = useAddons(); // Fetch addons
 
   const [quantity, setQuantity] = useState(1);
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);

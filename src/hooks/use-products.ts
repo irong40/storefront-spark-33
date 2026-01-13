@@ -127,20 +127,6 @@ export function useFeaturedProducts() {
   });
 }
 
-export interface ProductAddon {
-  id: string;
-  name: string;
-  display_name: string;
-  price: number;
-  sort_order: number;
-}
-
-export function useAddons() {
-  return useQuery({
-    queryKey: ['addons'],
-    queryFn: async (): Promise<ProductAddon[]> => {
-      // TODO: Implement when product_addons table exists
-      return [];
-    },
-  });
-}
+// Re-export addon types from use-product-variants for backward compatibility
+export { useProductAddons as useAddons } from './use-product-variants';
+export type { ProductAddon } from './use-product-variants';
