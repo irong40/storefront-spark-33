@@ -3,14 +3,21 @@ import { useCart } from '@/contexts/CartContext';
 import { ShoppingCart, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 
+interface GiftCardData {
+  recipientEmail: string;
+  recipientName?: string;
+  message?: string;
+  deliveryDate?: string;
+}
+
 interface AddToCartButtonProps {
   productId: string;
   quantity?: number;
-  sizeId?: string; // Standard Size ID (not name) -- actually I'll accept ID or handle lookup in upper layer, let's keep it simple: passthrough
+  sizeId?: string; // Standard Size ID
   sizeOverrideId?: string; // Variant ID
   selectedFlavorIds?: string[]; // Added flavor IDs
   addonIds?: string[]; // Added addon IDs
-  giftCardData?: any;
+  giftCardData?: GiftCardData;
   disabled?: boolean;
   className?: string;
   size?: 'default' | 'sm' | 'lg' | 'icon';

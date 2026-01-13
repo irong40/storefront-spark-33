@@ -2,6 +2,13 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { supabase } from '@/integrations/supabase/client';
 import type { Product } from '@/hooks/use-products';
 
+interface GiftCardData {
+  recipientEmail: string;
+  recipientName?: string;
+  message?: string;
+  deliveryDate?: string;
+}
+
 interface CartItem {
   id: string;
   product_id: string;
@@ -9,8 +16,8 @@ interface CartItem {
   size_id: string | null;
   size_override_id: string | null;
   addon_ids: string[];
-  selected_flavor_ids: string[]; // Added flavor ids
-  gift_card_data: any | null; // using any for flexibility with JSONB
+  selected_flavor_ids: string[];
+  gift_card_data: GiftCardData | null;
   product: Pick<Product, 'id' | 'name' | 'slug' | 'price' | 'image_url' | 'is_available'>;
   size?: { id: string; name: string; price: number } | null;
   size_override?: { id: string; size_name: string; price: number } | null;
@@ -30,8 +37,8 @@ interface CartContextType {
     sizeId?: string,
     sizeOverrideId?: string,
     addonIds?: string[],
-    giftCardData?: any,
-    selectedFlavorIds?: string[] // Added param
+    giftCardData?: GiftCardData,
+    selectedFlavorIds?: string[]
   ) => Promise<void>;
   updateQuantity: (itemId: string, quantity: number) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
@@ -133,8 +140,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     sizeId?: string,
     sizeOverrideId?: string,
     addonIds?: string[],
-    giftCardData?: any,
-    selectedFlavorIds?: string[] // Added param
+    giftCardData?: GiftCardData,
+    selectedFlavorIds?: string[]
   ) {
     if (!cartId) return;
 

@@ -9,13 +9,11 @@ export default function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
   const categoryParam = searchParams.get('category');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(categoryParam);
-  
+
   const { data: products, isLoading } = useProducts(selectedCategory || undefined);
 
   useEffect(() => {
-    if (categoryParam !== selectedCategory) {
-      setSelectedCategory(categoryParam);
-    }
+    setSelectedCategory(categoryParam);
   }, [categoryParam]);
 
   const handleCategoryChange = (slug: string | null) => {
@@ -43,7 +41,7 @@ export default function Products() {
             Our Products
           </h1>
           <p className="text-muted-foreground text-lg max-w-2xl">
-            Fresh, organic cold-pressed juices made daily. Choose from our selection of juices, 
+            Fresh, organic cold-pressed juices made daily. Choose from our selection of juices,
             wellness shots, and cleanse programs.
           </p>
         </div>
@@ -51,9 +49,9 @@ export default function Products() {
 
       <div className="container px-4 py-12">
         <div className="mb-8">
-          <CategoryFilter 
-            selectedCategory={selectedCategory} 
-            onSelectCategory={handleCategoryChange} 
+          <CategoryFilter
+            selectedCategory={selectedCategory}
+            onSelectCategory={handleCategoryChange}
           />
         </div>
 
