@@ -91,10 +91,30 @@ export function useProduct(slug: string) {
 
       if (error) throw error;
 
-      // Add empty variants array (table doesn't exist yet)
+      // Fetch product size overrides (variants) for this product
+      const { data: overrides, error: overridesError } = await supabase
+        .from('product_size_overrides')
+        .select('*')
+        .eq('product_id', data.id)
+        .eq('active', true)
+        .order('sort_order', { ascending: true });
+
+      if (overridesError) throw overridesError;
+
+      // Map overrides to variant format
+      const variants: ProductVariant[] = (overrides || []).map(o => ({
+        id: o.id,
+        size_name: o.size_name,
+        size_oz: o.size_oz,
+        price: Number(o.price),
+        is_subscription: o.is_subscription,
+        subscription_interval: o.subscription_interval,
+        sort_order: o.sort_order,
+      }));
+
       return {
         ...data,
-        variants: [] as ProductVariant[],
+        variants,
       } as Product;
     },
     enabled: !!slug,
