@@ -2,7 +2,6 @@ import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { MapPin, Clock } from 'lucide-react';
-import brandLogo from '@/assets/brand-logo.png';
 import { useBusinessSettings } from '@/hooks/use-business';
 import { formatHoursLines } from '@/lib/format-hours';
 
@@ -103,11 +102,11 @@ export default function About() {
             </div>
             <div className="order-1 lg:order-2">
               <div className="relative">
-                <div className="aspect-square rounded-3xl bg-brand-kraft border-4 border-brand-terracotta/30 shadow-xl overflow-hidden flex items-center justify-center p-8">
+                <div className="aspect-[4/3] rounded-3xl bg-brand-kraft border-4 border-brand-terracotta/30 shadow-xl overflow-hidden">
                   <img 
-                    src={brandLogo} 
-                    alt="imPRESSive Juice Bar Brand" 
-                    className="w-full h-full object-contain"
+                    src="/images/about-founder.png" 
+                    alt="Delisea Jackson, founder of imPRESSive Juice Bar" 
+                    className="w-full h-full object-cover"
                   />
                 </div>
                 <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-brand-berry/20 rounded-full blur-xl" />
