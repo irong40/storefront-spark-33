@@ -101,11 +101,11 @@ export default function ProductDetail() {
   // Gift Card Image Logic
   const getGiftCardImage = (amount: number) => {
     const images: Record<number, string> = {
-      25: "/images/products/gift-card-25.jpg",
-      50: "/images/products/gift-card-50.jpg",
-      100: "/images/products/gift-card-100.jpg",
-      150: "/images/products/gift-card-150.jpg",
-      200: "/images/products/gift-card-200.jpg"
+      25: "/images/products/egift-card-25.png",
+      50: "/images/products/egift-card-50.png",
+      100: "/images/products/egift-card-100.png",
+      150: "/images/products/egift-card-150.png",
+      200: "/images/products/egift-card-200.png"
     };
     return images[amount] || product?.image_url;
   };
