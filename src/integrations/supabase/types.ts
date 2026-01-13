@@ -76,27 +76,42 @@ export type Database = {
       }
       cart_items: {
         Row: {
+          addon_ids: string[] | null
           cart_id: string | null
           created_at: string | null
+          gift_card_data: Json | null
           id: string
           product_id: string | null
           quantity: number
+          selected_flavor_ids: string[] | null
+          size_id: string | null
+          size_override_id: string | null
           updated_at: string | null
         }
         Insert: {
+          addon_ids?: string[] | null
           cart_id?: string | null
           created_at?: string | null
+          gift_card_data?: Json | null
           id?: string
           product_id?: string | null
           quantity?: number
+          selected_flavor_ids?: string[] | null
+          size_id?: string | null
+          size_override_id?: string | null
           updated_at?: string | null
         }
         Update: {
+          addon_ids?: string[] | null
           cart_id?: string | null
           created_at?: string | null
+          gift_card_data?: Json | null
           id?: string
           product_id?: string | null
           quantity?: number
+          selected_flavor_ids?: string[] | null
+          size_id?: string | null
+          size_override_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -112,6 +127,20 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_items_size_id_fkey"
+            columns: ["size_id"]
+            isOneToOne: false
+            referencedRelation: "product_sizes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_items_size_override_id_fkey"
+            columns: ["size_override_id"]
+            isOneToOne: false
+            referencedRelation: "product_size_overrides"
             referencedColumns: ["id"]
           },
         ]
@@ -251,6 +280,105 @@ export type Database = {
           marketing_opt_in?: boolean | null
           phone?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      gift_card_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          gift_card_id: string
+          id: string
+          order_id: string | null
+          type: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          gift_card_id: string
+          id?: string
+          order_id?: string | null
+          type: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          gift_card_id?: string
+          id?: string
+          order_id?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gift_card_transactions_gift_card_id_fkey"
+            columns: ["gift_card_id"]
+            isOneToOne: false
+            referencedRelation: "gift_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gift_card_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gift_cards: {
+        Row: {
+          balance: number
+          code: string
+          created_at: string
+          delivered_at: string | null
+          delivery_date: string | null
+          expires_at: string | null
+          id: string
+          message: string | null
+          original_amount: number
+          purchased_at: string
+          purchased_by: string | null
+          recipient_email: string | null
+          recipient_name: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          balance: number
+          code: string
+          created_at?: string
+          delivered_at?: string | null
+          delivery_date?: string | null
+          expires_at?: string | null
+          id?: string
+          message?: string | null
+          original_amount: number
+          purchased_at?: string
+          purchased_by?: string | null
+          recipient_email?: string | null
+          recipient_name?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          balance?: number
+          code?: string
+          created_at?: string
+          delivered_at?: string | null
+          delivery_date?: string | null
+          expires_at?: string | null
+          id?: string
+          message?: string | null
+          original_amount?: number
+          purchased_at?: string
+          purchased_by?: string | null
+          recipient_email?: string | null
+          recipient_name?: string | null
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -792,6 +920,17 @@ export type Database = {
         Args: { lifetime_pts: number }
         Returns: string
       }
+      check_gift_card_balance: {
+        Args: { gift_card_code: string }
+        Returns: {
+          balance: number
+          code: string
+          expires_at: string
+          id: string
+          status: string
+        }[]
+      }
+      generate_gift_card_code: { Args: never; Returns: string }
       generate_reward_code: { Args: never; Returns: string }
       has_role: {
         Args: {
@@ -799,6 +938,18 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      redeem_gift_card: {
+        Args: {
+          for_order_id?: string
+          gift_card_code: string
+          redeem_amount: number
+        }
+        Returns: {
+          message: string
+          remaining_balance: number
+          success: boolean
+        }[]
       }
     }
     Enums: {
