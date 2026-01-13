@@ -11,20 +11,34 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, ShoppingBag, MapPin, Truck, CreditCard } from 'lucide-react';
+import { Loader2, ShoppingBag, MapPin, Truck, CreditCard, Gift, X, Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { SquarePaymentForm, PaymentResult } from '@/components/checkout/SquarePaymentForm';
 import { CHECKOUT_CONFIG } from '@/config/checkout';
+import { useGiftCard } from '@/hooks/use-gift-card';
+
+interface AppliedGiftCard {
+  code: string;
+  amountApplied: number;
+  balance: number;
+}
 
 export default function Checkout() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { items, subtotal, clearCart } = useCart();
   const { user, profile } = useAuth();
+  const { checkBalance, redeemGiftCard, isLoading: giftCardLoading } = useGiftCard();
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fulfillmentType, setFulfillmentType] = useState('pickup');
   const [paymentComplete, setPaymentComplete] = useState(false);
   const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
+  
+  // Gift card state
+  const [giftCardCode, setGiftCardCode] = useState('');
+  const [appliedGiftCards, setAppliedGiftCards] = useState<AppliedGiftCard[]>([]);
+  const [giftCardError, setGiftCardError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     email: profile?.email || user?.email || '',
@@ -39,10 +53,68 @@ export default function Checkout() {
     zip: '',
   });
 
+  // Calculate totals with gift card discount
+  const giftCardDiscount = appliedGiftCards.reduce((sum, gc) => sum + gc.amountApplied, 0);
   const tax = subtotal * CHECKOUT_CONFIG.TAX_RATE;
   const shipping = fulfillmentType === 'delivery' ? CHECKOUT_CONFIG.DELIVERY_FEE : 0;
-  const total = subtotal + tax + shipping;
+  const totalBeforeGiftCard = subtotal + tax + shipping;
+  const total = Math.max(0, totalBeforeGiftCard - giftCardDiscount);
   const totalInCents = Math.round(total * 100);
+
+  // Apply gift card handler
+  const handleApplyGiftCard = async () => {
+    if (!giftCardCode.trim()) return;
+    
+    setGiftCardError(null);
+    
+    // Check if already applied
+    if (appliedGiftCards.some(gc => gc.code.toUpperCase() === giftCardCode.toUpperCase())) {
+      setGiftCardError('This gift card has already been applied');
+      return;
+    }
+    
+    const result = await checkBalance(giftCardCode.trim());
+    
+    if (!result) {
+      setGiftCardError('Gift card not found or expired');
+      return;
+    }
+    
+    if (result.status !== 'active') {
+      setGiftCardError('This gift card is no longer active');
+      return;
+    }
+    
+    if (result.balance <= 0) {
+      setGiftCardError('This gift card has no remaining balance');
+      return;
+    }
+    
+    // Calculate how much to apply (remaining total after other gift cards)
+    const remainingTotal = totalBeforeGiftCard - appliedGiftCards.reduce((sum, gc) => sum + gc.amountApplied, 0);
+    const amountToApply = Math.min(result.balance, remainingTotal);
+    
+    if (amountToApply <= 0) {
+      setGiftCardError('Order is already fully covered by other gift cards');
+      return;
+    }
+    
+    setAppliedGiftCards(prev => [...prev, {
+      code: result.code,
+      amountApplied: amountToApply,
+      balance: result.balance,
+    }]);
+    
+    setGiftCardCode('');
+    toast({
+      title: 'Gift Card Applied',
+      description: `$${amountToApply.toFixed(2)} will be deducted from your order.`,
+    });
+  };
+
+  const removeGiftCard = (code: string) => {
+    setAppliedGiftCards(prev => prev.filter(gc => gc.code !== code));
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData(prev => ({
@@ -74,6 +146,15 @@ export default function Checkout() {
       title: 'Payment Failed',
       description: message,
       variant: 'destructive',
+    });
+  };
+
+  // Handle zero-dollar orders (fully covered by gift cards)
+  const handleZeroPaymentOrder = async () => {
+    await createOrder({
+      paymentId: `GC-${Date.now()}`, // Gift card payment reference
+      status: 'COMPLETED',
+      cardDetails: undefined,
     });
   };
 
@@ -138,6 +219,11 @@ export default function Checkout() {
 
       if (itemsError) throw itemsError;
 
+      // Redeem applied gift cards
+      for (const gc of appliedGiftCards) {
+        await redeemGiftCard(gc.code, gc.amountApplied, order.id);
+      }
+
       // Send order confirmation email (non-blocking)
       supabase.functions.invoke('send-order-confirmation', {
         body: {
@@ -153,6 +239,7 @@ export default function Checkout() {
           subtotal,
           tax,
           shipping,
+          giftCardDiscount,
           total,
           fulfillmentType,
           paymentStatus: 'completed',
@@ -391,13 +478,44 @@ export default function Checkout() {
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    Payment Successful
+                    {total === 0 ? 'Order Placed' : 'Payment Successful'}
                   </div>
                   {paymentResult?.cardDetails && (
                     <p className="text-sm text-muted-foreground mt-1">
                       {paymentResult.cardDetails.brand} ending in {paymentResult.cardDetails.last4}
                     </p>
                   )}
+                  {total === 0 && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Fully paid with gift card
+                    </p>
+                  )}
+                </div>
+              ) : total === 0 ? (
+                <div className="space-y-4">
+                  <div className="p-4 bg-brand-olive/10 border border-brand-olive/20 rounded-xl">
+                    <div className="flex items-center gap-2 text-brand-olive font-medium">
+                      <Gift className="h-5 w-5" />
+                      No payment required
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Your order is fully covered by gift card(s).
+                    </p>
+                  </div>
+                  <Button
+                    onClick={handleZeroPaymentOrder}
+                    disabled={isSubmitting}
+                    className="w-full bg-brand-berry hover:bg-brand-berry/90"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Placing Order...
+                      </>
+                    ) : (
+                      'Place Order'
+                    )}
+                  </Button>
                 </div>
               ) : (
                 <SquarePaymentForm
@@ -444,6 +562,76 @@ export default function Checkout() {
 
               <Separator className="my-4" />
 
+              {/* Gift Card Section */}
+              <div className="mb-4">
+                <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
+                  <Gift className="h-4 w-4 text-brand-olive" />
+                  Gift Card
+                </h3>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Enter gift card code"
+                    value={giftCardCode}
+                    onChange={(e) => {
+                      setGiftCardCode(e.target.value.toUpperCase());
+                      setGiftCardError(null);
+                    }}
+                    disabled={isSubmitting || paymentComplete || giftCardLoading}
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleApplyGiftCard}
+                    disabled={!giftCardCode.trim() || isSubmitting || paymentComplete || giftCardLoading}
+                    className="shrink-0"
+                  >
+                    {giftCardLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      'Apply'
+                    )}
+                  </Button>
+                </div>
+                {giftCardError && (
+                  <p className="text-sm text-destructive mt-1">{giftCardError}</p>
+                )}
+                
+                {/* Applied Gift Cards */}
+                {appliedGiftCards.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {appliedGiftCards.map((gc) => (
+                      <div
+                        key={gc.code}
+                        className="flex items-center justify-between p-2 bg-brand-olive/10 rounded-lg text-sm"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Check className="h-4 w-4 text-brand-olive" />
+                          <span className="font-mono">{gc.code}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-brand-olive font-medium">
+                            -${gc.amountApplied.toFixed(2)}
+                          </span>
+                          {!paymentComplete && (
+                            <button
+                              type="button"
+                              onClick={() => removeGiftCard(gc.code)}
+                              className="text-muted-foreground hover:text-destructive transition-colors"
+                              aria-label="Remove gift card"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <Separator className="my-4" />
+
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Subtotal</span>
@@ -457,6 +645,12 @@ export default function Checkout() {
                   <span className="text-muted-foreground">Shipping</span>
                   <span>{shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}</span>
                 </div>
+                {giftCardDiscount > 0 && (
+                  <div className="flex justify-between text-brand-olive">
+                    <span>Gift Card</span>
+                    <span>-${giftCardDiscount.toFixed(2)}</span>
+                  </div>
+                )}
               </div>
 
               <Separator className="my-4" />
