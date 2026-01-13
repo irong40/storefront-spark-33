@@ -254,6 +254,192 @@ export type Database = {
         }
         Relationships: []
       }
+      loyalty_members: {
+        Row: {
+          id: string
+          joined_at: string
+          lifetime_points: number
+          points_balance: number
+          tier: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          lifetime_points?: number
+          points_balance?: number
+          tier?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          lifetime_points?: number
+          points_balance?: number
+          tier?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      loyalty_redemptions: {
+        Row: {
+          code: string
+          created_at: string
+          expires_at: string
+          id: string
+          member_id: string
+          order_id: string | null
+          points_spent: number
+          reward_id: string
+          status: string
+          used_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          member_id: string
+          order_id?: string | null
+          points_spent: number
+          reward_id: string
+          status?: string
+          used_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          member_id?: string
+          order_id?: string | null
+          points_spent?: number
+          reward_id?: string
+          status?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_redemptions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "loyalty_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loyalty_redemptions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loyalty_redemptions_reward_id_fkey"
+            columns: ["reward_id"]
+            isOneToOne: false
+            referencedRelation: "loyalty_rewards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loyalty_rewards: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          id: string
+          min_order_amount: number
+          name: string
+          points_required: number
+          product_id: string | null
+          reward_type: string
+          reward_value: number | null
+          sort_order: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          min_order_amount?: number
+          name: string
+          points_required: number
+          product_id?: string | null
+          reward_type: string
+          reward_value?: number | null
+          sort_order?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          min_order_amount?: number
+          name?: string
+          points_required?: number
+          product_id?: string | null
+          reward_type?: string
+          reward_value?: number | null
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_rewards_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loyalty_transactions: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          member_id: string
+          order_id: string | null
+          points: number
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          member_id: string
+          order_id?: string | null
+          points: number
+          type: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          member_id?: string
+          order_id?: string | null
+          points?: number
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_transactions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "loyalty_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loyalty_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           created_at: string | null
@@ -486,6 +672,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_loyalty_tier: {
+        Args: { lifetime_pts: number }
+        Returns: string
+      }
+      generate_reward_code: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
