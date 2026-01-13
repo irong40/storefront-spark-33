@@ -1,7 +1,5 @@
-// Product variant hooks - stubbed until database tables are created
-// TODO: Create product_sizes, product_addons, product_size_overrides tables
-
 import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface ProductSize {
   id: string;
@@ -33,14 +31,22 @@ export interface ProductSizeOverride {
   active: boolean;
 }
 
-// Stub hooks - return empty data until tables exist
-
 export function useProductSizes() {
   return useQuery({
     queryKey: ['product-sizes'],
     queryFn: async (): Promise<ProductSize[]> => {
-      // TODO: Implement when product_sizes table exists
-      return [];
+      const { data, error } = await supabase
+        .from('product_sizes')
+        .select('*')
+        .eq('active', true)
+        .order('sort_order', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching product sizes:', error);
+        return [];
+      }
+
+      return data as ProductSize[];
     },
   });
 }
@@ -49,8 +55,18 @@ export function useProductAddons() {
   return useQuery({
     queryKey: ['product-addons'],
     queryFn: async (): Promise<ProductAddon[]> => {
-      // TODO: Implement when product_addons table exists
-      return [];
+      const { data, error } = await supabase
+        .from('product_addons')
+        .select('*')
+        .eq('active', true)
+        .order('sort_order', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching product addons:', error);
+        return [];
+      }
+
+      return data as ProductAddon[];
     },
   });
 }
@@ -59,9 +75,54 @@ export function useProductSizeOverrides(productId: string) {
   return useQuery({
     queryKey: ['product-size-overrides', productId],
     queryFn: async (): Promise<ProductSizeOverride[]> => {
-      // TODO: Implement when product_size_overrides table exists
-      return [];
+      if (!productId) return [];
+
+      const { data, error } = await supabase
+        .from('product_size_overrides')
+        .select('*')
+        .eq('product_id', productId)
+        .eq('active', true)
+        .order('sort_order', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching product size overrides:', error);
+        return [];
+      }
+
+      return data as ProductSizeOverride[];
     },
     enabled: !!productId,
   });
+}
+
+// Helper to get effective sizes for a product (overrides or global)
+export function useEffectiveProductSizes(productId: string) {
+  const { data: globalSizes, isLoading: globalLoading } = useProductSizes();
+  const { data: overrides, isLoading: overridesLoading } = useProductSizeOverrides(productId);
+
+  const effectiveSizes = overrides && overrides.length > 0
+    ? overrides.map(o => ({
+        id: o.id,
+        name: o.size_name,
+        size_oz: o.size_oz,
+        price: o.price,
+        sort_order: o.sort_order,
+        is_subscription: o.is_subscription,
+        subscription_interval: o.subscription_interval,
+      }))
+    : globalSizes?.map(s => ({
+        id: s.id,
+        name: s.name,
+        size_oz: s.size_oz,
+        price: s.price,
+        sort_order: s.sort_order,
+        is_subscription: false,
+        subscription_interval: null,
+      })) || [];
+
+  return {
+    sizes: effectiveSizes,
+    isLoading: globalLoading || overridesLoading,
+    hasOverrides: (overrides?.length || 0) > 0,
+  };
 }

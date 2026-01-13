@@ -557,6 +557,122 @@ export type Database = {
         }
         Relationships: []
       }
+      product_addons: {
+        Row: {
+          active: boolean
+          created_at: string
+          display_name: string
+          id: string
+          name: string
+          price: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          display_name: string
+          id?: string
+          name: string
+          price?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          display_name?: string
+          id?: string
+          name?: string
+          price?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      product_size_overrides: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          is_subscription: boolean
+          price: number
+          product_id: string
+          size_name: string
+          size_oz: number | null
+          sort_order: number
+          subscription_interval: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          is_subscription?: boolean
+          price: number
+          product_id: string
+          size_name: string
+          size_oz?: number | null
+          sort_order?: number
+          subscription_interval?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          is_subscription?: boolean
+          price?: number
+          product_id?: string
+          size_name?: string
+          size_oz?: number | null
+          sort_order?: number
+          subscription_interval?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_size_overrides_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_sizes: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+          price: number
+          size_oz: number | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          price: number
+          size_oz?: number | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          price?: number
+          size_oz?: number | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           active: boolean | null
