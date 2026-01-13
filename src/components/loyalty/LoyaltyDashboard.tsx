@@ -74,10 +74,12 @@ export function LoyaltyDashboard() {
     const handleRedeem = async (rewardId: string) => {
         try {
             const result = await redeemMutation.mutateAsync(rewardId);
-            toast({
-                title: 'Reward Redeemed!',
-                description: `Your code: ${result.code}`,
-            });
+            if (result && 'code' in result) {
+                toast({
+                    title: 'Reward Redeemed!',
+                    description: `Your code: ${result.code}`,
+                });
+            }
         } catch (error) {
             toast({
                 title: 'Error',

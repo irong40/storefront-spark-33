@@ -91,7 +91,7 @@ export function GiftCardForm({ productId }: GiftCardFormProps) {
                 };
 
                 // Add to cart with gift card data
-                await addItem(productId, 1, undefined, [], sizeOverride?.id);
+                await addItem(productId, 1, undefined, sizeOverride?.id, [], giftCardData);
             }
         } finally {
             setIsSubmitting(false);
