@@ -1,8 +1,7 @@
-// Loyalty feature hooks - stubbed until database tables are created
-// TODO: Create loyalty_members, loyalty_transactions, loyalty_rewards, loyalty_redemptions tables
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export interface LoyaltyMember {
   id: string;
@@ -11,6 +10,7 @@ export interface LoyaltyMember {
   lifetime_points: number;
   tier: 'bronze' | 'silver' | 'gold' | 'platinum';
   joined_at: string;
+  updated_at: string;
 }
 
 export interface LoyaltyTransaction {
@@ -33,6 +33,7 @@ export interface LoyaltyReward {
   product_id: string | null;
   min_order_amount: number;
   active: boolean;
+  sort_order: number;
 }
 
 export interface LoyaltyRedemption {
@@ -43,10 +44,10 @@ export interface LoyaltyRedemption {
   code: string;
   status: 'active' | 'used' | 'expired';
   expires_at: string;
+  used_at: string | null;
+  created_at: string;
   reward?: LoyaltyReward;
 }
-
-// Stub hooks - return empty/null data until loyalty tables are created
 
 export function useLoyaltyMember() {
   const { user } = useAuth();
@@ -54,23 +55,49 @@ export function useLoyaltyMember() {
   return useQuery({
     queryKey: ['loyalty-member', user?.id],
     queryFn: async (): Promise<LoyaltyMember | null> => {
-      // TODO: Implement when loyalty_members table exists
-      return null;
+      if (!user) return null;
+
+      const { data, error } = await supabase
+        .from('loyalty_members')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching loyalty member:', error);
+        return null;
+      }
+
+      return data as LoyaltyMember | null;
     },
     enabled: !!user,
   });
 }
 
-export function useLoyaltyTransactions(_limit = 10) {
+export function useLoyaltyTransactions(limit = 10) {
   const { user } = useAuth();
+  const { data: member } = useLoyaltyMember();
 
   return useQuery({
-    queryKey: ['loyalty-transactions', user?.id],
+    queryKey: ['loyalty-transactions', member?.id, limit],
     queryFn: async (): Promise<LoyaltyTransaction[]> => {
-      // TODO: Implement when loyalty_transactions table exists
-      return [];
+      if (!member) return [];
+
+      const { data, error } = await supabase
+        .from('loyalty_transactions')
+        .select('*')
+        .eq('member_id', member.id)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+      if (error) {
+        console.error('Error fetching loyalty transactions:', error);
+        return [];
+      }
+
+      return data as LoyaltyTransaction[];
     },
-    enabled: !!user,
+    enabled: !!user && !!member,
   });
 }
 
@@ -78,36 +105,183 @@ export function useLoyaltyRewards() {
   return useQuery({
     queryKey: ['loyalty-rewards'],
     queryFn: async (): Promise<LoyaltyReward[]> => {
-      // TODO: Implement when loyalty_rewards table exists
-      return [];
+      const { data, error } = await supabase
+        .from('loyalty_rewards')
+        .select('*')
+        .eq('active', true)
+        .order('sort_order', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching loyalty rewards:', error);
+        return [];
+      }
+
+      return data as LoyaltyReward[];
     },
   });
 }
 
 export function useLoyaltyRedemptions() {
   const { user } = useAuth();
+  const { data: member } = useLoyaltyMember();
 
   return useQuery({
-    queryKey: ['loyalty-redemptions', user?.id],
+    queryKey: ['loyalty-redemptions', member?.id],
     queryFn: async (): Promise<LoyaltyRedemption[]> => {
-      // TODO: Implement when loyalty_redemptions table exists
-      return [];
+      if (!member) return [];
+
+      const { data, error } = await supabase
+        .from('loyalty_redemptions')
+        .select(`
+          *,
+          reward:loyalty_rewards(*)
+        `)
+        .eq('member_id', member.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching loyalty redemptions:', error);
+        return [];
+      }
+
+      return data as LoyaltyRedemption[];
     },
-    enabled: !!user,
+    enabled: !!user && !!member,
   });
 }
 
 export function useRedeemReward() {
   const queryClient = useQueryClient();
+  const { data: member } = useLoyaltyMember();
 
   return useMutation({
-    mutationFn: async (_rewardId: string): Promise<{ code: string }> => {
-      // TODO: Implement when loyalty tables exist
-      throw new Error('Loyalty feature coming soon!');
+    mutationFn: async (rewardId: string): Promise<{ code: string }> => {
+      if (!member) {
+        throw new Error('You must be a loyalty member to redeem rewards');
+      }
+
+      // Fetch the reward to validate
+      const { data: reward, error: rewardError } = await supabase
+        .from('loyalty_rewards')
+        .select('*')
+        .eq('id', rewardId)
+        .single();
+
+      if (rewardError || !reward) {
+        throw new Error('Reward not found');
+      }
+
+      if (member.points_balance < reward.points_required) {
+        throw new Error(`You need ${reward.points_required - member.points_balance} more points to redeem this reward`);
+      }
+
+      // Create the redemption (code is auto-generated by trigger)
+      const { data: redemption, error: redemptionError } = await supabase
+        .from('loyalty_redemptions')
+        .insert({
+          member_id: member.id,
+          reward_id: rewardId,
+          points_spent: reward.points_required,
+          code: '', // Will be set by trigger
+        })
+        .select()
+        .single();
+
+      if (redemptionError) {
+        console.error('Redemption error:', redemptionError);
+        throw new Error('Failed to redeem reward');
+      }
+
+      // Deduct points from member
+      const newBalance = member.points_balance - reward.points_required;
+      const { error: updateError } = await supabase
+        .from('loyalty_members')
+        .update({ points_balance: newBalance })
+        .eq('id', member.id);
+
+      if (updateError) {
+        console.error('Update error:', updateError);
+        // Try to rollback the redemption
+        await supabase.from('loyalty_redemptions').delete().eq('id', redemption.id);
+        throw new Error('Failed to update points balance');
+      }
+
+      // Create transaction record
+      await supabase.from('loyalty_transactions').insert({
+        member_id: member.id,
+        type: 'redeem',
+        points: -reward.points_required,
+        description: `Redeemed: ${reward.name}`,
+      });
+
+      return { code: redemption.code };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      toast.success(`Reward redeemed! Your code: ${data.code}`);
       queryClient.invalidateQueries({ queryKey: ['loyalty-member'] });
       queryClient.invalidateQueries({ queryKey: ['loyalty-redemptions'] });
+      queryClient.invalidateQueries({ queryKey: ['loyalty-transactions'] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+}
+
+export function useJoinLoyalty() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async (): Promise<LoyaltyMember> => {
+      if (!user) {
+        throw new Error('You must be logged in to join the loyalty program');
+      }
+
+      // Check if already a member
+      const { data: existing } = await supabase
+        .from('loyalty_members')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (existing) {
+        return existing as LoyaltyMember;
+      }
+
+      // Create new member with 25 bonus points
+      const { data, error } = await supabase
+        .from('loyalty_members')
+        .insert({
+          user_id: user.id,
+          points_balance: 25,
+          lifetime_points: 25,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Join loyalty error:', error);
+        throw new Error('Failed to join loyalty program');
+      }
+
+      // Create welcome bonus transaction
+      await supabase.from('loyalty_transactions').insert({
+        member_id: data.id,
+        type: 'bonus',
+        points: 25,
+        description: 'Welcome bonus for joining the loyalty program',
+      });
+
+      return data as LoyaltyMember;
+    },
+    onSuccess: () => {
+      toast.success('Welcome to our loyalty program! You earned 25 bonus points!');
+      queryClient.invalidateQueries({ queryKey: ['loyalty-member'] });
+      queryClient.invalidateQueries({ queryKey: ['loyalty-transactions'] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
     },
   });
 }

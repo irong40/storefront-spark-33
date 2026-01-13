@@ -4,7 +4,7 @@ import {
     useLoyaltyRewards,
     useLoyaltyRedemptions,
     useRedeemReward,
-    getTier,
+    useJoinLoyalty,
     getPointsToNextTier
 } from '@/hooks/use-loyalty';
 import { useAuth } from '@/contexts/AuthContext';
@@ -39,7 +39,11 @@ export function LoyaltyDashboard() {
     const { data: rewards, isLoading: rewardsLoading } = useLoyaltyRewards();
     const { data: redemptions } = useLoyaltyRedemptions();
     const redeemMutation = useRedeemReward();
+    const joinMutation = useJoinLoyalty();
     const { toast } = useToast();
+
+    // Filter only active redemptions
+    const activeRedemptions = redemptions?.filter(r => r.status === 'active') || [];
 
     if (!user) {
         return (
@@ -64,6 +68,28 @@ export function LoyaltyDashboard() {
                 <Skeleton className="h-48 w-full rounded-xl" />
                 <Skeleton className="h-64 w-full rounded-xl" />
             </div>
+        );
+    }
+
+    // Show join card for logged in users who aren't members yet
+    if (!member) {
+        return (
+            <Card className="text-center py-12">
+                <CardContent>
+                    <Gift className="h-16 w-16 mx-auto mb-4 text-primary" />
+                    <h2 className="text-2xl font-bold mb-2">Join Our Loyalty Program</h2>
+                    <p className="text-muted-foreground mb-6">
+                        Join now and get <strong>25 bonus points</strong> instantly!
+                    </p>
+                    <Button 
+                        size="lg" 
+                        onClick={() => joinMutation.mutate()}
+                        disabled={joinMutation.isPending}
+                    >
+                        {joinMutation.isPending ? 'Joining...' : 'Join Now & Earn Points'}
+                    </Button>
+                </CardContent>
+            </Card>
         );
     }
 
@@ -149,7 +175,7 @@ export function LoyaltyDashboard() {
             </Card>
 
             {/* Active Reward Codes */}
-            {redemptions && redemptions.length > 0 && (
+            {activeRedemptions.length > 0 && (
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
@@ -158,7 +184,7 @@ export function LoyaltyDashboard() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                        {redemptions.map((redemption) => (
+                        {activeRedemptions.map((redemption) => (
                             <div
                                 key={redemption.id}
                                 className="flex items-center justify-between p-3 bg-muted rounded-lg"
