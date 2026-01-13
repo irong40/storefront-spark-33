@@ -50,14 +50,13 @@ export function ProductCard({ product }: ProductCardProps) {
           </p>
         )}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="font-heading font-bold text-lg text-brand-berry">${Number(product.price).toFixed(2)}</span>
-            {hasDiscount && (
-              <span className="text-sm text-muted-foreground line-through">
-                ${Number(product.compare_at_price).toFixed(2)}
-              </span>
-            )}
-          </div>
+          {/* Price Hidden by Request */}
+          <span className="text-sm font-medium text-muted-foreground">Select Size</span>
+          {hasDiscount && (
+            <span className="text-sm text-muted-foreground line-through ml-2">
+              Sale
+            </span>
+          )}
           <AddToCartButton productId={product.id} size="sm" />
         </div>
       </CardContent>

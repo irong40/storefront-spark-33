@@ -15,9 +15,9 @@ export function Footer() {
           {/* Brand */}
           <div className="lg:col-span-1">
             <Link to="/" className="flex items-center mb-4">
-              <img 
-                src={logo} 
-                alt="imPRESSive Juice Bar" 
+              <img
+                src={logo}
+                alt="imPRESSive Juice Bar"
                 className="h-16 w-auto object-contain"
               />
             </Link>
@@ -25,18 +25,18 @@ export function Footer() {
               Cold-Pressed Happiness
             </p>
             <p className="text-white/70 text-[15px] mb-6">
-              {business?.description || 'Fresh, organic, cold-pressed juices crafted daily with love for your wellness journey.'}
+              {business?.description || "100% cold pressed juice. No added sugar. No dilution. No Preservatives."}
             </p>
             {/* Social */}
             <div className="flex gap-3">
-              <a 
-                href={business?.social_links?.instagram || '#'} 
+              <a
+                href={business?.social_links?.instagram || '#'}
                 className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center transition-all hover:bg-brand-berry hover:-translate-y-1"
               >
                 <Instagram className="h-5 w-5" />
               </a>
-              <a 
-                href={business?.social_links?.facebook || '#'} 
+              <a
+                href={business?.social_links?.facebook || '#'}
                 className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center transition-all hover:bg-brand-berry hover:-translate-y-1"
               >
                 <Facebook className="h-5 w-5" />
@@ -51,8 +51,8 @@ export function Footer() {
               <li><Link to="/products" className="text-white/70 hover:text-brand-berry transition-colors">All Products</Link></li>
               {categories?.slice(0, 4).map((category) => (
                 <li key={category.id}>
-                  <Link 
-                    to={`/products?category=${category.slug}`} 
+                  <Link
+                    to={`/products?category=${category.slug}`}
                     className="text-white/70 hover:text-brand-berry transition-colors"
                   >
                     {category.name}
@@ -77,6 +77,7 @@ export function Footer() {
             <h4 className="text-sm font-semibold uppercase tracking-widest mb-6">Support</h4>
             <ul className="space-y-3">
               <li><Link to="/account" className="text-white/70 hover:text-brand-berry transition-colors">My Account</Link></li>
+              <li><Link to="/gift-cards/balance" className="text-white/70 hover:text-brand-berry transition-colors">Check Gift Card Balance</Link></li>
               <li><a href="#" className="text-white/70 hover:text-brand-berry transition-colors">Shipping Info</a></li>
               <li><a href="#" className="text-white/70 hover:text-brand-berry transition-colors">Returns</a></li>
               <li><a href="#" className="text-white/70 hover:text-brand-berry transition-colors">FAQ</a></li>

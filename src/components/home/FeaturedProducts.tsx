@@ -5,42 +5,56 @@ import { ArrowRight, Plus } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCart } from '@/contexts/CartContext';
 
-const productEmojis: Record<string, string> = {
+const productImages: Record<string, string> = {
   // Sweet Treats
+  'kiwi-kwencher': '/images/products/06-kiwi-kwencher.jpg',
+  'pomegranate-pearadise': '/images/products/07-pomegranate-pearadise.jpg',
+  'apple-mango-tango': '/images/products/09-apple-mango-tango.jpg',
+  'very-very-green-goddess': '/images/products/11-green-goddess.jpg',
+  'very-berry': '/images/products/10-very-berry.jpg',
+  'summer-breeze': '/images/products/12-summer-breeze.jpg',
+  // Wellness Shots
+  'wellness-shot-turmeric': '/images/products/13-wellness-shot-turmeric.jpg',
+  'wellness-shot-kale': '/images/products/14-wellness-shot-kale.jpg',
+  'wellness-shot-ginger': '/images/products/16-wellness-shot-ginger.jpg',
+  'wellness-shot-beet': '/images/products/15-wellness-shot-beet.jpg',
+  // Energy & Immunity
+  'glowin': '/images/products/17-glowin.jpg',
+  'immunity-boost': '/images/products/18-immunity-boost.jpg',
+  'ginger-ale': '/images/products/19-ginger-ale.jpg',
+  'bleeding-heart': '/images/products/20-bleeding-heart.jpg',
+  'beets-me': '/images/products/21-beets-me.jpg',
+  // Detox & Fat Burners
+  'morning-detox': '/images/products/22-morning-detox.jpg',
+  'pineapple-express': '/images/products/23-pineapple-express.jpg',
+  'citrus-blast': '/images/products/24-citrus-blast.jpg',
+  'oh-sht': '/images/products/25-oh-snap.jpg',
+  'kale-yea': '/images/products/26-kale-yeah.jpg',
+  'lemon-drop': '/images/products/27-lemon-drop.jpg',
+  'the-cure': '/images/products/28-the-cure.jpg',
+  // Detox Packages
+  '1-day-detox': '/images/products/04-1-day-detox-pack.jpg',
+  '3-day-detox': '/images/products/05-1-day-detox-variety.jpg',
+  // Subscriptions
+  'wellness-shot-subscription': '/images/products/29-wellness-shot-subscription.jpg',
+  'gallon-subscription': '/images/products/31-gallon-subscription.jpg',
+  '3-pack-subscription': '/images/products/30-3-pack-subscription.jpg',
+};
+
+const productEmojis: Record<string, string> = {
+  // Fallbacks
   'kiwi-kwencher': '🥝',
   'pomegranate-pearadise': '🍐',
-  'apple-mango-tango': '🥭',
-  'very-very-green-goddess': '🥬',
-  // Wellness Shots
-  'wellness-shot-turmeric': '🧡',
-  'wellness-shot-kale': '🥗',
-  'wellness-shot-ginger': '🫚',
-  'wellness-shot-beet': '🔴',
-  // Energy & Immunity
-  'glowin': '✨',
-  'immunity-boost': '🛡️',
-  'ginger-ale': '🫚',
-  'bleeding-heart': '❤️',
-  'beets-me': '💜',
-  // Detox & Fat Burners
-  'morning-detox': '🌅',
-  'pineapple-express': '🍍',
-  'oh-sht': '💥',
-  'kale-yea': '🥬',
-  'lemon-drop': '🍋',
-  'the-cure': '💊',
-  // Detox Packages
-  '1-day-detox': '📦',
-  '3-day-detox': '📦',
-  // Subscriptions
-  'wellness-shot-subscription': '💉',
-  'gallon-subscription': '🥛',
-  '3-pack-subscription': '🎁',
+  // ... (keep limited fallback if needed, or rely on default)
 };
 
 export function FeaturedProducts() {
   const { data: products, isLoading } = useFeaturedProducts();
   const { addItem } = useCart();
+
+  const getProductImage = (slug: string) => {
+    return productImages[slug] || null;
+  };
 
   const getEmoji = (slug: string) => {
     return productEmojis[slug] || '🧃';
@@ -80,57 +94,70 @@ export function FeaturedProducts() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {products?.map((product, index) => (
-              <div
-                key={product.id}
-                className="group bg-background rounded-3xl p-6 text-center transition-all duration-300 hover:-translate-y-2 hover:shadow-lifted relative overflow-hidden"
-              >
-                {/* Top gradient border on hover */}
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand-berry to-brand-mustard transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
+            {products?.map((product, index) => {
+              const imageSrc = product.image_url || getProductImage(product.slug);
 
-                {/* Image placeholder */}
-                <Link to={`/products/${product.slug}`}>
-                  <div className="relative w-28 h-36 mx-auto mb-4 bg-gradient-to-br from-brand-cream-dark to-brand-terracotta rounded-2xl flex items-center justify-center text-5xl">
-                    {getEmoji(product.slug)}
-                    {index === 0 && (
-                      <span className="absolute -top-2 -right-2 bg-brand-berry text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">
-                        Popular
-                      </span>
-                    )}
-                    {index === 3 && (
-                      <span className="absolute -top-2 -right-2 bg-brand-olive text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">
-                        New
-                      </span>
-                    )}
+              return (
+                <div
+                  key={product.id}
+                  className="group bg-background rounded-3xl p-6 text-center transition-all duration-300 hover:-translate-y-2 hover:shadow-lifted relative overflow-hidden flex flex-col h-full"
+                >
+                  {/* Top gradient border on hover */}
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand-berry to-brand-mustard transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
+
+                  {/* Image */}
+                  <Link to={`/products/${product.slug}`} className="block mb-4">
+                    <div className="relative w-full aspect-[4/5] mx-auto bg-gradient-to-br from-brand-cream-dark to-brand-terracotta/20 rounded-2xl overflow-hidden flex items-center justify-center">
+                      {imageSrc ? (
+                        <img
+                          src={imageSrc}
+                          alt={product.name}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        />
+                      ) : (
+                        <span className="text-6xl">{getEmoji(product.slug)}</span>
+                      )}
+
+                      {index === 0 && (
+                        <span className="absolute top-3 right-3 bg-brand-berry text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider shadow-sm z-10">
+                          Popular
+                        </span>
+                      )}
+                      {index === 3 && (
+                        <span className="absolute top-3 right-3 bg-brand-olive text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider shadow-sm z-10">
+                          New
+                        </span>
+                      )}
+                    </div>
+                  </Link>
+
+                  {/* Product info */}
+                  <div className="flex-1 flex flex-col">
+                    <Link to={`/products/${product.slug}`}>
+                      <h3 className="font-display text-xl font-semibold text-brand-brown mb-1 group-hover:text-brand-berry transition-colors">
+                        {product.name}
+                      </h3>
+                    </Link>
+                    <p className="text-sm text-brand-warm-gray mb-4 line-clamp-2">
+                      {product.ingredients || product.short_description}
+                    </p>
+
+                    <div className="mt-auto flex items-center justify-between">
+                      <div className="font-display text-lg font-medium text-brand-olive">
+                        Select Size
+                      </div>
+                      <Button
+                        size="icon"
+                        className="rounded-full bg-brand-berry hover:bg-brand-berry-dark hover:scale-110 transition-all shadow-sm"
+                        onClick={() => addItem(product.id)}
+                      >
+                        <Plus className="h-5 w-5" />
+                      </Button>
+                    </div>
                   </div>
-                </Link>
-
-                {/* Product info */}
-                <Link to={`/products/${product.slug}`}>
-                  <h3 className="font-display text-xl font-semibold text-brand-brown mb-1">
-                    {product.name}
-                  </h3>
-                </Link>
-                <p className="text-sm text-brand-warm-gray mb-4 line-clamp-1">
-                  {product.ingredients || product.short_description}
-                </p>
-
-                {/* Footer */}
-                <div className="flex items-center justify-between">
-                  <div className="font-display text-2xl font-semibold text-brand-olive">
-                    ${product.price.toFixed(2)}
-                    <span className="text-sm text-brand-warm-gray font-normal"> / 16oz</span>
-                  </div>
-                  <Button
-                    size="icon"
-                    className="rounded-full bg-brand-berry hover:bg-brand-berry-dark hover:scale-110 transition-all"
-                    onClick={() => addItem(product.id)}
-                  >
-                    <Plus className="h-5 w-5" />
-                  </Button>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
 

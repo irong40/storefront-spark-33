@@ -25,7 +25,7 @@ export function FlavorSelector({
         // Only include products from "juice" categories
         const juiceCategories = ['sweet-treats', 'energy-immunity-booster', 'detox-fat-burners'];
         // This would need the category slug - for now we'll use a simple check
-        return p.is_available && p.active;
+        return p.is_available && p.active && p.category?.slug && juiceCategories.includes(p.category.slug);
     }) || [];
 
     const handleFlavorToggle = (product: Product) => {

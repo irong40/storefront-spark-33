@@ -42,6 +42,14 @@ export interface HourlyDistribution {
   count: number;
 }
 
+// Type for Supabase joined product data
+interface JoinedProductData {
+  id?: string;
+  name?: string;
+  image_url?: string | null;
+  categories?: { name: string } | null;
+}
+
 export interface RecentOrder {
   id: string;
   order_number: string;
@@ -57,7 +65,7 @@ export type TimePeriod = 'week' | 'month' | 'year';
 function getDateRange(period: TimePeriod): { start: Date; end: Date; previousStart: Date; previousEnd: Date } {
   const now = new Date();
   const today = startOfDay(now);
-  
+
   switch (period) {
     case 'week':
       return {
@@ -116,12 +124,12 @@ export function useRevenueStats(period: TimePeriod = 'month') {
       const previousRevenue = previousOrders?.reduce((sum, o) => sum + Number(o.total), 0) || 0;
       const previousOrderCount = previousOrders?.length || 0;
 
-      const revenueChange = previousRevenue > 0 
-        ? ((totalRevenue - previousRevenue) / previousRevenue) * 100 
+      const revenueChange = previousRevenue > 0
+        ? ((totalRevenue - previousRevenue) / previousRevenue) * 100
         : totalRevenue > 0 ? 100 : 0;
-      
-      const orderChange = previousOrderCount > 0 
-        ? ((orderCount - previousOrderCount) / previousOrderCount) * 100 
+
+      const orderChange = previousOrderCount > 0
+        ? ((orderCount - previousOrderCount) / previousOrderCount) * 100
         : orderCount > 0 ? 100 : 0;
 
       return {
@@ -153,7 +161,7 @@ export function useCustomerStats(period: TimePeriod = 'month') {
       if (allError) throw allError;
 
       const orders = allOrders || [];
-      
+
       // Track first order date for each customer
       const customerFirstOrder: Record<string, Date> = {};
       const customerOrderCounts: Record<string, number> = {};
@@ -161,7 +169,7 @@ export function useCustomerStats(period: TimePeriod = 'month') {
       orders.forEach(order => {
         const email = order.email.toLowerCase();
         const orderDate = new Date(order.created_at!);
-        
+
         if (!customerFirstOrder[email] || orderDate < customerFirstOrder[email]) {
           customerFirstOrder[email] = orderDate;
         }
@@ -183,8 +191,8 @@ export function useCustomerStats(period: TimePeriod = 'month') {
         .filter(([_, date]) => date >= previousStart && date <= previousEnd)
         .length;
 
-      const customerChange = previousNewCustomers > 0 
-        ? ((newCustomers - previousNewCustomers) / previousNewCustomers) * 100 
+      const customerChange = previousNewCustomers > 0
+        ? ((newCustomers - previousNewCustomers) / previousNewCustomers) * 100
         : newCustomers > 0 ? 100 : 0;
 
       return {
@@ -227,7 +235,7 @@ export function useTopProducts(limit: number = 5) {
       orderItems?.forEach(item => {
         const productId = item.product_id || item.product_name;
         if (!productMap[productId]) {
-          const product = item.products as any;
+          const product = item.products as JoinedProductData | null;
           productMap[productId] = {
             id: item.product_id || '',
             name: product?.name || item.product_name,
@@ -283,7 +291,7 @@ export function useSalesTimeSeries(period: TimePeriod = 'month') {
       }
 
       const dataMap: Record<string, TimeSeriesData> = {};
-      
+
       intervals.forEach(date => {
         const key = format(date, formatStr);
         dataMap[key] = { date: key, revenue: 0, orders: 0 };
@@ -375,7 +383,7 @@ export function useCategoryDistribution() {
       const categoryMap: Record<string, number> = {};
 
       orderItems?.forEach(item => {
-        const product = item.products as any;
+        const product = item.products as JoinedProductData | null;
         const categoryName = product?.categories?.name || 'Uncategorized';
         categoryMap[categoryName] = (categoryMap[categoryName] || 0) + Number(item.total);
       });

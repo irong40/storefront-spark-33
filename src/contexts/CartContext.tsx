@@ -7,9 +7,13 @@ interface CartItem {
   product_id: string;
   quantity: number;
   size_id: string | null;
+  size_override_id: string | null;
   addon_ids: string[];
+  selected_flavor_ids: string[]; // Added flavor ids
+  gift_card_data: any | null; // using any for flexibility with JSONB
   product: Pick<Product, 'id' | 'name' | 'slug' | 'price' | 'image_url' | 'is_available'>;
   size?: { id: string; name: string; price: number } | null;
+  size_override?: { id: string; size_name: string; price: number } | null;
 }
 
 interface CartContextType {
@@ -20,7 +24,15 @@ interface CartContextType {
   isOpen: boolean;
   openCart: () => void;
   closeCart: () => void;
-  addItem: (productId: string, quantity?: number, sizeId?: string, addonIds?: string[]) => Promise<void>;
+  addItem: (
+    productId: string,
+    quantity?: number,
+    sizeId?: string,
+    sizeOverrideId?: string,
+    addonIds?: string[],
+    giftCardData?: any,
+    selectedFlavorIds?: string[] // Added param
+  ) => Promise<void>;
   updateQuantity: (itemId: string, quantity: number) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
   clearCart: () => Promise<void>;
@@ -47,8 +59,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = items.reduce((sum, item) => {
-    // Use size price if available, otherwise use product base price
-    const itemPrice = item.size ? Number(item.size.price) : Number(item.product.price);
+    // Prioritize variant override price, then standard size price, then base price
+    let itemPrice = Number(item.product.price);
+    if (item.size_override) {
+      itemPrice = Number(item.size_override.price);
+    } else if (item.size) {
+      itemPrice = Number(item.size.price);
+    }
     return sum + (itemPrice * item.quantity);
   }, 0);
 
@@ -93,23 +110,35 @@ export function CartProvider({ children }: { children: ReactNode }) {
         product_id,
         quantity,
         size_id,
+        size_override_id,
         addon_ids,
+        selected_flavor_ids,
+        gift_card_data,
         product:products(id, name, slug, price, image_url, is_available),
-        size:product_sizes(id, name, price)
+        size:product_sizes(id, name, price),
+        size_override:product_size_overrides(id, size_name, price)
       `)
       .eq('cart_id', id);
 
     if (!error && data) {
-      const validItems = data.filter(item => item.product !== null) as CartItem[];
+      // Manual type casting or mapping might be needed if Supabase return types aren't perfectly inferred
+      const validItems = data.filter(item => item.product !== null) as unknown as CartItem[];
       setItems(validItems);
     }
   }
 
-  async function addItem(productId: string, quantity = 1, sizeId?: string, addonIds?: string[]) {
+  async function addItem(
+    productId: string,
+    quantity = 1,
+    sizeId?: string,
+    sizeOverrideId?: string,
+    addonIds?: string[],
+    giftCardData?: any,
+    selectedFlavorIds?: string[] // Added param
+  ) {
     if (!cartId) return;
 
     try {
-      // For items with variants, always create a new cart item (don't merge)
       const { error } = await supabase
         .from('cart_items')
         .insert({
@@ -117,7 +146,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
           product_id: productId,
           quantity,
           size_id: sizeId || null,
-          addon_ids: addonIds || []
+          size_override_id: sizeOverrideId || null,
+          addon_ids: addonIds || [],
+          gift_card_data: giftCardData || null,
+          selected_flavor_ids: selectedFlavorIds || []
         });
 
       if (error) throw error;

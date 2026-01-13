@@ -17,69 +17,56 @@ export function Locations() {
           </h2>
         </div>
 
-        {/* Location Cards */}
-        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-          {/* Main Location */}
-          <div className="bg-background rounded-3xl overflow-hidden transition-all hover:shadow-lifted hover:-translate-y-1">
-            {/* Map */}
-            <div className="h-48 overflow-hidden">
-              <GoogleMapEmbed 
-                address={`${business?.address_line1 || '719 High St.'}, ${business?.city || 'Portsmouth'}, ${business?.state || 'VA'} ${business?.zip || '23703'}`}
-                className="rounded-none rounded-t-3xl"
-              />
-            </div>
-            
-            {/* Content */}
-            <div className="p-6">
-              <h3 className="font-display text-2xl font-semibold text-brand-brown mb-4">
-                Bloom Market
-              </h3>
-              <div className="space-y-3 text-brand-warm-gray">
-                <div className="flex items-start gap-3">
-                  <MapPin className="h-5 w-5 text-brand-olive mt-0.5 flex-shrink-0" />
-                  <span>
-                    {business?.address_line1 || '719 High St.'}<br />
-                    {business?.city || 'Portsmouth'}, {business?.state || 'VA'} {business?.zip || '23703'}
-                  </span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Clock className="h-5 w-5 text-brand-olive mt-0.5 flex-shrink-0" />
-                  <span>
-                    {formatHoursLines(business?.hours as Record<string, string> | null).map((line, i) => (
-                      <span key={i}>
-                        {line}
-                        {i < formatHoursLines(business?.hours as Record<string, string> | null).length - 1 && <br />}
-                      </span>
-                    ))}
-                  </span>
-                </div>
-                {business?.phone && (
-                  <div className="flex items-center gap-3">
-                    <Phone className="h-5 w-5 text-brand-olive flex-shrink-0" />
-                    <a href={`tel:${business.phone}`} className="hover:text-brand-berry transition-colors">
-                      {business.phone}
-                    </a>
-                  </div>
-                )}
-              </div>
-            </div>
+        {/* Main Location */}
+        <div className="bg-background rounded-3xl overflow-hidden transition-all hover:shadow-lifted hover:-translate-y-1 md:col-span-2 max-w-2xl mx-auto w-full">
+          {/* Map */}
+          <div className="h-64 overflow-hidden">
+            <GoogleMapEmbed
+              address={`${business?.address_line1 || '719 High St.'}, ${business?.city || 'Portsmouth'}, ${business?.state || 'VA'} ${business?.zip || '23703'}`}
+              className="rounded-none rounded-t-3xl"
+            />
           </div>
 
-          {/* Coming Soon */}
-          <div className="bg-background rounded-3xl overflow-hidden transition-all hover:shadow-lifted hover:-translate-y-1">
-            {/* Map placeholder */}
-            <div className="h-48 bg-gradient-to-br from-brand-terracotta-light to-brand-terracotta flex items-center justify-center">
-              <span className="text-6xl">🎉</span>
-            </div>
-            
-            {/* Content */}
-            <div className="p-6">
-              <h3 className="font-display text-2xl font-semibold text-brand-brown mb-4">
-                More Locations Coming Soon
-              </h3>
-              <p className="text-brand-warm-gray">
-                We're expanding! Subscribe to our newsletter to be the first to know when we open new locations in your area.
-              </p>
+          {/* Content */}
+          <div className="p-8">
+            <h3 className="font-display text-3xl font-semibold text-brand-brown mb-6 text-center">
+              Bloom Market
+            </h3>
+            <div className="space-y-4 text-brand-warm-gray max-w-lg mx-auto">
+              <div className="flex items-start gap-4">
+                <MapPin className="h-6 w-6 text-brand-olive mt-0.5 flex-shrink-0" />
+                <span className="text-lg">
+                  {business?.address_line1 || '719 High St.'}<br />
+                  {business?.city || 'Portsmouth'}, {business?.state || 'VA'} {business?.zip || '23703'}
+                </span>
+              </div>
+              <div className="flex items-start gap-4">
+                <Clock className="h-6 w-6 text-brand-olive mt-0.5 flex-shrink-0" />
+                <span className="text-lg">
+                  {business?.hours ? (
+                    formatHoursLines(business.hours as Record<string, string>).map((line, i) => (
+                      <span key={i}>
+                        {line}
+                        {i < formatHoursLines(business.hours as Record<string, string>).length - 1 && <br />}
+                      </span>
+                    ))
+                  ) : (
+                    <>
+                      Tue - Fri: 10am - 6pm<br />
+                      Sat: 10am - 4pm<br />
+                      Sun - Mon: Closed
+                    </>
+                  )}
+                </span>
+              </div>
+              {business?.phone && (
+                <div className="flex items-center gap-4">
+                  <Phone className="h-6 w-6 text-brand-olive flex-shrink-0" />
+                  <a href={`tel:${business.phone}`} className="hover:text-brand-berry transition-colors text-lg">
+                    {business.phone}
+                  </a>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -7,7 +7,7 @@ export function Hero() {
     <section className="relative min-h-screen flex items-center pt-4 overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-background via-brand-cream-dark to-brand-kraft" />
-      
+
       {/* Decorative circles */}
       <div className="absolute -top-[20%] -right-[10%] w-[800px] h-[800px] rounded-full bg-gradient-radial from-brand-berry/[0.08] to-transparent pointer-events-none" />
       <div className="absolute -bottom-[30%] -left-[10%] w-[600px] h-[600px] rounded-full bg-gradient-radial from-brand-olive/[0.08] to-transparent pointer-events-none" />
@@ -75,22 +75,28 @@ export function Hero() {
               <div className="absolute inset-[10%] rounded-full bg-gradient-to-br from-brand-cream-dark to-brand-terracotta opacity-30" />
 
               {/* Floating juice cards */}
-              <div className="absolute top-[10%] left-[5%] bg-card rounded-2xl p-5 shadow-lifted animate-float z-10">
-                <div className="text-4xl mb-2">🥬</div>
-                <div className="font-display text-base font-semibold text-brand-brown">Green Goddess</div>
-                <div className="text-xs text-brand-warm-gray">Kale • Spinach • Apple</div>
+              <div className="absolute top-[10%] left-[5%] bg-card rounded-2xl p-3 shadow-lifted animate-float z-10 w-44">
+                <div className="aspect-[4/5] rounded-xl overflow-hidden mb-3">
+                  <img src="/images/products/11-green-goddess.jpg" alt="Green Goddess" className="w-full h-full object-cover" />
+                </div>
+                <div className="font-display text-sm font-semibold text-brand-brown">Green Goddess</div>
+                <div className="text-xs text-brand-warm-gray line-clamp-1">Kale • Spinach • Apple</div>
               </div>
 
-              <div className="absolute top-[45%] right-0 bg-card rounded-2xl p-5 shadow-lifted animate-float-delayed z-10">
-                <div className="text-4xl mb-2">🍊</div>
-                <div className="font-display text-base font-semibold text-brand-brown">Citrus Sunrise</div>
-                <div className="text-xs text-brand-warm-gray">Orange • Grapefruit • Ginger</div>
+              <div className="absolute top-[45%] right-0 bg-card rounded-2xl p-3 shadow-lifted animate-float-delayed z-20 w-44">
+                <div className="aspect-[4/5] rounded-xl overflow-hidden mb-3">
+                  <img src="/images/products/24-citrus-blast.jpg" alt="Citrus Sunrise" className="w-full h-full object-cover" />
+                </div>
+                <div className="font-display text-sm font-semibold text-brand-brown">Citrus Sunrise</div>
+                <div className="text-xs text-brand-warm-gray line-clamp-1">Orange • Grapefruit • Ginger</div>
               </div>
 
-              <div className="absolute bottom-[10%] left-[15%] bg-card rounded-2xl p-5 shadow-lifted animate-float-slow z-10">
-                <div className="text-4xl mb-2">🫐</div>
-                <div className="font-display text-base font-semibold text-brand-brown">Berry Bliss</div>
-                <div className="text-xs text-brand-warm-gray">Blueberry • Acai • Banana</div>
+              <div className="absolute bottom-[5%] left-[15%] bg-card rounded-2xl p-3 shadow-lifted animate-float-slow z-30 w-44">
+                <div className="aspect-[4/5] rounded-xl overflow-hidden mb-3">
+                  <img src="/images/products/10-very-berry.jpg" alt="Berry Bliss" className="w-full h-full object-cover" />
+                </div>
+                <div className="font-display text-sm font-semibold text-brand-brown">Berry Bliss</div>
+                <div className="text-xs text-brand-warm-gray line-clamp-1">Blueberry • Acai • Banana</div>
               </div>
             </div>
           </div>

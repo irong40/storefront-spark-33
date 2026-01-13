@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
   darkMode: ["class"],
@@ -145,8 +146,9 @@ export default {
         "float-delayed": "float-delayed 6s ease-in-out infinite 2s",
         "float-slow": "float 8s ease-in-out infinite 4s",
         "scroll": "scroll 20s linear infinite",
+        "marquee": "scroll 30s linear infinite",
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindcssAnimate],
 } satisfies Config;
