@@ -26,6 +26,11 @@ export interface CartItem {
   flavors?: { id: string; name: string }[];
 }
 
+interface ReorderItem {
+  product_id: string;
+  quantity: number;
+}
+
 interface CartContextType {
   items: CartItem[];
   itemCount: number;
@@ -46,6 +51,7 @@ interface CartContextType {
   updateQuantity: (itemId: string, quantity: number) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
   clearCart: () => Promise<void>;
+  reorderItems: (items: ReorderItem[]) => Promise<{ success: boolean; addedCount: number; skippedCount: number }>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -292,6 +298,63 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  async function reorderItems(orderItems: ReorderItem[]): Promise<{ success: boolean; addedCount: number; skippedCount: number }> {
+    if (!cartId) return { success: false, addedCount: 0, skippedCount: 0 };
+
+    try {
+      // Check which products are still available
+      const productIds = orderItems.map(item => item.product_id).filter(Boolean);
+      
+      const { data: availableProducts } = await supabase
+        .from('products')
+        .select('id, is_available, active')
+        .in('id', productIds)
+        .eq('is_available', true)
+        .eq('active', true);
+
+      const availableIds = new Set(availableProducts?.map(p => p.id) || []);
+      
+      let addedCount = 0;
+      let skippedCount = 0;
+
+      for (const item of orderItems) {
+        if (item.product_id && availableIds.has(item.product_id)) {
+          const { error } = await supabase
+            .from('cart_items')
+            .insert({
+              cart_id: cartId,
+              product_id: item.product_id,
+              quantity: item.quantity,
+              size_id: null,
+              size_override_id: null,
+              addon_ids: [],
+              selected_flavor_ids: [],
+              gift_card_data: null,
+            });
+
+          if (!error) {
+            addedCount++;
+          } else {
+            skippedCount++;
+          }
+        } else {
+          skippedCount++;
+        }
+      }
+
+      await fetchCartItems(cartId);
+      
+      if (addedCount > 0) {
+        setIsOpen(true);
+      }
+
+      return { success: addedCount > 0, addedCount, skippedCount };
+    } catch (error) {
+      console.error('Failed to reorder items:', error);
+      return { success: false, addedCount: 0, skippedCount: orderItems.length };
+    }
+  }
+
   return (
     <CartContext.Provider value={{
       items,
@@ -305,6 +368,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       updateQuantity,
       removeItem,
       clearCart,
+      reorderItems,
     }}>
       {children}
     </CartContext.Provider>
