@@ -8,17 +8,17 @@ export default {
   theme: {
     container: {
       center: true,
-      padding: "1.5rem",
+      padding: "2rem",
       screens: {
-        "2xl": "1280px",
+        "2xl": "1400px",
       },
     },
     extend: {
       fontFamily: {
-        sans: ['Nunito Sans', 'system-ui', 'sans-serif'],
-        display: ['Cormorant Garamond', 'Georgia', 'serif'],
-        script: ['Dancing Script', 'cursive'],
-        body: ['Nunito Sans', 'system-ui', 'sans-serif'],
+        sans: ['Libre Franklin', '-apple-system', 'sans-serif'],
+        display: ['Playfair Display', 'Georgia', 'serif'],
+        accent: ['Cormorant', 'Georgia', 'serif'],
+        body: ['Libre Franklin', '-apple-system', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -71,6 +71,17 @@ export default {
           "brown-light": "hsl(var(--brand-brown-light))",
           "warm-gray": "hsl(var(--brand-warm-gray))",
           kraft: "hsl(var(--brand-kraft))",
+          // New sophisticated palette colors
+          ivory: "hsl(var(--color-ivory))",
+          stone: "hsl(var(--color-stone))",
+          taupe: "hsl(var(--color-taupe))",
+          sage: "hsl(var(--color-sage))",
+          "sage-muted": "hsl(var(--color-sage-muted))",
+          charcoal: "hsl(var(--color-charcoal))",
+          ink: "hsl(var(--color-ink))",
+          "warm-white": "hsl(var(--color-warm-white))",
+          champagne: "hsl(var(--color-champagne))",
+          blush: "hsl(var(--color-blush))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
@@ -87,15 +98,16 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
-        xl: "1rem",
-        "2xl": "1.5rem",
-        "3xl": "2rem",
+        xl: "0.5rem",
+        "2xl": "0.75rem",
+        "3xl": "1rem",
       },
       boxShadow: {
         soft: "var(--shadow-soft)",
         medium: "var(--shadow-medium)",
         lifted: "var(--shadow-lifted)",
         berry: "var(--shadow-berry)",
+        subtle: "0 2px 20px rgba(0,0,0,0.04)",
       },
       keyframes: {
         "accordion-down": {
@@ -145,12 +157,15 @@ export default {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.5s ease-out",
-        "fade-in-up": "fade-in-up 0.8s ease-out forwards",
+        "fade-in-up": "fade-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards",
         "slide-up": "slide-up 0.5s ease-out",
         "scale-in": "scale-in 0.3s ease-out",
         "float-card": "float-card var(--float-duration, 25s) ease-in-out var(--float-delay, 0s) infinite",
         "scroll": "scroll 20s linear infinite",
         "marquee": "scroll 30s linear infinite",
+      },
+      transitionTimingFunction: {
+        "ease-out-expo": "cubic-bezier(0.16, 1, 0.3, 1)",
       },
     },
   },
