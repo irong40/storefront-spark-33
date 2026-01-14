@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { useCart } from '@/contexts/CartContext';
@@ -9,12 +9,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, ShoppingBag, MapPin, Truck, CreditCard, Gift, X, Check } from 'lucide-react';
+import { Loader2, ShoppingBag, MapPin, Truck, CreditCard, Gift, X, Check, Clock, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { SquarePaymentForm, PaymentResult } from '@/components/checkout/SquarePaymentForm';
-import { CHECKOUT_CONFIG } from '@/config/checkout';
+import { CHECKOUT_CONFIG, getAvailablePickupDates, getAvailableTimeSlots } from '@/config/checkout';
 import { useGiftCard } from '@/hooks/use-gift-card';
 
 interface AppliedGiftCard {
@@ -51,7 +52,17 @@ export default function Checkout() {
     city: '',
     state: '',
     zip: '',
+    // Pickup scheduling
+    pickupDate: '',
+    pickupTime: '',
   });
+
+  // Get available pickup dates and time slots
+  const availablePickupDates = useMemo(() => getAvailablePickupDates(), []);
+  const availableTimeSlots = useMemo(
+    () => (formData.pickupDate ? getAvailableTimeSlots(formData.pickupDate) : []),
+    [formData.pickupDate]
+  );
 
   // Calculate totals with gift card discount
   const giftCardDiscount = appliedGiftCards.reduce((sum, gc) => sum + gc.amountApplied, 0);
@@ -123,8 +134,22 @@ export default function Checkout() {
     }));
   };
 
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => {
+      const newData = { ...prev, [name]: value };
+      // Reset time when date changes
+      if (name === 'pickupDate') {
+        newData.pickupTime = '';
+      }
+      return newData;
+    });
+  };
+
   const isFormValid = () => {
     if (!formData.email) return false;
+    if (fulfillmentType === 'pickup') {
+      if (!formData.pickupDate || !formData.pickupTime) return false;
+    }
     if (fulfillmentType === 'delivery') {
       if (!formData.addressLine1 || !formData.city || !formData.state || !formData.zip) {
         return false;
@@ -190,6 +215,8 @@ export default function Checkout() {
           notes: formData.notes || null,
           payment_id: payment.paymentId,
           payment_status: 'completed',
+          pickup_date: fulfillmentType === 'pickup' ? formData.pickupDate : null,
+          pickup_time: fulfillmentType === 'pickup' ? formData.pickupTime : null,
           shipping_address: fulfillmentType === 'delivery' ? {
             line1: formData.addressLine1,
             line2: formData.addressLine2,
@@ -242,6 +269,8 @@ export default function Checkout() {
           giftCardDiscount,
           total,
           fulfillmentType,
+          pickupDate: formData.pickupDate || undefined,
+          pickupTime: formData.pickupTime || undefined,
           paymentStatus: 'completed',
         },
       }).then(({ error }) => {
@@ -357,7 +386,7 @@ export default function Checkout() {
                     <MapPin className="h-5 w-5 text-primary" />
                     <div>
                       <div className="font-medium">Pickup</div>
-                      <div className="text-sm text-muted-foreground">Free</div>
+                      <div className="text-xs text-muted-foreground">Free • Tue-Fri 10-6, Sat 10-5</div>
                     </div>
                   </div>
                 </Label>
@@ -373,17 +402,79 @@ export default function Checkout() {
                     <Truck className="h-5 w-5 text-primary" />
                     <div>
                       <div className="font-medium">Delivery</div>
-                      <div className="text-sm text-muted-foreground">$5.99</div>
+                      <div className="text-xs text-muted-foreground">Free • Mon-Fri</div>
                     </div>
                   </div>
                 </Label>
               </RadioGroup>
             </div>
 
-            {/* Shipping Address */}
+            {/* Pickup Scheduling */}
+            {fulfillmentType === 'pickup' && (
+              <div>
+                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                  <Clock className="h-5 w-5" />
+                  Pickup Details
+                </h2>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="pickupDate">Pickup Date *</Label>
+                    <Select
+                      value={formData.pickupDate}
+                      onValueChange={(value) => handleSelectChange('pickupDate', value)}
+                      disabled={isSubmitting || paymentComplete}
+                    >
+                      <SelectTrigger id="pickupDate">
+                        <SelectValue placeholder="Select a date" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availablePickupDates.map((date) => (
+                          <SelectItem key={date.value} value={date.value}>
+                            {date.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="pickupTime">Pickup Time *</Label>
+                    <Select
+                      value={formData.pickupTime}
+                      onValueChange={(value) => handleSelectChange('pickupTime', value)}
+                      disabled={isSubmitting || paymentComplete || !formData.pickupDate}
+                    >
+                      <SelectTrigger id="pickupTime">
+                        <SelectValue placeholder={formData.pickupDate ? "Select a time" : "Select a date first"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableTimeSlots.map((slot) => (
+                          <SelectItem key={slot.value} value={slot.value}>
+                            {slot.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Delivery Address */}
             {fulfillmentType === 'delivery' && (
               <div>
                 <h2 className="text-xl font-semibold mb-4">Delivery Address</h2>
+                
+                {/* Delivery Info Banner */}
+                <div className="flex items-start gap-3 p-4 bg-primary/5 border border-primary/20 rounded-xl mb-4">
+                  <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                  <div className="text-sm">
+                    <p className="font-medium text-foreground">Free delivery Monday through Friday</p>
+                    <p className="text-muted-foreground mt-1">
+                      Delivery times vary based on your location. We'll notify you when your order is on the way.
+                    </p>
+                  </div>
+                </div>
+
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="addressLine1">Address *</Label>
@@ -469,7 +560,9 @@ export default function Checkout() {
               {!isFormValid() ? (
                 <div className="p-4 bg-muted rounded-xl text-center">
                   <p className="text-muted-foreground text-sm">
-                    Please fill in the required fields above to proceed with payment.
+                    {fulfillmentType === 'pickup' && (!formData.pickupDate || !formData.pickupTime) 
+                      ? 'Please select a pickup date and time to proceed with payment.'
+                      : 'Please fill in the required fields above to proceed with payment.'}
                   </p>
                 </div>
               ) : paymentComplete ? (
@@ -643,7 +736,7 @@ export default function Checkout() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Shipping</span>
-                  <span>{shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}</span>
+                  <span>Free</span>
                 </div>
                 {giftCardDiscount > 0 && (
                   <div className="flex justify-between text-brand-olive">

@@ -666,6 +666,8 @@ export type Database = {
           payment_id: string | null
           payment_status: string | null
           phone: string | null
+          pickup_date: string | null
+          pickup_time: string | null
           shipping: number | null
           shipping_address: Json | null
           status: string | null
@@ -688,6 +690,8 @@ export type Database = {
           payment_id?: string | null
           payment_status?: string | null
           phone?: string | null
+          pickup_date?: string | null
+          pickup_time?: string | null
           shipping?: number | null
           shipping_address?: Json | null
           status?: string | null
@@ -710,6 +714,8 @@ export type Database = {
           payment_id?: string | null
           payment_status?: string | null
           phone?: string | null
+          pickup_date?: string | null
+          pickup_time?: string | null
           shipping?: number | null
           shipping_address?: Json | null
           status?: string | null
