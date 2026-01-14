@@ -127,13 +127,13 @@ export default {
             transform: "translate(0, 0) rotate(var(--card-rotation, 0deg))",
           },
           "25%": {
-            transform: "translate(8px, -10px) rotate(calc(var(--card-rotation, 0deg) + 1.5deg))",
+            transform: "translate(6px, -8px) rotate(calc(var(--card-rotation, 0deg) + 0.5deg))",
           },
           "50%": {
-            transform: "translate(0, -16px) rotate(var(--card-rotation, 0deg))",
+            transform: "translate(0, -12px) rotate(var(--card-rotation, 0deg))",
           },
           "75%": {
-            transform: "translate(-8px, -8px) rotate(calc(var(--card-rotation, 0deg) - 1.5deg))",
+            transform: "translate(-6px, -6px) rotate(calc(var(--card-rotation, 0deg) - 0.5deg))",
           },
         },
         "scroll": {
