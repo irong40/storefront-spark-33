@@ -16,8 +16,8 @@ import valueQuality from '@/assets/value-quality.png';
 const values = [
   {
     image: valueOrganic,
-    title: '100% Organic',
-    description: 'Certified organic ingredients, sourced responsibly for purity and taste.',
+    title: 'All Natural',
+    description: 'All natural ingredients, sourced responsibly for purity and taste.',
   },
   {
     image: valueColdpressed,
@@ -130,7 +130,7 @@ export default function About() {
                 I then performed a three-day nine-juice detox. I even recruited a few friends to join in, and after the third day, our bodies felt terrific! I'd bragged so much about how good I felt that other friends asked me to make juices for their detox.
               </p>
               <p>
-                We at imPRESSive Juice Bar exist to provide quality organic cold-pressed juice while delivering an easy way to make a healthy choice. It brings us great joy to see customers pleased with imPRESSive's fresh taste and the detoxifying effect provided by the replenishing nutrients we place in every bottle.
+                We at imPRESSive Juice Bar exist to provide quality cold-pressed juice while delivering an easy way to make a healthy choice. It brings us great joy to see customers pleased with imPRESSive's fresh taste and the detoxifying effect provided by the replenishing nutrients we place in every bottle.
               </p>
               <p className="text-lg font-medium text-brand-olive italic border-l-4 border-brand-berry pl-6">
                 "We leave no stone unturned, ensuring an imPRESSive taste from the first sip to the last."
@@ -242,7 +242,7 @@ export default function About() {
             </h2>
             <div className="space-y-8">
               {[
-                { step: 1, title: 'Source the Best', desc: 'We work with local organic farms to source the freshest, highest-quality produce available.' },
+                { step: 1, title: 'Source the Best', desc: 'We work with local farms to source the freshest, highest-quality produce available.' },
                 { step: 2, title: 'Wash & Prep', desc: 'Every ingredient is thoroughly washed and carefully prepared by our trained team.' },
                 { step: 3, title: 'Cold Press', desc: 'Our hydraulic press applies thousands of pounds of pressure without heat, extracting maximum nutrients while preserving delicate enzymes.' },
                 { step: 4, title: 'Bottle Fresh', desc: 'Immediately bottled and refrigerated, our juices reach you at peak freshness. Best enjoyed within 3-5 days.' },

@@ -258,7 +258,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
             id="features"
             value={formData.features}
             onChange={(e) => setFormData(prev => ({ ...prev, features: e.target.value }))}
-            placeholder="Cold-pressed, No added sugar, Organic"
+            placeholder="Cold-pressed, No added sugar, All natural"
           />
         </div>
 

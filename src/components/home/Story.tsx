@@ -53,7 +53,7 @@ export function Story() {
             <p className="text-brand-warm-gray text-lg mb-8">
               Hi, I'm Delisea Jackson, and the benefits of juicing are nothing short of imPRESSive. 
               One trip with lousy eating habits put me on this path. Now I'm here to hand you healthy 
-              choices in a bottle — 100% organic, cold-pressed, and crafted with love.
+              choices in a bottle — 100% natural, cold-pressed, and crafted with love.
             </p>
 
             {/* Features */}

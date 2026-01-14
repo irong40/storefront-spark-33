@@ -2,13 +2,14 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { ShoppingCart, User, Settings } from 'lucide-react';
-import logo from '@/assets/logo.jpg';
+import logo from '@/assets/logo-new.png';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/use-admin';
 import { useState, useEffect } from 'react';
 
 const navLinks = [
+  { href: '/', label: 'Home' },
   { href: '/products', label: 'Menu' },
   { href: '/about', label: 'Our Story' },
   { href: '/contact', label: 'Contact' },
@@ -41,7 +42,7 @@ export function Header() {
           <img 
             src={logo} 
             alt="imPRESSive Juice Bar" 
-            className="h-14 w-auto object-contain"
+            className="h-20 w-auto object-contain"
           />
         </Link>
 

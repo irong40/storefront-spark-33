@@ -1,7 +1,7 @@
 import { Leaf, Sun, Heart, Recycle, Sparkles } from 'lucide-react';
 
 const benefits = [
-  { icon: Leaf, text: '100% Organic' },
+  { icon: Leaf, text: 'All Natural' },
   { icon: Sun, text: 'Pressed Fresh Daily' },
   { icon: Heart, text: 'Made with Love' },
   { icon: Recycle, text: 'Eco-Friendly Packaging' },

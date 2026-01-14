@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Instagram, Facebook } from 'lucide-react';
 import { useBusinessSettings } from '@/hooks/use-business';
 import { useCategories } from '@/hooks/use-categories';
-import logo from '@/assets/logo.jpg';
+import logo from '@/assets/logo-new.png';
 
 export function Footer() {
   const { data: business } = useBusinessSettings();
@@ -18,7 +18,7 @@ export function Footer() {
               <img
                 src={logo}
                 alt="imPRESSive Juice Bar"
-                className="h-16 w-auto object-contain"
+                className="h-24 w-auto object-contain"
               />
             </Link>
             <p className="font-script text-lg text-brand-mustard mb-4">
