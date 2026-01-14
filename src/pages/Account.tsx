@@ -2,31 +2,24 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCart } from '@/contexts/CartContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { User, Package, LogOut, Loader2 } from 'lucide-react';
-
-interface Order {
-  id: string;
-  order_number: string;
-  status: string;
-  total: number;
-  created_at: string;
-}
+import { useCustomerOrders } from '@/hooks/use-customer-orders';
+import { User, Package, LogOut, Loader2, RefreshCw } from 'lucide-react';
 
 export default function Account() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, profile, signOut, updateProfile, isLoading: authLoading } = useAuth();
+  const { reorderItems } = useCart();
+  const { data: orders = [], isLoading: isLoadingOrders } = useCustomerOrders();
   
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [isLoadingOrders, setIsLoadingOrders] = useState(true);
+  const [reorderingId, setReorderingId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   
   const [profileData, setProfileData] = useState({
@@ -51,28 +44,6 @@ export default function Account() {
     }
   }, [profile]);
 
-  // Fetch orders
-  useEffect(() => {
-    async function fetchOrders() {
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from('orders')
-        .select('id, order_number, status, total, created_at')
-        .or(`user_id.eq.${user.id},email.eq.${user.email}`)
-        .order('created_at', { ascending: false });
-
-      if (!error && data) {
-        setOrders(data);
-      }
-      setIsLoadingOrders(false);
-    }
-
-    if (user) {
-      fetchOrders();
-    }
-  }, [user]);
-
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
@@ -93,6 +64,51 @@ export default function Account() {
     }
 
     setIsSaving(false);
+  };
+
+  const handleReorder = async (order: typeof orders[0]) => {
+    setReorderingId(order.id);
+    
+    const itemsToReorder = order.order_items
+      .filter(item => item.product_id)
+      .map(item => ({
+        product_id: item.product_id!,
+        quantity: item.quantity,
+      }));
+
+    if (itemsToReorder.length === 0) {
+      toast({
+        title: 'Cannot Reorder',
+        description: 'This order has no products available for reorder.',
+        variant: 'destructive',
+      });
+      setReorderingId(null);
+      return;
+    }
+
+    const result = await reorderItems(itemsToReorder);
+    
+    if (result.success) {
+      if (result.skippedCount > 0) {
+        toast({
+          title: 'Items Added to Cart',
+          description: `${result.addedCount} item(s) added. ${result.skippedCount} item(s) unavailable.`,
+        });
+      } else {
+        toast({
+          title: 'Order Added to Cart',
+          description: `${result.addedCount} item(s) added to your cart.`,
+        });
+      }
+    } else {
+      toast({
+        title: 'Reorder Failed',
+        description: 'Some products may no longer be available.',
+        variant: 'destructive',
+      });
+    }
+    
+    setReorderingId(null);
   };
 
   const handleSignOut = async () => {
@@ -204,7 +220,7 @@ export default function Account() {
                 {isLoadingOrders ? (
                   <div className="space-y-4">
                     {[...Array(3)].map((_, i) => (
-                      <Skeleton key={i} className="h-20 rounded-xl" />
+                      <Skeleton key={i} className="h-24 rounded-xl" />
                     ))}
                   </div>
                 ) : orders.length === 0 ? (
@@ -221,30 +237,54 @@ export default function Account() {
                 ) : (
                   <div className="space-y-4">
                     {orders.map((order) => (
-                      <Link 
+                      <div 
                         key={order.id}
-                        to={`/order-confirmation/${order.id}`}
-                        className="block p-4 rounded-xl border border-border hover:border-primary/50 transition-colors"
+                        className="p-4 rounded-xl border border-border hover:border-primary/50 transition-colors"
                       >
-                        <div className="flex items-center justify-between">
-                          <div>
+                        <div className="flex items-start justify-between gap-4">
+                          <Link 
+                            to={`/order-confirmation/${order.id}`}
+                            className="flex-1 min-w-0"
+                          >
                             <p className="font-medium">{order.order_number}</p>
                             <p className="text-sm text-muted-foreground">
-                              {new Date(order.created_at).toLocaleDateString('en-US', {
+                              {order.created_at && new Date(order.created_at).toLocaleDateString('en-US', {
                                 year: 'numeric',
                                 month: 'long',
                                 day: 'numeric',
                               })}
                             </p>
-                          </div>
-                          <div className="text-right">
+                            {order.order_items.length > 0 && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {order.order_items.length} item{order.order_items.length !== 1 ? 's' : ''}
+                              </p>
+                            )}
+                          </Link>
+                          <div className="text-right flex-shrink-0">
                             <p className="font-semibold">${Number(order.total).toFixed(2)}</p>
-                            <p className="text-sm capitalize text-muted-foreground">
+                            <p className="text-sm capitalize text-muted-foreground mb-2">
                               {order.status}
                             </p>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleReorder(order);
+                              }}
+                              disabled={reorderingId === order.id}
+                              className="gap-1.5"
+                            >
+                              {reorderingId === order.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <RefreshCw className="h-3.5 w-3.5" />
+                              )}
+                              Reorder
+                            </Button>
                           </div>
                         </div>
-                      </Link>
+                      </div>
                     ))}
                   </div>
                 )}
