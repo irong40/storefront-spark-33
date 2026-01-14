@@ -1,3 +1,4 @@
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
@@ -6,10 +7,55 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export function Hero() {
   const { data: products, isLoading } = useFeaturedProducts();
-  const displayProducts = products?.slice(0, 3) || [];
+  
+  // Track which product index each card shows
+  const [cardIndices, setCardIndices] = useState([0, 1, 2]);
+  const [fadingCard, setFadingCard] = useState<number | null>(null);
+
+  const rotateCard = useCallback((cardPosition: number) => {
+    if (!products || products.length <= 3) return;
+    
+    setFadingCard(cardPosition);
+    
+    setTimeout(() => {
+      setCardIndices(prev => {
+        const newIndices = [...prev];
+        // Get next available index that's not currently shown
+        let nextIndex = (prev[cardPosition] + 3) % products.length;
+        // Ensure we don't show duplicates
+        while (prev.includes(nextIndex) && products.length > 3) {
+          nextIndex = (nextIndex + 1) % products.length;
+        }
+        newIndices[cardPosition] = nextIndex;
+        return newIndices;
+      });
+      setFadingCard(null);
+    }, 300);
+  }, [products]);
+
+  // Independent timers for each card
+  useEffect(() => {
+    if (!products || products.length <= 3) return;
+
+    const timer1 = setInterval(() => rotateCard(0), 240000); // 4 minutes
+    const timer2 = setInterval(() => rotateCard(1), 300000); // 5 minutes
+    const timer3 = setInterval(() => rotateCard(2), 360000); // 6 minutes
+
+    return () => {
+      clearInterval(timer1);
+      clearInterval(timer2);
+      clearInterval(timer3);
+    };
+  }, [products, rotateCard]);
+
+  const getProduct = (cardPosition: number) => {
+    if (!products || products.length === 0) return null;
+    const index = cardIndices[cardPosition] % products.length;
+    return products[index];
+  };
 
   return (
-    <section className="relative min-h-screen flex items-center pt-4 overflow-hidden">
+    <section className="relative min-h-[75vh] flex items-center pt-4 overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-background via-brand-cream-dark to-brand-kraft" />
 
@@ -66,10 +112,6 @@ export function Hero() {
                 <div className="font-display text-3xl md:text-4xl font-semibold text-brand-brown">24</div>
                 <div className="text-sm text-brand-warm-gray mt-1">Unique Blends</div>
               </div>
-              <div className="text-center">
-                <div className="font-display text-3xl md:text-4xl font-semibold text-brand-brown">5K+</div>
-                <div className="text-sm text-brand-warm-gray mt-1">Happy Customers</div>
-              </div>
             </div>
           </div>
 
@@ -79,7 +121,7 @@ export function Hero() {
               {/* Background circle */}
               <div className="absolute inset-[10%] rounded-full bg-gradient-to-br from-brand-cream-dark to-brand-terracotta opacity-30" />
 
-              {/* Floating juice cards - Dynamic from database */}
+              {/* Floating juice cards - Dynamic from database with rotation */}
               {isLoading ? (
                 <>
                   <Skeleton className="absolute top-[10%] left-[5%] w-44 h-56 rounded-2xl" />
@@ -88,65 +130,71 @@ export function Hero() {
                 </>
               ) : (
                 <>
-                  {displayProducts[0] && (
+                  {getProduct(0) && (
                     <Link
-                      to={`/products/${displayProducts[0].slug}`}
-                      className="absolute top-[10%] left-[5%] bg-card rounded-2xl p-3 shadow-lifted animate-float z-10 w-44 hover:shadow-xl transition-shadow"
+                      to={`/products/${getProduct(0)!.slug}`}
+                      className={`absolute top-[10%] left-[5%] bg-card rounded-2xl p-3 shadow-lifted animate-float z-10 w-44 hover:shadow-xl transition-all duration-300 ${
+                        fadingCard === 0 ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+                      }`}
                     >
                       <div className="aspect-[4/5] rounded-xl overflow-hidden mb-3">
                         <img
-                          src={displayProducts[0].image_url || '/placeholder.svg'}
-                          alt={displayProducts[0].name}
+                          src={getProduct(0)!.image_url || '/placeholder.svg'}
+                          alt={getProduct(0)!.name}
                           className="w-full h-full object-cover"
                         />
                       </div>
                       <div className="font-display text-sm font-semibold text-brand-brown truncate">
-                        {displayProducts[0].name}
+                        {getProduct(0)!.name}
                       </div>
                       <div className="text-xs text-brand-warm-gray line-clamp-1">
-                        {displayProducts[0].short_description || displayProducts[0].ingredients || 'Fresh & Natural'}
+                        {getProduct(0)!.short_description || getProduct(0)!.ingredients || 'Fresh & Natural'}
                       </div>
                     </Link>
                   )}
 
-                  {displayProducts[1] && (
+                  {getProduct(1) && (
                     <Link
-                      to={`/products/${displayProducts[1].slug}`}
-                      className="absolute top-[45%] right-0 bg-card rounded-2xl p-3 shadow-lifted animate-float-delayed z-20 w-44 hover:shadow-xl transition-shadow"
+                      to={`/products/${getProduct(1)!.slug}`}
+                      className={`absolute top-[45%] right-0 bg-card rounded-2xl p-3 shadow-lifted animate-float-delayed z-20 w-44 hover:shadow-xl transition-all duration-300 ${
+                        fadingCard === 1 ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+                      }`}
                     >
                       <div className="aspect-[4/5] rounded-xl overflow-hidden mb-3">
                         <img
-                          src={displayProducts[1].image_url || '/placeholder.svg'}
-                          alt={displayProducts[1].name}
+                          src={getProduct(1)!.image_url || '/placeholder.svg'}
+                          alt={getProduct(1)!.name}
                           className="w-full h-full object-cover"
                         />
                       </div>
                       <div className="font-display text-sm font-semibold text-brand-brown truncate">
-                        {displayProducts[1].name}
+                        {getProduct(1)!.name}
                       </div>
                       <div className="text-xs text-brand-warm-gray line-clamp-1">
-                        {displayProducts[1].short_description || displayProducts[1].ingredients || 'Fresh & Natural'}
+                        {getProduct(1)!.short_description || getProduct(1)!.ingredients || 'Fresh & Natural'}
                       </div>
                     </Link>
                   )}
 
-                  {displayProducts[2] && (
+                  {getProduct(2) && (
                     <Link
-                      to={`/products/${displayProducts[2].slug}`}
-                      className="absolute bottom-[5%] left-[15%] bg-card rounded-2xl p-3 shadow-lifted animate-float-slow z-30 w-44 hover:shadow-xl transition-shadow"
+                      to={`/products/${getProduct(2)!.slug}`}
+                      className={`absolute bottom-[5%] left-[15%] bg-card rounded-2xl p-3 shadow-lifted animate-float-slow z-30 w-44 hover:shadow-xl transition-all duration-300 ${
+                        fadingCard === 2 ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+                      }`}
                     >
                       <div className="aspect-[4/5] rounded-xl overflow-hidden mb-3">
                         <img
-                          src={displayProducts[2].image_url || '/placeholder.svg'}
-                          alt={displayProducts[2].name}
+                          src={getProduct(2)!.image_url || '/placeholder.svg'}
+                          alt={getProduct(2)!.name}
                           className="w-full h-full object-cover"
                         />
                       </div>
                       <div className="font-display text-sm font-semibold text-brand-brown truncate">
-                        {displayProducts[2].name}
+                        {getProduct(2)!.name}
                       </div>
                       <div className="text-xs text-brand-warm-gray line-clamp-1">
-                        {displayProducts[2].short_description || displayProducts[2].ingredients || 'Fresh & Natural'}
+                        {getProduct(2)!.short_description || getProduct(2)!.ingredients || 'Fresh & Natural'}
                       </div>
                     </Link>
                   )}
