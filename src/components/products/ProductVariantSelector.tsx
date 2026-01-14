@@ -75,7 +75,7 @@ export function ProductVariantSelector({ productId, productName, disabled }: Pro
         <div className="space-y-6">
             {/* Size Selection */}
             <div>
-                <h3 className="font-semibold text-sm mb-3">Select Size</h3>
+                <h3 className="font-semibold text-sm mb-3">Size</h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {sizes?.map((size) => (
                         <button
