@@ -40,7 +40,7 @@ export function Hero() {
 
             {/* Description */}
             <p className="text-lg text-brand-warm-gray mb-8 max-w-md">
-              Fresh, organic, cold-pressed juices crafted daily with love. No additives, no preservatives — just pure, vibrant nutrition in every sip.
+              Fresh, cold-pressed juices crafted daily with love. No additives, no preservatives — just pure, vibrant nutrition in every sip.
             </p>
 
             {/* Actions */}
@@ -60,7 +60,7 @@ export function Hero() {
             <div className="flex gap-12">
               <div className="text-center">
                 <div className="font-display text-3xl md:text-4xl font-semibold text-brand-brown">100%</div>
-                <div className="text-sm text-brand-warm-gray mt-1">Organic Produce</div>
+                <div className="text-sm text-brand-warm-gray mt-1">Fresh Produce</div>
               </div>
               <div className="text-center">
                 <div className="font-display text-3xl md:text-4xl font-semibold text-brand-brown">24</div>
@@ -104,7 +104,7 @@ export function Hero() {
                         {displayProducts[0].name}
                       </div>
                       <div className="text-xs text-brand-warm-gray line-clamp-1">
-                        {displayProducts[0].short_description || displayProducts[0].ingredients || 'Fresh & Organic'}
+                        {displayProducts[0].short_description || displayProducts[0].ingredients || 'Fresh & Natural'}
                       </div>
                     </Link>
                   )}
@@ -125,7 +125,7 @@ export function Hero() {
                         {displayProducts[1].name}
                       </div>
                       <div className="text-xs text-brand-warm-gray line-clamp-1">
-                        {displayProducts[1].short_description || displayProducts[1].ingredients || 'Fresh & Organic'}
+                        {displayProducts[1].short_description || displayProducts[1].ingredients || 'Fresh & Natural'}
                       </div>
                     </Link>
                   )}
@@ -146,7 +146,7 @@ export function Hero() {
                         {displayProducts[2].name}
                       </div>
                       <div className="text-xs text-brand-warm-gray line-clamp-1">
-                        {displayProducts[2].short_description || displayProducts[2].ingredients || 'Fresh & Organic'}
+                        {displayProducts[2].short_description || displayProducts[2].ingredients || 'Fresh & Natural'}
                       </div>
                     </Link>
                   )}

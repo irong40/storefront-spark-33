@@ -36,12 +36,12 @@ export default function Products() {
         </div>
 
         <div className="container px-4 relative z-10">
-          <span className="font-script text-2xl text-brand-terracotta mb-2 block">Fresh & Organic</span>
+          <span className="font-script text-2xl text-brand-terracotta mb-2 block">Fresh & Natural</span>
           <h1 className="text-4xl md:text-5xl font-heading font-bold text-brand-brown mb-4">
             Our Products
           </h1>
           <p className="text-muted-foreground text-lg max-w-2xl">
-            Fresh, organic cold-pressed juices made daily. Choose from our selection of juices,
+            Fresh cold-pressed juices made daily. Choose from our selection of juices,
             wellness shots, and cleanse programs.
           </p>
         </div>
