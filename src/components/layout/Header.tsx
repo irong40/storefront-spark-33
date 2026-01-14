@@ -91,10 +91,16 @@ export function Header() {
             </Link>
           </Button>
 
-          {/* Order Now CTA - Desktop */}
-          <Button asChild className="hidden md:inline-flex rounded-full px-6 bg-brand-berry hover:bg-brand-berry-dark shadow-berry font-semibold">
-            <Link to="/products">Order Now</Link>
-          </Button>
+          {/* Order Now / Add Order CTA - Desktop */}
+          {isAdmin ? (
+            <Button asChild className="hidden md:inline-flex rounded-full px-6 bg-brand-olive hover:bg-brand-olive/90 shadow-sm font-semibold">
+              <Link to="/admin#orders">Add Order</Link>
+            </Button>
+          ) : (
+            <Button asChild className="hidden md:inline-flex rounded-full px-6 bg-brand-berry hover:bg-brand-berry-dark shadow-berry font-semibold">
+              <Link to="/products">Order Now</Link>
+            </Button>
+          )}
 
           {/* Mobile Menu */}
           <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
@@ -133,14 +139,25 @@ export function Header() {
                     Admin
                   </Link>
                 )}
-                <Button 
-                  asChild 
-                  size="lg" 
-                  className="mt-4 rounded-full bg-brand-berry hover:bg-brand-berry-dark shadow-berry font-semibold"
-                  onClick={() => setIsMobileOpen(false)}
-                >
-                  <Link to="/products">Order Now</Link>
-                </Button>
+                {isAdmin ? (
+                  <Button 
+                    asChild 
+                    size="lg" 
+                    className="mt-4 rounded-full bg-brand-olive hover:bg-brand-olive/90 shadow-sm font-semibold"
+                    onClick={() => setIsMobileOpen(false)}
+                  >
+                    <Link to="/admin#orders">Add Order</Link>
+                  </Button>
+                ) : (
+                  <Button 
+                    asChild 
+                    size="lg" 
+                    className="mt-4 rounded-full bg-brand-berry hover:bg-brand-berry-dark shadow-berry font-semibold"
+                    onClick={() => setIsMobileOpen(false)}
+                  >
+                    <Link to="/products">Order Now</Link>
+                  </Button>
+                )}
               </nav>
             </SheetContent>
           </Sheet>
