@@ -1,127 +1,138 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Dancing+Script:wght@400;500;600;700&family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,500;6..12,600;6..12,700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* New Earthy Brand Palette */
-    /* Cream - backgrounds, cards */
-    --background: 34 33% 93%;
-    --foreground: 30 22% 17%;
+    /* Core Palette - Sophisticated Neutrals */
+    --color-ivory: 40 33% 97%;
+    --color-stone: 35 20% 89%;
+    --color-taupe: 30 8% 57%;
+    --color-sage: 95 15% 55%;
+    --color-sage-muted: 95 12% 65%;
+    --color-charcoal: 0 0% 17%;
+    --color-ink: 0 0% 10%;
+    --color-warm-white: 40 40% 99%;
     
-    /* Card surfaces */
-    --card: 0 0% 100%;
-    --card-foreground: 30 22% 17%;
+    /* Accent - Subtle Luxury */
+    --color-champagne: 40 30% 74%;
+    --color-blush: 15 30% 86%;
+    --color-terracotta: 30 35% 62%;
+
+    /* Main theme tokens */
+    --background: var(--color-ivory);
+    --foreground: var(--color-charcoal);
     
-    --popover: 0 0% 100%;
-    --popover-foreground: 30 22% 17%;
+    --card: var(--color-warm-white);
+    --card-foreground: var(--color-charcoal);
     
-    /* Primary - Berry Pink for CTAs */
-    --primary: 340 62% 56%;
-    --primary-foreground: 0 0% 100%;
+    --popover: var(--color-warm-white);
+    --popover-foreground: var(--color-charcoal);
     
-    /* Secondary - Terracotta warmth */
-    --secondary: 27 45% 64%;
-    --secondary-foreground: 30 22% 17%;
+    /* Primary - Charcoal for CTAs */
+    --primary: var(--color-charcoal);
+    --primary-foreground: var(--color-warm-white);
+    
+    /* Secondary - Sage green */
+    --secondary: var(--color-sage);
+    --secondary-foreground: var(--color-warm-white);
     
     /* Muted - Subdued elements */
-    --muted: 34 20% 88%;
-    --muted-foreground: 30 15% 45%;
+    --muted: var(--color-stone);
+    --muted-foreground: var(--color-taupe);
     
-    /* Accent - Mustard Gold highlights */
-    --accent: 43 66% 56%;
-    --accent-foreground: 30 22% 17%;
+    /* Accent - Champagne highlights */
+    --accent: var(--color-champagne);
+    --accent-foreground: var(--color-charcoal);
     
     /* Destructive - Errors */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     
-    /* Border and input - Terracotta tint */
-    --border: 34 25% 85%;
-    --input: 34 25% 85%;
-    --ring: 340 62% 56%;
+    /* Border and input */
+    --border: var(--color-stone);
+    --input: var(--color-stone);
+    --ring: var(--color-sage);
     
-    /* Border radius */
-    --radius: 0.75rem;
+    /* Border radius - Refined and minimal */
+    --radius: 0.25rem;
 
     /* Brand-specific tokens */
-    --brand-cream: 34 33% 93%;
-    --brand-cream-dark: 34 25% 88%;
-    --brand-terracotta: 27 45% 64%;
-    --brand-terracotta-light: 27 50% 78%;
-    --brand-olive: 80 25% 39%;
-    --brand-olive-light: 80 22% 51%;
-    --brand-olive-dark: 80 28% 30%;
-    --brand-mustard: 43 66% 56%;
-    --brand-mustard-light: 43 70% 66%;
-    --brand-berry: 340 62% 56%;
-    --brand-berry-dark: 340 55% 48%;
-    --brand-berry-light: 340 68% 68%;
-    --brand-brown: 30 22% 17%;
-    --brand-brown-light: 30 18% 28%;
-    --brand-warm-gray: 30 10% 44%;
-    --brand-kraft: 30 30% 82%;
+    --brand-cream: var(--color-ivory);
+    --brand-cream-dark: var(--color-stone);
+    --brand-terracotta: var(--color-terracotta);
+    --brand-terracotta-light: 30 40% 75%;
+    --brand-olive: var(--color-sage);
+    --brand-olive-light: var(--color-sage-muted);
+    --brand-olive-dark: 95 20% 40%;
+    --brand-mustard: var(--color-champagne);
+    --brand-mustard-light: 40 35% 82%;
+    --brand-berry: var(--color-sage);
+    --brand-berry-dark: 95 18% 45%;
+    --brand-berry-light: var(--color-sage-muted);
+    --brand-brown: var(--color-charcoal);
+    --brand-brown-light: 0 0% 28%;
+    --brand-warm-gray: var(--color-taupe);
+    --brand-kraft: var(--color-stone);
 
-    /* Shadows */
-    --shadow-soft: 0 4px 20px hsla(30, 22%, 17%, 0.08);
-    --shadow-medium: 0 8px 30px hsla(30, 22%, 17%, 0.12);
-    --shadow-lifted: 0 12px 40px hsla(30, 22%, 17%, 0.15);
-    --shadow-berry: 0 8px 24px hsla(340, 62%, 56%, 0.25);
+    /* Shadows - Subtle and refined */
+    --shadow-soft: 0 2px 20px hsla(0, 0%, 0%, 0.04);
+    --shadow-medium: 0 8px 40px hsla(0, 0%, 0%, 0.06);
+    --shadow-lifted: 0 20px 60px hsla(0, 0%, 0%, 0.08);
+    --shadow-berry: 0 8px 24px hsla(95, 15%, 55%, 0.2);
 
     /* Sidebar */
-    --sidebar-background: 34 33% 96%;
-    --sidebar-foreground: 30 22% 17%;
-    --sidebar-primary: 340 62% 56%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 43 66% 56%;
-    --sidebar-accent-foreground: 30 22% 17%;
-    --sidebar-border: 27 30% 80%;
-    --sidebar-ring: 340 62% 56%;
+    --sidebar-background: var(--color-ivory);
+    --sidebar-foreground: var(--color-charcoal);
+    --sidebar-primary: var(--color-charcoal);
+    --sidebar-primary-foreground: var(--color-warm-white);
+    --sidebar-accent: var(--color-sage);
+    --sidebar-accent-foreground: var(--color-warm-white);
+    --sidebar-border: var(--color-stone);
+    --sidebar-ring: var(--color-sage);
   }
 
   .dark {
-    /* Dark mode with earthy warmth */
-    --background: 30 22% 10%;
-    --foreground: 34 33% 93%;
+    /* Dark mode with sophisticated warmth */
+    --background: 0 0% 8%;
+    --foreground: 40 33% 97%;
     
-    --card: 30 20% 14%;
-    --card-foreground: 34 33% 93%;
+    --card: 0 0% 12%;
+    --card-foreground: 40 33% 97%;
     
-    --popover: 30 20% 14%;
-    --popover-foreground: 34 33% 93%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 40 33% 97%;
     
-    --primary: 340 62% 60%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 40 33% 97%;
+    --primary-foreground: 0 0% 10%;
     
-    --secondary: 27 35% 30%;
-    --secondary-foreground: 34 33% 93%;
+    --secondary: 95 12% 40%;
+    --secondary-foreground: 40 33% 97%;
     
-    --muted: 30 15% 20%;
-    --muted-foreground: 30 15% 60%;
+    --muted: 0 0% 18%;
+    --muted-foreground: 30 8% 60%;
     
-    --accent: 43 60% 50%;
-    --accent-foreground: 30 22% 10%;
+    --accent: 40 25% 50%;
+    --accent-foreground: 0 0% 10%;
     
     --destructive: 0 62% 45%;
     --destructive-foreground: 0 0% 100%;
     
-    --border: 30 15% 22%;
-    --input: 30 15% 22%;
-    --ring: 340 62% 60%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 95 12% 50%;
 
-    --brand-cream: 34 20% 20%;
-    --brand-berry: 340 62% 60%;
+    --brand-cream: 0 0% 15%;
+    --brand-berry: 95 15% 55%;
 
-    --sidebar-background: 30 22% 12%;
-    --sidebar-foreground: 34 33% 93%;
-    --sidebar-primary: 340 62% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 43 60% 45%;
-    --sidebar-accent-foreground: 34 33% 93%;
-    --sidebar-border: 30 15% 22%;
-    --sidebar-ring: 340 62% 60%;
+    --sidebar-background: 0 0% 10%;
+    --sidebar-foreground: 40 33% 97%;
+    --sidebar-primary: 40 33% 97%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-accent: 95 12% 45%;
+    --sidebar-accent-foreground: 40 33% 97%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 95 12% 50%;
   }
 }
 
@@ -132,85 +143,70 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Nunito Sans', system-ui, sans-serif;
+    font-family: 'Libre Franklin', -apple-system, sans-serif;
+    font-weight: 400;
+    line-height: 1.7;
+    letter-spacing: 0.01em;
+    -webkit-font-smoothing: antialiased;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 400;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
   }
 
-  /* Texture overlay */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-    opacity: 0.03;
-    pointer-events: none;
-    z-index: 9999;
+  ::selection {
+    background: hsl(var(--color-sage-muted));
+    color: hsl(var(--color-ink));
   }
 }
 
 @layer utilities {
   .font-display {
-    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-family: 'Playfair Display', Georgia, serif;
   }
 
-  .font-script {
-    font-family: 'Dancing Script', cursive;
+  .font-accent {
+    font-family: 'Cormorant', Georgia, serif;
   }
 
   .font-body {
-    font-family: 'Nunito Sans', system-ui, sans-serif;
+    font-family: 'Libre Franklin', -apple-system, sans-serif;
   }
 
-  /* Kraft paper texture effect */
-  .kraft-texture {
-    background-color: hsl(var(--brand-kraft));
-    background-image: 
-      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-    background-blend-mode: multiply;
-  }
-
-  /* Watercolor splash effect */
-  .watercolor-accent {
-    position: relative;
-  }
-
-  .watercolor-accent::before {
-    content: '';
-    position: absolute;
-    width: 120%;
-    height: 120%;
-    top: -10%;
-    left: -10%;
-    background: radial-gradient(ellipse at 30% 70%, hsl(var(--brand-berry) / 0.15) 0%, transparent 50%),
-                radial-gradient(ellipse at 70% 30%, hsl(var(--brand-mustard) / 0.15) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 50%, hsl(var(--brand-olive) / 0.1) 0%, transparent 60%);
-    pointer-events: none;
-    z-index: 0;
+  /* Eyebrow text utility */
+  .eyebrow {
+    @apply font-body text-[0.6875rem] font-medium uppercase tracking-[0.2em] text-muted-foreground;
   }
 
   /* Label utility */
   .label-text {
-    @apply font-body text-xs font-semibold uppercase tracking-[3px] text-brand-olive;
+    @apply font-body text-xs font-medium uppercase tracking-[0.15em] text-muted-foreground;
+  }
+
+  /* Italic accent style */
+  .italic-accent {
+    font-family: 'Cormorant', Georgia, serif;
+    font-style: italic;
   }
 }
 
-/* Scrollbar styling */
+/* Scrollbar styling - Minimal and refined */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: hsl(var(--brand-cream));
+  background: hsl(var(--color-ivory));
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--brand-terracotta));
-  border-radius: 4px;
+  background: hsl(var(--color-taupe));
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--brand-olive));
+  background: hsl(var(--color-charcoal));
 }
