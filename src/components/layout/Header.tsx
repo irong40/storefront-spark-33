@@ -36,13 +36,21 @@ export function Header() {
         ? 'bg-background/95 backdrop-blur-xl shadow-soft' 
         : 'bg-transparent'
     }`}>
-      <div className="container flex h-[88px] md:h-[112px] lg:h-[124px] items-center justify-between">
+      <div className={`container flex items-center justify-between transition-all duration-300 ${
+        isScrolled 
+          ? 'h-16 md:h-18 lg:h-20' 
+          : 'h-[88px] md:h-[112px] lg:h-[124px]'
+      }`}>
         {/* Logo */}
         <Link to="/" className="flex items-center p-3">
           <img 
             src={logo} 
             alt="imPRESSive Juice Bar" 
-            className="h-[70px] md:h-[90px] lg:h-[100px] w-auto object-contain transition-transform duration-300 hover:scale-105"
+            className={`w-auto object-contain transition-all duration-300 hover:scale-105 ${
+              isScrolled 
+                ? 'h-10 md:h-12 lg:h-14' 
+                : 'h-[70px] md:h-[90px] lg:h-[100px]'
+            }`}
           />
         </Link>
 
