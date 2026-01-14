@@ -145,3 +145,30 @@ export function useRemoveRole() {
     },
   });
 }
+
+export function useResetUserPassword() {
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ email }: { email: string }) => {
+      const { data, error } = await supabase.functions.invoke('reset-user-password', {
+        body: { email },
+      });
+
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (data) => {
+      toast({ title: 'Password reset email sent', description: data.message });
+    },
+    onError: (error: Error) => {
+      console.error('Error resetting password:', error);
+      toast({ 
+        title: 'Failed to send password reset', 
+        description: error.message,
+        variant: 'destructive' 
+      });
+    },
+  });
+}

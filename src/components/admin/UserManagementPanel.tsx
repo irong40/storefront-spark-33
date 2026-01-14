@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useUsers, useAssignRole, useRemoveRole, useCreateUser, UserWithRole } from '@/hooks/use-users';
+import { useUsers, useAssignRole, useRemoveRole, useCreateUser, useResetUserPassword, UserWithRole } from '@/hooks/use-users';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Table,
@@ -39,7 +39,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Search, UserPlus, X, Shield, ShieldCheck, Plus } from 'lucide-react';
+import { Search, UserPlus, X, Shield, ShieldCheck, Plus, KeyRound } from 'lucide-react';
 import { format } from 'date-fns';
 
 export function UserManagementPanel() {
@@ -48,6 +48,7 @@ export function UserManagementPanel() {
   const assignRole = useAssignRole();
   const removeRole = useRemoveRole();
   const createUser = useCreateUser();
+  const resetPassword = useResetUserPassword();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
@@ -61,6 +62,10 @@ export function UserManagementPanel() {
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserName, setNewUserName] = useState('');
   const [newUserRole, setNewUserRole] = useState<'none' | 'admin' | 'moderator'>('none');
+
+  // Reset password dialog state
+  const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
+  const [userToReset, setUserToReset] = useState<UserWithRole | null>(null);
 
   const filteredUsers = users?.filter(user => {
     const query = searchQuery.toLowerCase();
@@ -139,6 +144,24 @@ export function UserManagementPanel() {
           setNewUserEmail('');
           setNewUserName('');
           setNewUserRole('none');
+        },
+      }
+    );
+  };
+
+  const openResetPasswordDialog = (user: UserWithRole) => {
+    setUserToReset(user);
+    setResetPasswordDialogOpen(true);
+  };
+
+  const handleResetPassword = () => {
+    if (!userToReset) return;
+    resetPassword.mutate(
+      { email: userToReset.email },
+      {
+        onSuccess: () => {
+          setResetPasswordDialogOpen(false);
+          setUserToReset(null);
         },
       }
     );
@@ -229,15 +252,25 @@ export function UserManagementPanel() {
                 </span>
               </TableCell>
               <TableCell className="text-right">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => openAssignDialog(user)}
-                  disabled={user.roles.includes('admin') && user.roles.includes('moderator')}
-                >
-                  <UserPlus className="h-4 w-4 mr-1" />
-                  Assign Role
-                </Button>
+                <div className="flex gap-2 justify-end">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => openResetPasswordDialog(user)}
+                  >
+                    <KeyRound className="h-4 w-4 mr-1" />
+                    Reset Password
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => openAssignDialog(user)}
+                    disabled={user.roles.includes('admin') && user.roles.includes('moderator')}
+                  >
+                    <UserPlus className="h-4 w-4 mr-1" />
+                    Assign Role
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
           ))}
@@ -390,6 +423,27 @@ export function UserManagementPanel() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Reset Password Confirmation */}
+      <AlertDialog open={resetPasswordDialogOpen} onOpenChange={setResetPasswordDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset Password</AlertDialogTitle>
+            <AlertDialogDescription>
+              Send a password reset email to {userToReset?.email}? They will receive a link to set a new password.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleResetPassword}
+              disabled={resetPassword.isPending}
+            >
+              {resetPassword.isPending ? 'Sending...' : 'Send Reset Email'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
