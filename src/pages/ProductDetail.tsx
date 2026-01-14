@@ -74,9 +74,15 @@ export default function ProductDetail() {
     );
   };
 
+  // Check if product is a wellness shot (fixed $3 price)
+  const isWellnessShot = product?.category?.slug === 'wellness-shots';
+
   // Price Calculation
   let currentPrice = 0;
-  if (selectedVariant) {
+  if (isWellnessShot) {
+    // Wellness shots are always $3
+    currentPrice = 3;
+  } else if (selectedVariant) {
     currentPrice = Number(selectedVariant.price);
   } else if (!product?.variants?.length && product?.slug !== 'egift-card' && selectedSize) {
     currentPrice = selectedSize.price;
@@ -117,16 +123,16 @@ export default function ProductDetail() {
   // Determine if we should show addons (Standard Juices only, NOT wellness shots)
   // Logic: Not requiring flavors (bundles), not gift card, not wellness shots, has category, category is one of the juice types
   const showAddons = !requiresFlavors && product?.slug !== 'egift-card' &&
+    !isWellnessShot &&
     product?.category?.slug &&
-    ['sweet-treats', 'energy-immunity-booster', 'detox-fat-burners'].includes(product.category.slug) &&
-    product.category.slug !== 'wellness-shots';
+    ['sweet-treats', 'energy-immunity-booster', 'detox-fat-burners'].includes(product.category.slug);
 
-  // Determine if we should show size selector (NOT for wellness shots - they have only one size)
+  // Determine if we should show size selector (NOT for wellness shots - they have only one size at $3)
   const showSizeSelector = !product?.variants?.length && 
     product?.slug !== 'egift-card' && 
     globalSizes.length > 0 && 
     !requiresFlavors &&
-    product?.category?.slug !== 'wellness-shots';
+    !isWellnessShot;
 
   if (isLoading) {
     return (
