@@ -33,8 +33,9 @@ import { GiftCardsPanel } from '@/components/admin/GiftCardsPanel';
 import { FeaturedProductsPanel } from '@/components/admin/FeaturedProductsPanel';
 import { AnnouncementsPanel } from '@/components/admin/AnnouncementsPanel';
 import { UserManagementPanel } from '@/components/admin/UserManagementPanel';
+import { AdminHelpPanel } from '@/components/admin/AdminHelpPanel';
 import { useToast } from '@/hooks/use-toast';
-import { BarChart3, Settings, RefreshCw, Sliders, Gift, Star, Megaphone, Users } from 'lucide-react';
+import { BarChart3, Settings, RefreshCw, Sliders, Gift, Star, Megaphone, Users, HelpCircle } from 'lucide-react';
 import { Plus, Pencil, Trash2, Wand2, Loader2, Image, Package, ShoppingBag } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -212,6 +213,10 @@ export default function Admin() {
             <TabsTrigger value="settings" className="gap-2">
               <Settings className="h-4 w-4" />
               Settings
+            </TabsTrigger>
+            <TabsTrigger value="help" className="gap-2">
+              <HelpCircle className="h-4 w-4" />
+              Help
             </TabsTrigger>
           </TabsList>
 
@@ -405,6 +410,10 @@ export default function Admin() {
                 <UserManagementPanel />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="help">
+            <AdminHelpPanel />
           </TabsContent>
         </Tabs>
 

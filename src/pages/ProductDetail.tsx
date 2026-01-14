@@ -23,14 +23,20 @@ export default function ProductDetail() {
   // Flavor Selection Configuration
   const getFlavorSelectionLimit = (slug: string) => {
     switch (slug) {
+      case '4-pack-sample-box': return 4;
       case 'sample-box': return 4;
       case '3-pack-subscription': return 3;
-      case 'wellness-shot': return 1;
       case 'gallon-subscription': return 1;
+      case 'full-gallon-subscription': return 1;
       case 'half-gallon-subscription': return 1;
       default: return 0;
     }
   };
+
+  // Check if product is a detox package (1-day, 3-day) - no sizes, no add-ons
+  const isDetoxPackage = product?.slug?.includes('-day-detox') || 
+    product?.slug === '1-day-detox' || 
+    product?.slug === '3-day-detox';
 
 
   const [quantity, setQuantity] = useState(1);
@@ -122,19 +128,23 @@ export default function ProductDetail() {
     ? getGiftCardImage(currentPrice) // Note: currentPrice includes addons but gift cards don't have addons
     : (product?.image_url || null);
 
-  // Determine if we should show addons (Standard Juices only, NOT wellness shots)
-  // Logic: Not requiring flavors (bundles), not gift card, not wellness shots, has category, category is one of the juice types
+  // Determine if we should show addons (Standard Juices only, NOT wellness shots, NOT detox packages)
+  // Logic: Not requiring flavors (bundles), not gift card, not wellness shots, not detox, has category, category is one of the juice types
   const showAddons = !requiresFlavors && product?.slug !== 'egift-card' &&
     !isWellnessShot &&
+    !isDetoxPackage &&
     product?.category?.slug &&
     ['sweet-treats', 'energy-immunity-booster', 'detox-fat-burners'].includes(product.category.slug);
 
-  // Determine if we should show size selector (NOT for wellness shots - they have only one size at $3)
+  // Determine if we should show size selector
+  // NOT for wellness shots (fixed $3), NOT for detox packages (fixed packages)
+  // Allow for 4-pack-sample-box even though it requires flavors
   const showSizeSelector = !product?.variants?.length && 
     product?.slug !== 'egift-card' && 
     globalSizes.length > 0 && 
-    !requiresFlavors &&
-    !isWellnessShot;
+    !isWellnessShot &&
+    !isDetoxPackage &&
+    (!requiresFlavors || product?.slug === '4-pack-sample-box');
 
   if (isLoading) {
     return (

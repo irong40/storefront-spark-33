@@ -20,11 +20,16 @@ export function FlavorSelector({
 }: FlavorSelectorProps) {
     const { data: products, isLoading } = useProducts();
 
-    // Filter to only show juices (exclude subscriptions, detox packages, and shots)
+    // Filter to only show regular juices (exclude subscriptions, detox packages, and wellness shots)
     const availableFlavors = products?.filter(p => {
-        // Only include products from "juice" categories
+        // Exclude wellness shots
+        if (p.slug?.startsWith('wellness-shot')) return false;
+        // Exclude detox packages (1-day, 3-day detox)
+        if (p.slug?.includes('-day-detox')) return false;
+        // Exclude subscriptions
+        if (p.slug?.includes('subscription')) return false;
+        // Only include products from juice categories
         const juiceCategories = ['sweet-treats', 'energy-immunity-booster', 'detox-fat-burners'];
-        // This would need the category slug - for now we'll use a simple check
         return p.is_available && p.active && p.category?.slug && juiceCategories.includes(p.category.slug);
     }) || [];
 
