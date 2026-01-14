@@ -36,13 +36,13 @@ export function Header() {
         ? 'bg-background/95 backdrop-blur-xl shadow-soft' 
         : 'bg-transparent'
     }`}>
-      <div className="container flex h-16 items-center justify-between">
+      <div className="container flex h-[88px] md:h-[112px] lg:h-[124px] items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center">
+        <Link to="/" className="flex items-center p-3">
           <img 
             src={logo} 
             alt="imPRESSive Juice Bar" 
-            className="h-20 w-auto object-contain"
+            className="h-[70px] md:h-[90px] lg:h-[100px] w-auto object-contain transition-transform duration-300 hover:scale-105"
           />
         </Link>
 
