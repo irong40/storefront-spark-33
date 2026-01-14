@@ -37,9 +37,9 @@ export function Hero() {
   useEffect(() => {
     if (!products || products.length <= 3) return;
 
-    const timer1 = setInterval(() => rotateCard(0), 8000);  // 8 seconds
-    const timer2 = setInterval(() => rotateCard(1), 12000); // 12 seconds
-    const timer3 = setInterval(() => rotateCard(2), 15000); // 15 seconds
+    const timer1 = setInterval(() => rotateCard(0), 20000); // 20 seconds
+    const timer2 = setInterval(() => rotateCard(1), 25000); // 25 seconds
+    const timer3 = setInterval(() => rotateCard(2), 30000); // 30 seconds
 
     return () => {
       clearInterval(timer1);
