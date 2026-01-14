@@ -47,6 +47,43 @@ export function useUsers() {
   });
 }
 
+export function useCreateUser() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ 
+      email, 
+      full_name, 
+      role 
+    }: { 
+      email: string; 
+      full_name?: string; 
+      role?: 'admin' | 'moderator' 
+    }) => {
+      const { data, error } = await supabase.functions.invoke('create-user', {
+        body: { email, full_name, role },
+      });
+
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (data) => {
+      toast({ title: 'User created successfully', description: data.message });
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    },
+    onError: (error: Error) => {
+      console.error('Error creating user:', error);
+      toast({ 
+        title: 'Failed to create user', 
+        description: error.message,
+        variant: 'destructive' 
+      });
+    },
+  });
+}
+
 export function useAssignRole() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
