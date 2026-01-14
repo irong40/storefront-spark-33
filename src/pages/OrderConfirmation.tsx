@@ -26,6 +26,8 @@ interface Order {
   shipping: number;
   total: number;
   fulfillment_type: string;
+  pickup_date: string | null;
+  pickup_time: string | null;
   created_at: string;
   payment_id: string | null;
   payment_status: string | null;
@@ -197,12 +199,35 @@ export default function OrderConfirmation() {
           <h3 className="font-semibold mb-2">
             {order.fulfillment_type === 'pickup' ? '📍 Pickup' : '🚚 Delivery'}
           </h3>
-          <p className="text-muted-foreground text-sm">
-            {order.fulfillment_type === 'pickup' 
-              ? "We'll notify you when your order is ready for pickup at our store."
-              : "We'll notify you when your order is out for delivery."
-            }
-          </p>
+          {order.fulfillment_type === 'pickup' && order.pickup_date && order.pickup_time ? (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-muted-foreground">Date:</span>
+                <span className="font-medium">
+                  {new Date(order.pickup_date + 'T00:00:00').toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-muted-foreground">Time:</span>
+                <span className="font-medium">{order.pickup_time}</span>
+              </div>
+              <p className="text-muted-foreground text-sm mt-3">
+                Please pick up your order at the scheduled time.
+              </p>
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-sm">
+              {order.fulfillment_type === 'pickup' 
+                ? "We'll notify you when your order is ready for pickup at our store."
+                : "Delivery is FREE and available Monday-Friday. We'll notify you when your order is on the way."
+              }
+            </p>
+          )}
         </div>
 
         {/* Actions */}
