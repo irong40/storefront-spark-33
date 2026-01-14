@@ -124,16 +124,16 @@ export default {
         },
         "float-card": {
           "0%, 100%": {
-            transform: "translate(0, 0) rotate(var(--card-rotation, 0deg))",
+            transform: "translate(0, 0)",
           },
           "25%": {
-            transform: "translate(6px, -8px) rotate(calc(var(--card-rotation, 0deg) + 0.5deg))",
+            transform: "translate(6px, -8px)",
           },
           "50%": {
-            transform: "translate(0, -12px) rotate(var(--card-rotation, 0deg))",
+            transform: "translate(0, -12px)",
           },
           "75%": {
-            transform: "translate(-6px, -6px) rotate(calc(var(--card-rotation, 0deg) - 0.5deg))",
+            transform: "translate(-6px, -6px)",
           },
         },
         "scroll": {
