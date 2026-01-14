@@ -114,11 +114,19 @@ export default function ProductDetail() {
     ? getGiftCardImage(currentPrice) // Note: currentPrice includes addons but gift cards don't have addons
     : (product?.image_url || null);
 
-  // Determine if we should show addons (Standard Juices only)
-  // Logic: Not requiring flavors (bundles), not gift card, has category, category is one of the juice types
+  // Determine if we should show addons (Standard Juices only, NOT wellness shots)
+  // Logic: Not requiring flavors (bundles), not gift card, not wellness shots, has category, category is one of the juice types
   const showAddons = !requiresFlavors && product?.slug !== 'egift-card' &&
     product?.category?.slug &&
-    ['sweet-treats', 'energy-immunity-booster', 'detox-fat-burners'].includes(product.category.slug);
+    ['sweet-treats', 'energy-immunity-booster', 'detox-fat-burners'].includes(product.category.slug) &&
+    product.category.slug !== 'wellness-shots';
+
+  // Determine if we should show size selector (NOT for wellness shots - they have only one size)
+  const showSizeSelector = !product?.variants?.length && 
+    product?.slug !== 'egift-card' && 
+    globalSizes.length > 0 && 
+    !requiresFlavors &&
+    product?.category?.slug !== 'wellness-shots';
 
   if (isLoading) {
     return (
@@ -257,8 +265,8 @@ export default function ProductDetail() {
               </div>
             )}
 
-            {/* Standard Size Selector (for regular products) */}
-            {!product.variants?.length && product.slug !== 'egift-card' && globalSizes.length > 0 && !requiresFlavors && (
+            {/* Standard Size Selector (for regular products, NOT wellness shots) */}
+            {showSizeSelector && (
               <div className="mb-8">
                 <span className="font-medium text-brand-brown block mb-3">
                   Size:
