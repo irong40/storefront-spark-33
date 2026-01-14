@@ -117,7 +117,7 @@ export default function About() {
         </div>
       </section>
 
-      {/* The Journey Continues */}
+      {/* Mission Statement */}
       <section className="py-20 bg-brand-kraft/50">
         <div className="container px-4">
           <div className="max-w-3xl mx-auto">
@@ -125,17 +125,9 @@ export default function About() {
               <span className="font-script text-brand-berry">My Quest to</span>{' '}
               imPRESS
             </h2>
-            <div className="space-y-4 text-muted-foreground leading-relaxed">
-              <p>
-                I then performed a three-day nine-juice detox. I even recruited a few friends to join in, and after the third day, our bodies felt terrific! I'd bragged so much about how good I felt that other friends asked me to make juices for their detox.
-              </p>
-              <p>
-                We at imPRESSive Juice Bar exist to provide quality cold-pressed juice while delivering an easy way to make a healthy choice. It brings us great joy to see customers pleased with imPRESSive's fresh taste and the detoxifying effect provided by the replenishing nutrients we place in every bottle.
-              </p>
-              <p className="text-lg font-medium text-brand-olive italic border-l-4 border-brand-berry pl-6">
-                "We leave no stone unturned, ensuring an imPRESSive taste from the first sip to the last."
-              </p>
-            </div>
+            <p className="text-lg text-center text-muted-foreground leading-relaxed">
+              Our vision is to become a trusted wellness brand that inspires everyday balance, nourishes communities, and proves that intentional nutrition can be both beautiful and delicious.
+            </p>
           </div>
         </div>
       </section>
