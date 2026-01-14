@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useUsers, useAssignRole, useRemoveRole, UserWithRole } from '@/hooks/use-users';
+import { useUsers, useAssignRole, useRemoveRole, useCreateUser, UserWithRole } from '@/hooks/use-users';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Table,
@@ -12,6 +12,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Dialog,
@@ -38,7 +39,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Search, UserPlus, X, Shield, ShieldCheck } from 'lucide-react';
+import { Search, UserPlus, X, Shield, ShieldCheck, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 
 export function UserManagementPanel() {
@@ -46,6 +47,7 @@ export function UserManagementPanel() {
   const { data: users, isLoading } = useUsers();
   const assignRole = useAssignRole();
   const removeRole = useRemoveRole();
+  const createUser = useCreateUser();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
@@ -53,6 +55,12 @@ export function UserManagementPanel() {
   const [selectedRole, setSelectedRole] = useState<'admin' | 'moderator'>('admin');
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
   const [roleToRemove, setRoleToRemove] = useState<{ user: UserWithRole; role: 'admin' | 'moderator' | 'user' } | null>(null);
+  
+  // Add user dialog state
+  const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
+  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserName, setNewUserName] = useState('');
+  const [newUserRole, setNewUserRole] = useState<'none' | 'admin' | 'moderator'>('none');
 
   const filteredUsers = users?.filter(user => {
     const query = searchQuery.toLowerCase();
@@ -118,6 +126,24 @@ export function UserManagementPanel() {
     return true;
   };
 
+  const handleCreateUser = () => {
+    createUser.mutate(
+      { 
+        email: newUserEmail, 
+        full_name: newUserName || undefined,
+        role: newUserRole === 'none' ? undefined : newUserRole
+      },
+      {
+        onSuccess: () => {
+          setAddUserDialogOpen(false);
+          setNewUserEmail('');
+          setNewUserName('');
+          setNewUserRole('none');
+        },
+      }
+    );
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -131,15 +157,21 @@ export function UserManagementPanel() {
 
   return (
     <div className="space-y-4">
-      {/* Search Bar */}
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search by email or name..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10"
-        />
+      {/* Header with Search and Add User */}
+      <div className="flex flex-col sm:flex-row gap-4 justify-between">
+        <div className="relative max-w-sm flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by email or name..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Button onClick={() => setAddUserDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add User
+        </Button>
       </div>
 
       {/* Users Table */}
@@ -288,6 +320,76 @@ export function UserManagementPanel() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Add User Dialog */}
+      <Dialog open={addUserDialogOpen} onOpenChange={setAddUserDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New User</DialogTitle>
+            <DialogDescription>
+              Create a new user account. They will receive an email to set their password.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email *</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="user@example.com"
+                value={newUserEmail}
+                onChange={(e) => setNewUserEmail(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="name">Full Name</Label>
+              <Input
+                id="name"
+                placeholder="John Doe"
+                value={newUserName}
+                onChange={(e) => setNewUserName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Assign Role (Optional)</Label>
+              <Select
+                value={newUserRole}
+                onValueChange={(value: 'none' | 'admin' | 'moderator') => setNewUserRole(value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No special role</SelectItem>
+                  <SelectItem value="admin">
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className="h-4 w-4" />
+                      Admin
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="moderator">
+                    <div className="flex items-center gap-2">
+                      <Shield className="h-4 w-4" />
+                      Moderator
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddUserDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleCreateUser} 
+              disabled={createUser.isPending || !newUserEmail}
+            >
+              {createUser.isPending ? 'Creating...' : 'Create User'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
