@@ -74,8 +74,10 @@ export default function ProductDetail() {
     );
   };
 
-  // Check if product is a wellness shot (fixed $3 price)
-  const isWellnessShot = product?.category?.slug === 'wellness-shots';
+  // Check if product is a wellness shot (fixed $3 price, no sizes, no addons)
+  // Wellness shots have slugs starting with "wellness-shot-" (not subscription)
+  const isWellnessShot = product?.slug?.startsWith('wellness-shot-') && 
+    product?.slug !== 'wellness-shot-subscription';
 
   // Price Calculation
   let currentPrice = 0;
