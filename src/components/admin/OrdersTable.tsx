@@ -1,14 +1,23 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { useOrders, useUpdateOrderStatus, OrderWithItems } from '@/hooks/use-orders';
+import { useOrders, useUpdateOrderStatus, useArchiveOrders, useUnarchiveOrders, OrderWithItems, ArchiveType } from '@/hooks/use-orders';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, Package, Truck, CheckCircle, XCircle, Clock, RefreshCw } from 'lucide-react';
+import { Eye, Package, CheckCircle, XCircle, Clock, RefreshCw, Archive, Plus, ArchiveRestore, ChevronDown } from 'lucide-react';
+import { CreateOrderDialog } from './CreateOrderDialog';
 
 const ORDER_STATUSES = [
   { value: 'pending', label: 'Pending', icon: Clock, color: 'bg-yellow-100 text-yellow-800' },
@@ -19,7 +28,18 @@ const ORDER_STATUSES = [
   { value: 'cancelled', label: 'Cancelled', icon: XCircle, color: 'bg-red-100 text-red-800' },
 ];
 
+const ARCHIVE_OPTIONS: { value: ArchiveType; label: string }[] = [
+  { value: 'archived_weekly', label: 'Weekly Archive' },
+  { value: 'archived_monthly', label: 'Monthly Archive' },
+  { value: 'archived_quarterly', label: 'Quarterly Archive' },
+  { value: 'archived_yearly', label: 'Yearly Archive' },
+];
+
 function getStatusBadge(status: string) {
+  if (status?.startsWith('archived_')) {
+    const archiveLabel = ARCHIVE_OPTIONS.find(a => a.value === status)?.label || 'Archived';
+    return <Badge className="bg-gray-100 text-gray-800 border-0">{archiveLabel}</Badge>;
+  }
   const statusConfig = ORDER_STATUSES.find(s => s.value === status) || ORDER_STATUSES[0];
   return (
     <Badge className={`${statusConfig.color} border-0`}>
@@ -29,10 +49,15 @@ function getStatusBadge(status: string) {
 }
 
 export function OrdersTable() {
-  const { data: orders, isLoading, refetch } = useOrders();
+  const [showArchived, setShowArchived] = useState(false);
+  const { data: orders, isLoading, refetch } = useOrders(showArchived);
   const updateStatus = useUpdateOrderStatus();
+  const archiveOrders = useArchiveOrders();
+  const unarchiveOrders = useUnarchiveOrders();
   const { toast } = useToast();
   const [selectedOrder, setSelectedOrder] = useState<OrderWithItems | null>(null);
+  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     try {
@@ -40,6 +65,50 @@ export function OrdersTable() {
       toast({ title: 'Order status updated' });
     } catch {
       toast({ title: 'Failed to update status', variant: 'destructive' });
+    }
+  };
+
+  const handleSelectOrder = (orderId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedOrderIds(ids => [...ids, orderId]);
+    } else {
+      setSelectedOrderIds(ids => ids.filter(id => id !== orderId));
+    }
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked && orders) {
+      setSelectedOrderIds(orders.map(o => o.id));
+    } else {
+      setSelectedOrderIds([]);
+    }
+  };
+
+  const handleArchive = async (archiveType: ArchiveType) => {
+    if (selectedOrderIds.length === 0) {
+      toast({ title: 'Please select orders to archive', variant: 'destructive' });
+      return;
+    }
+    try {
+      await archiveOrders.mutateAsync({ orderIds: selectedOrderIds, archiveType });
+      toast({ title: `${selectedOrderIds.length} order(s) archived` });
+      setSelectedOrderIds([]);
+    } catch {
+      toast({ title: 'Failed to archive orders', variant: 'destructive' });
+    }
+  };
+
+  const handleUnarchive = async () => {
+    if (selectedOrderIds.length === 0) {
+      toast({ title: 'Please select orders to restore', variant: 'destructive' });
+      return;
+    }
+    try {
+      await unarchiveOrders.mutateAsync({ orderIds: selectedOrderIds });
+      toast({ title: `${selectedOrderIds.length} order(s) restored` });
+      setSelectedOrderIds([]);
+    } catch {
+      toast({ title: 'Failed to restore orders', variant: 'destructive' });
     }
   };
 
@@ -53,86 +122,146 @@ export function OrdersTable() {
     );
   }
 
-  if (!orders?.length) {
-    return (
-      <div className="text-center py-12 text-muted-foreground">
-        <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-        <p>No orders yet</p>
-      </div>
-    );
-  }
-
   return (
     <>
-      <div className="flex justify-end mb-4">
-        <Button variant="outline" size="sm" onClick={() => refetch()}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
-      </div>
+      <div className="space-y-4">
+        {/* Header Actions */}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <Tabs value={showArchived ? 'archived' : 'active'} onValueChange={(v) => {
+            setShowArchived(v === 'archived');
+            setSelectedOrderIds([]);
+          }}>
+            <TabsList>
+              <TabsTrigger value="active">Active Orders</TabsTrigger>
+              <TabsTrigger value="archived">Archived</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          
+          <div className="flex items-center gap-2">
+            {selectedOrderIds.length > 0 && (
+              <>
+                {showArchived ? (
+                  <Button variant="outline" size="sm" onClick={handleUnarchive}>
+                    <ArchiveRestore className="h-4 w-4 mr-2" />
+                    Restore ({selectedOrderIds.length})
+                  </Button>
+                ) : (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Archive className="h-4 w-4 mr-2" />
+                        Archive ({selectedOrderIds.length})
+                        <ChevronDown className="h-4 w-4 ml-2" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      {ARCHIVE_OPTIONS.map((option) => (
+                        <DropdownMenuItem key={option.value} onClick={() => handleArchive(option.value)}>
+                          {option.label}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </>
+            )}
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+            <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Order
+            </Button>
+          </div>
+        </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Order #</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>Customer</TableHead>
-            <TableHead>Items</TableHead>
-            <TableHead>Total</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {orders.map((order) => (
-            <TableRow key={order.id}>
-              <TableCell className="font-mono font-medium">
-                {order.order_number}
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {format(new Date(order.created_at ?? new Date()), 'MMM d, yyyy h:mm a')}
-              </TableCell>
-              <TableCell>
-                <div>
-                  <p className="font-medium">{order.customer_name || 'Guest'}</p>
-                  <p className="text-sm text-muted-foreground">{order.email}</p>
-                </div>
-              </TableCell>
-              <TableCell>{order.order_items?.length || 0} items</TableCell>
-              <TableCell className="font-medium">${order.total.toFixed(2)}</TableCell>
-              <TableCell>
-                <Select
-                  value={order.status || 'pending'}
-                  onValueChange={(value) => handleStatusChange(order.id, value)}
-                >
-                  <SelectTrigger className="w-[130px] h-8">
-                    <SelectValue>{getStatusBadge(order.status || 'pending')}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ORDER_STATUSES.map((status) => (
-                      <SelectItem key={status.value} value={status.value}>
-                        <div className="flex items-center gap-2">
-                          <status.icon className="h-4 w-4" />
-                          {status.label}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </TableCell>
-              <TableCell className="text-right">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setSelectedOrder(order)}
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+        {!orders?.length ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p>{showArchived ? 'No archived orders' : 'No orders yet'}</p>
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={orders.length > 0 && selectedOrderIds.length === orders.length}
+                    onCheckedChange={handleSelectAll}
+                  />
+                </TableHead>
+                <TableHead>Order #</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Customer</TableHead>
+                <TableHead>Items</TableHead>
+                <TableHead>Total</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {orders.map((order) => (
+                <TableRow key={order.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedOrderIds.includes(order.id)}
+                      onCheckedChange={(checked) => handleSelectOrder(order.id, !!checked)}
+                    />
+                  </TableCell>
+                  <TableCell className="font-mono font-medium">
+                    {order.order_number}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {format(new Date(order.created_at ?? new Date()), 'MMM d, yyyy h:mm a')}
+                  </TableCell>
+                  <TableCell>
+                    <div>
+                      <p className="font-medium">{order.customer_name || 'Guest'}</p>
+                      <p className="text-sm text-muted-foreground">{order.email}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell>{order.order_items?.length || 0} items</TableCell>
+                  <TableCell className="font-medium">${order.total.toFixed(2)}</TableCell>
+                  <TableCell>
+                    {showArchived ? (
+                      getStatusBadge(order.status || 'pending')
+                    ) : (
+                      <Select
+                        value={order.status || 'pending'}
+                        onValueChange={(value) => handleStatusChange(order.id, value)}
+                      >
+                        <SelectTrigger className="w-[130px] h-8">
+                          <SelectValue>{getStatusBadge(order.status || 'pending')}</SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ORDER_STATUSES.map((status) => (
+                            <SelectItem key={status.value} value={status.value}>
+                              <div className="flex items-center gap-2">
+                                <status.icon className="h-4 w-4" />
+                                {status.label}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setSelectedOrder(order)}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </div>
 
       <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
         <DialogContent className="max-w-2xl">
@@ -142,6 +271,8 @@ export function OrdersTable() {
           {selectedOrder && <OrderDetails order={selectedOrder} />}
         </DialogContent>
       </Dialog>
+
+      <CreateOrderDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
     </>
   );
 }
@@ -164,6 +295,9 @@ function OrderDetails({ order }: { order: OrderWithItems }) {
             <p><span className="text-muted-foreground">Date:</span> {format(new Date(order.created_at ?? new Date()), 'PPpp')}</p>
             <p><span className="text-muted-foreground">Status:</span> {getStatusBadge(order.status || 'pending')}</p>
             <p><span className="text-muted-foreground">Fulfillment:</span> {order.fulfillment_type || 'pickup'}</p>
+            {order.pickup_date && (
+              <p><span className="text-muted-foreground">Pickup:</span> {order.pickup_date} at {order.pickup_time}</p>
+            )}
             {order.payment_id && (
               <p><span className="text-muted-foreground">Payment ID:</span> <span className="font-mono text-xs">{order.payment_id}</span></p>
             )}
