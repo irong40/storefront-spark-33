@@ -30,8 +30,10 @@ import { AnalyticsDashboard } from '@/components/admin/analytics/AnalyticsDashbo
 import { BusinessSettingsForm } from '@/components/admin/BusinessSettingsForm';
 import { ProductVariantsPanel } from '@/components/admin/ProductVariantsPanel';
 import { GiftCardsPanel } from '@/components/admin/GiftCardsPanel';
+import { FeaturedProductsPanel } from '@/components/admin/FeaturedProductsPanel';
+import { AnnouncementsPanel } from '@/components/admin/AnnouncementsPanel';
 import { useToast } from '@/hooks/use-toast';
-import { BarChart3, Settings, RefreshCw, Sliders, Gift } from 'lucide-react';
+import { BarChart3, Settings, RefreshCw, Sliders, Gift, Star, Megaphone } from 'lucide-react';
 import { Plus, Pencil, Trash2, Wand2, Loader2, Image, Package, ShoppingBag } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -193,6 +195,14 @@ export default function Admin() {
             <TabsTrigger value="gift-cards" className="gap-2">
               <Gift className="h-4 w-4" />
               Gift Cards
+            </TabsTrigger>
+            <TabsTrigger value="featured" className="gap-2">
+              <Star className="h-4 w-4" />
+              Featured
+            </TabsTrigger>
+            <TabsTrigger value="announcements" className="gap-2">
+              <Megaphone className="h-4 w-4" />
+              Announcements
             </TabsTrigger>
             <TabsTrigger value="settings" className="gap-2">
               <Settings className="h-4 w-4" />
@@ -371,6 +381,14 @@ export default function Admin() {
                 <GiftCardsPanel />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="featured">
+            <FeaturedProductsPanel />
+          </TabsContent>
+
+          <TabsContent value="announcements">
+            <AnnouncementsPanel />
           </TabsContent>
         </Tabs>
 
