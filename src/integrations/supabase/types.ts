@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      announcements: {
+        Row: {
+          created_at: string | null
+          emoji: string | null
+          ends_at: string | null
+          id: string
+          is_active: boolean | null
+          message: string
+          sort_order: number | null
+          starts_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          emoji?: string | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          message: string
+          sort_order?: number | null
+          starts_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          emoji?: string | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          message?: string
+          sort_order?: number | null
+          starts_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       business_settings: {
         Row: {
           address_line1: string | null

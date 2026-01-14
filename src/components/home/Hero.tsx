@@ -1,8 +1,13 @@
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import { useFeaturedProducts } from '@/hooks/use-products';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function Hero() {
+  const { data: products, isLoading } = useFeaturedProducts();
+  const displayProducts = products?.slice(0, 3) || [];
+
   return (
     <section className="relative min-h-screen flex items-center pt-4 overflow-hidden">
       {/* Background */}
@@ -74,30 +79,79 @@ export function Hero() {
               {/* Background circle */}
               <div className="absolute inset-[10%] rounded-full bg-gradient-to-br from-brand-cream-dark to-brand-terracotta opacity-30" />
 
-              {/* Floating juice cards */}
-              <div className="absolute top-[10%] left-[5%] bg-card rounded-2xl p-3 shadow-lifted animate-float z-10 w-44">
-                <div className="aspect-[4/5] rounded-xl overflow-hidden mb-3">
-                  <img src="/images/products/11-green-goddess.jpg" alt="Green Goddess" className="w-full h-full object-cover" />
-                </div>
-                <div className="font-display text-sm font-semibold text-brand-brown">Green Goddess</div>
-                <div className="text-xs text-brand-warm-gray line-clamp-1">Kale • Spinach • Apple</div>
-              </div>
+              {/* Floating juice cards - Dynamic from database */}
+              {isLoading ? (
+                <>
+                  <Skeleton className="absolute top-[10%] left-[5%] w-44 h-56 rounded-2xl" />
+                  <Skeleton className="absolute top-[45%] right-0 w-44 h-56 rounded-2xl" />
+                  <Skeleton className="absolute bottom-[5%] left-[15%] w-44 h-56 rounded-2xl" />
+                </>
+              ) : (
+                <>
+                  {displayProducts[0] && (
+                    <Link
+                      to={`/products/${displayProducts[0].slug}`}
+                      className="absolute top-[10%] left-[5%] bg-card rounded-2xl p-3 shadow-lifted animate-float z-10 w-44 hover:shadow-xl transition-shadow"
+                    >
+                      <div className="aspect-[4/5] rounded-xl overflow-hidden mb-3">
+                        <img
+                          src={displayProducts[0].image_url || '/placeholder.svg'}
+                          alt={displayProducts[0].name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="font-display text-sm font-semibold text-brand-brown truncate">
+                        {displayProducts[0].name}
+                      </div>
+                      <div className="text-xs text-brand-warm-gray line-clamp-1">
+                        {displayProducts[0].short_description || displayProducts[0].ingredients || 'Fresh & Organic'}
+                      </div>
+                    </Link>
+                  )}
 
-              <div className="absolute top-[45%] right-0 bg-card rounded-2xl p-3 shadow-lifted animate-float-delayed z-20 w-44">
-                <div className="aspect-[4/5] rounded-xl overflow-hidden mb-3">
-                  <img src="/images/products/24-citrus-blast.jpg" alt="Citrus Sunrise" className="w-full h-full object-cover" />
-                </div>
-                <div className="font-display text-sm font-semibold text-brand-brown">Citrus Sunrise</div>
-                <div className="text-xs text-brand-warm-gray line-clamp-1">Orange • Grapefruit • Ginger</div>
-              </div>
+                  {displayProducts[1] && (
+                    <Link
+                      to={`/products/${displayProducts[1].slug}`}
+                      className="absolute top-[45%] right-0 bg-card rounded-2xl p-3 shadow-lifted animate-float-delayed z-20 w-44 hover:shadow-xl transition-shadow"
+                    >
+                      <div className="aspect-[4/5] rounded-xl overflow-hidden mb-3">
+                        <img
+                          src={displayProducts[1].image_url || '/placeholder.svg'}
+                          alt={displayProducts[1].name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="font-display text-sm font-semibold text-brand-brown truncate">
+                        {displayProducts[1].name}
+                      </div>
+                      <div className="text-xs text-brand-warm-gray line-clamp-1">
+                        {displayProducts[1].short_description || displayProducts[1].ingredients || 'Fresh & Organic'}
+                      </div>
+                    </Link>
+                  )}
 
-              <div className="absolute bottom-[5%] left-[15%] bg-card rounded-2xl p-3 shadow-lifted animate-float-slow z-30 w-44">
-                <div className="aspect-[4/5] rounded-xl overflow-hidden mb-3">
-                  <img src="/images/products/10-very-berry.jpg" alt="Berry Bliss" className="w-full h-full object-cover" />
-                </div>
-                <div className="font-display text-sm font-semibold text-brand-brown">Berry Bliss</div>
-                <div className="text-xs text-brand-warm-gray line-clamp-1">Blueberry • Acai • Banana</div>
-              </div>
+                  {displayProducts[2] && (
+                    <Link
+                      to={`/products/${displayProducts[2].slug}`}
+                      className="absolute bottom-[5%] left-[15%] bg-card rounded-2xl p-3 shadow-lifted animate-float-slow z-30 w-44 hover:shadow-xl transition-shadow"
+                    >
+                      <div className="aspect-[4/5] rounded-xl overflow-hidden mb-3">
+                        <img
+                          src={displayProducts[2].image_url || '/placeholder.svg'}
+                          alt={displayProducts[2].name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="font-display text-sm font-semibold text-brand-brown truncate">
+                        {displayProducts[2].name}
+                      </div>
+                      <div className="text-xs text-brand-warm-gray line-clamp-1">
+                        {displayProducts[2].short_description || displayProducts[2].ingredients || 'Fresh & Organic'}
+                      </div>
+                    </Link>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>
