@@ -261,7 +261,7 @@ export default function ProductDetail() {
             {!product.variants?.length && product.slug !== 'egift-card' && globalSizes.length > 0 && !requiresFlavors && (
               <div className="mb-8">
                 <span className="font-medium text-brand-brown block mb-3">
-                  Select Size:
+                  Size:
                 </span>
                 <div className="flex flex-wrap gap-3">
                   {globalSizes.map((size) => (
