@@ -43,10 +43,10 @@ export function Header() {
       }`}>
         {/* Logo */}
         <Link to="/" className="flex items-center p-3">
-          <img 
+        <img 
             src={logo} 
             alt="imPRESSive Juice Bar" 
-            className={`w-auto object-contain transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_8px_20px_rgba(0,0,0,0.15)] ${
+            className={`w-auto object-contain transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_8px_20px_rgba(0,0,0,0.15)] mix-blend-multiply ${
               isScrolled 
                 ? 'h-10 md:h-12 lg:h-14' 
                 : 'h-[70px] md:h-[90px] lg:h-[100px]'
