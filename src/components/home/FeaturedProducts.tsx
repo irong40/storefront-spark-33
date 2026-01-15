@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Plus } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCart } from '@/contexts/CartContext';
-
 const productImages: Record<string, string> = {
   // Sweet Treats
   'kiwi-kwencher': '/images/products/06-kiwi-kwencher.jpg',
@@ -38,30 +37,29 @@ const productImages: Record<string, string> = {
   // Subscriptions
   'wellness-shot-subscription': '/images/products/29-wellness-shot-subscription.jpg',
   'gallon-subscription': '/images/products/31-gallon-subscription.jpg',
-  '3-pack-subscription': '/images/products/30-3-pack-subscription.jpg',
+  '3-pack-subscription': '/images/products/30-3-pack-subscription.jpg'
 };
-
 const productEmojis: Record<string, string> = {
   // Fallbacks
   'kiwi-kwencher': '🥝',
-  'pomegranate-pearadise': '🍐',
+  'pomegranate-pearadise': '🍐'
   // ... (keep limited fallback if needed, or rely on default)
 };
-
 export function FeaturedProducts() {
-  const { data: products, isLoading } = useFeaturedProducts();
-  const { addItem } = useCart();
-
+  const {
+    data: products,
+    isLoading
+  } = useFeaturedProducts();
+  const {
+    addItem
+  } = useCart();
   const getProductImage = (slug: string) => {
     return productImages[slug] || null;
   };
-
   const getEmoji = (slug: string) => {
     return productEmojis[slug] || '🧃';
   };
-
-  return (
-    <section className="py-24 bg-card relative">
+  return <section className="py-24 bg-card relative">
       {/* Gradient overlay from background */}
       <div className="absolute top-0 left-0 right-0 h-48 bg-gradient-to-b from-background to-transparent pointer-events-none" />
 
@@ -78,10 +76,8 @@ export function FeaturedProducts() {
         </div>
 
         {/* Products Grid */}
-        {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-background rounded-3xl p-6">
+        {isLoading ? <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => <div key={i} className="bg-background rounded-3xl p-6">
                 <Skeleton className="w-28 h-36 mx-auto mb-4 rounded-2xl" />
                 <Skeleton className="h-6 w-3/4 mx-auto mb-2" />
                 <Skeleton className="h-4 w-full mb-4" />
@@ -89,45 +85,25 @@ export function FeaturedProducts() {
                   <Skeleton className="h-8 w-20" />
                   <Skeleton className="h-10 w-10 rounded-full" />
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              </div>)}
+          </div> : <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {products?.map((product, index) => {
-              const imageSrc = product.image_url || getProductImage(product.slug);
-
-              return (
-                <div
-                  key={product.id}
-                  className="group bg-background rounded-3xl p-6 text-center transition-all duration-300 hover:-translate-y-2 hover:shadow-lifted relative overflow-hidden flex flex-col h-full"
-                >
+          const imageSrc = product.image_url || getProductImage(product.slug);
+          return <div key={product.id} className="group bg-background rounded-3xl p-6 text-center transition-all duration-300 hover:-translate-y-2 hover:shadow-lifted relative overflow-hidden flex flex-col h-full">
                   {/* Top gradient border on hover */}
                   <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand-berry to-brand-mustard transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
 
                   {/* Image */}
                   <Link to={`/products/${product.slug}`} className="block mb-4">
                     <div className="relative w-full aspect-[4/5] mx-auto bg-gradient-to-br from-brand-cream-dark to-brand-terracotta/20 rounded-2xl overflow-hidden flex items-center justify-center">
-                      {imageSrc ? (
-                        <img
-                          src={imageSrc}
-                          alt={product.name}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        />
-                      ) : (
-                        <span className="text-6xl">{getEmoji(product.slug)}</span>
-                      )}
+                      {imageSrc ? <img src={imageSrc} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" /> : <span className="text-6xl">{getEmoji(product.slug)}</span>}
 
-                      {index === 0 && (
-                        <span className="absolute top-3 right-3 bg-brand-berry text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider shadow-sm z-10">
+                      {index === 0 && <span className="absolute top-3 right-3 bg-brand-berry text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider shadow-sm z-10">
                           Popular
-                        </span>
-                      )}
-                      {index === 3 && (
-                        <span className="absolute top-3 right-3 bg-brand-olive text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider shadow-sm z-10">
+                        </span>}
+                      {index === 3 && <span className="absolute top-3 right-3 bg-brand-olive text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider shadow-sm z-10">
                           New
-                        </span>
-                      )}
+                        </span>}
                     </div>
                   </Link>
 
@@ -143,23 +119,15 @@ export function FeaturedProducts() {
                     </p>
 
                     <div className="mt-auto flex items-center justify-between">
-                      <div className="font-display text-lg font-medium text-brand-olive">
-                        Select Size
-                      </div>
-                      <Button
-                        size="icon"
-                        className="rounded-full bg-brand-berry hover:bg-brand-berry-dark hover:scale-110 transition-all shadow-sm"
-                        onClick={() => addItem(product.id)}
-                      >
+                      
+                      <Button size="icon" className="rounded-full bg-brand-berry hover:bg-brand-berry-dark hover:scale-110 transition-all shadow-sm" onClick={() => addItem(product.id)}>
                         <Plus className="h-5 w-5" />
                       </Button>
                     </div>
                   </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
+                </div>;
+        })}
+          </div>}
 
         {/* View All CTA */}
         <div className="text-center mt-12">
@@ -171,6 +139,5 @@ export function FeaturedProducts() {
           </Button>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 }
