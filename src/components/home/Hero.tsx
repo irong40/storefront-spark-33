@@ -133,10 +133,9 @@ export function Hero() {
                   {getProduct(0) && (
                     <Link
                       to={`/products/${getProduct(0)!.slug}`}
-                      className={`absolute top-[10%] left-[5%] bg-card rounded-lg p-2.5 shadow-lifted animate-float-card z-10 w-36 hover:shadow-xl transition-all duration-300 ${
+                      className={`absolute top-[10%] left-[5%] bg-card rounded-lg p-2.5 shadow-lifted z-10 w-36 hover:shadow-xl transition-all duration-300 ${
                         fadingCard === 0 ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
                       }`}
-                      style={{ '--float-duration': '25s', '--float-delay': '0s', '--card-rotation': '-2deg' } as React.CSSProperties}
                     >
                       <div className="aspect-[4/5] rounded overflow-hidden mb-2">
                         <img
@@ -157,10 +156,9 @@ export function Hero() {
                   {getProduct(1) && (
                     <Link
                       to={`/products/${getProduct(1)!.slug}`}
-                      className={`absolute top-[45%] right-0 bg-card rounded-lg p-2.5 shadow-lifted animate-float-card z-20 w-36 hover:shadow-xl transition-all duration-300 ${
+                      className={`absolute top-[45%] right-0 bg-card rounded-lg p-2.5 shadow-lifted z-20 w-36 hover:shadow-xl transition-all duration-300 ${
                         fadingCard === 1 ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
                       }`}
-                      style={{ '--float-duration': '30s', '--float-delay': '5s', '--card-rotation': '2deg' } as React.CSSProperties}
                     >
                       <div className="aspect-[4/5] rounded overflow-hidden mb-2">
                         <img
@@ -181,10 +179,9 @@ export function Hero() {
                   {getProduct(2) && (
                     <Link
                       to={`/products/${getProduct(2)!.slug}`}
-                      className={`absolute bottom-[5%] left-[15%] bg-card rounded-lg p-2.5 shadow-lifted animate-float-card z-30 w-36 hover:shadow-xl transition-all duration-300 ${
+                      className={`absolute bottom-[5%] left-[15%] bg-card rounded-lg p-2.5 shadow-lifted z-30 w-36 hover:shadow-xl transition-all duration-300 ${
                         fadingCard === 2 ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
                       }`}
-                      style={{ '--float-duration': '35s', '--float-delay': '10s', '--card-rotation': '0deg' } as React.CSSProperties}
                     >
                       <div className="aspect-[4/5] rounded overflow-hidden mb-2">
                         <img
