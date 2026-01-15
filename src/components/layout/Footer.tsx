@@ -18,7 +18,7 @@ export function Footer() {
               <img
                 src={logo}
                 alt="imPRESSive Juice Bar"
-                className="h-24 w-auto object-contain"
+                className="h-24 w-auto object-contain mix-blend-multiply"
               />
             </Link>
             <p className="font-script text-lg text-brand-mustard mb-4">
