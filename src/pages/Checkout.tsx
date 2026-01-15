@@ -613,6 +613,7 @@ export default function Checkout() {
               ) : (
                 <SquarePaymentForm
                   amountInCents={totalInCents}
+                  sessionId={localStorage.getItem('cart_session_id') || ''}
                   onSuccess={handlePaymentSuccess}
                   onError={handlePaymentError}
                   disabled={isSubmitting}
