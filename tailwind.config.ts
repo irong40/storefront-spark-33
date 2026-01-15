@@ -103,11 +103,11 @@ export default {
         "3xl": "1rem",
       },
       boxShadow: {
-        soft: "var(--shadow-soft)",
-        medium: "var(--shadow-medium)",
-        lifted: "var(--shadow-lifted)",
-        berry: "var(--shadow-berry)",
         subtle: "0 2px 20px rgba(0,0,0,0.04)",
+        soft: "0 8px 40px rgba(0,0,0,0.06)",
+        lifted: "0 20px 60px rgba(0,0,0,0.08)",
+        medium: "var(--shadow-medium)",
+        berry: "var(--shadow-berry)",
       },
       keyframes: {
         "accordion-down": {
