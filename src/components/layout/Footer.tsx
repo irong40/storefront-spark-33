@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Instagram, Facebook } from 'lucide-react';
 import { useBusinessSettings } from '@/hooks/use-business';
 import { useCategories } from '@/hooks/use-categories';
-import logo from '@/assets/logo-new.png';
+import logo from '@/assets/logo-transparent.png';
 
 export function Footer() {
   const { data: business } = useBusinessSettings();
