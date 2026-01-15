@@ -124,32 +124,32 @@ export function Hero() {
               {/* Floating juice cards - Dynamic from database with rotation */}
               {isLoading ? (
                 <>
-                  <Skeleton className="absolute top-[10%] left-[5%] w-44 h-56 rounded-2xl" />
-                  <Skeleton className="absolute top-[45%] right-0 w-44 h-56 rounded-2xl" />
-                  <Skeleton className="absolute bottom-[5%] left-[15%] w-44 h-56 rounded-2xl" />
+                  <Skeleton className="absolute top-[10%] left-[5%] w-36 h-48 rounded-lg" />
+                  <Skeleton className="absolute top-[45%] right-0 w-36 h-48 rounded-lg" />
+                  <Skeleton className="absolute bottom-[5%] left-[15%] w-36 h-48 rounded-lg" />
                 </>
               ) : (
                 <>
                   {getProduct(0) && (
                     <Link
                       to={`/products/${getProduct(0)!.slug}`}
-                      className={`absolute top-[10%] left-[5%] bg-card rounded-2xl p-3 shadow-lifted animate-float-card z-10 w-44 hover:shadow-xl transition-all duration-300 ${
+                      className={`absolute top-[10%] left-[5%] bg-card rounded-lg p-2.5 shadow-lifted animate-float-card z-10 w-36 hover:shadow-xl transition-all duration-300 ${
                         fadingCard === 0 ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
                       }`}
                       style={{ '--float-duration': '25s', '--float-delay': '0s', '--card-rotation': '-2deg' } as React.CSSProperties}
                     >
-                      <div className="aspect-[4/5] rounded-xl overflow-hidden mb-3">
+                      <div className="aspect-[4/5] rounded overflow-hidden mb-2">
                         <img
                           src={getProduct(0)!.image_url || '/placeholder.svg'}
                           alt={getProduct(0)!.name}
                           className="w-full h-full object-cover"
                         />
                       </div>
-                      <div className="font-display text-sm font-semibold text-brand-brown truncate">
+                      <div className="font-display text-sm text-charcoal truncate">
                         {getProduct(0)!.name}
                       </div>
-                      <div className="text-xs text-brand-warm-gray line-clamp-1">
-                        {getProduct(0)!.short_description || getProduct(0)!.ingredients || 'Fresh & Natural'}
+                      <div className="text-[10px] tracking-[0.1em] uppercase text-taupe">
+                        Signature Elixir
                       </div>
                     </Link>
                   )}
@@ -157,23 +157,23 @@ export function Hero() {
                   {getProduct(1) && (
                     <Link
                       to={`/products/${getProduct(1)!.slug}`}
-                      className={`absolute top-[45%] right-0 bg-card rounded-2xl p-3 shadow-lifted animate-float-card z-20 w-44 hover:shadow-xl transition-all duration-300 ${
+                      className={`absolute top-[45%] right-0 bg-card rounded-lg p-2.5 shadow-lifted animate-float-card z-20 w-36 hover:shadow-xl transition-all duration-300 ${
                         fadingCard === 1 ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
                       }`}
                       style={{ '--float-duration': '30s', '--float-delay': '5s', '--card-rotation': '2deg' } as React.CSSProperties}
                     >
-                      <div className="aspect-[4/5] rounded-xl overflow-hidden mb-3">
+                      <div className="aspect-[4/5] rounded overflow-hidden mb-2">
                         <img
                           src={getProduct(1)!.image_url || '/placeholder.svg'}
                           alt={getProduct(1)!.name}
                           className="w-full h-full object-cover"
                         />
                       </div>
-                      <div className="font-display text-sm font-semibold text-brand-brown truncate">
+                      <div className="font-display text-sm text-charcoal truncate">
                         {getProduct(1)!.name}
                       </div>
-                      <div className="text-xs text-brand-warm-gray line-clamp-1">
-                        {getProduct(1)!.short_description || getProduct(1)!.ingredients || 'Fresh & Natural'}
+                      <div className="text-[10px] tracking-[0.1em] uppercase text-taupe">
+                        Energizing
                       </div>
                     </Link>
                   )}
@@ -181,23 +181,23 @@ export function Hero() {
                   {getProduct(2) && (
                     <Link
                       to={`/products/${getProduct(2)!.slug}`}
-                      className={`absolute bottom-[5%] left-[15%] bg-card rounded-2xl p-3 shadow-lifted animate-float-card z-30 w-44 hover:shadow-xl transition-all duration-300 ${
+                      className={`absolute bottom-[5%] left-[15%] bg-card rounded-lg p-2.5 shadow-lifted animate-float-card z-30 w-36 hover:shadow-xl transition-all duration-300 ${
                         fadingCard === 2 ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
                       }`}
                       style={{ '--float-duration': '35s', '--float-delay': '10s', '--card-rotation': '0deg' } as React.CSSProperties}
                     >
-                      <div className="aspect-[4/5] rounded-xl overflow-hidden mb-3">
+                      <div className="aspect-[4/5] rounded overflow-hidden mb-2">
                         <img
                           src={getProduct(2)!.image_url || '/placeholder.svg'}
                           alt={getProduct(2)!.name}
                           className="w-full h-full object-cover"
                         />
                       </div>
-                      <div className="font-display text-sm font-semibold text-brand-brown truncate">
+                      <div className="font-display text-sm text-charcoal truncate">
                         {getProduct(2)!.name}
                       </div>
-                      <div className="text-xs text-brand-warm-gray line-clamp-1">
-                        {getProduct(2)!.short_description || getProduct(2)!.ingredients || 'Fresh & Natural'}
+                      <div className="text-[10px] tracking-[0.1em] uppercase text-taupe">
+                        Antioxidant
                       </div>
                     </Link>
                   )}
