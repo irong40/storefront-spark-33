@@ -1,9 +1,18 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+interface CartItem {
+  quantity: number;
+  product: { price: number } | null;
+  size: { price: number } | null;
+  size_override: { price: number } | null;
+  addons: { price: number }[] | null;
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -12,13 +21,134 @@ serve(async (req) => {
   }
 
   try {
-    const { sourceId, amount, currency = "USD" } = await req.json();
+    const { sourceId, sessionId, currency = "USD" } = await req.json();
 
-    console.log("Processing payment:", { sourceId: sourceId?.substring(0, 20) + "...", amount, currency });
+    console.log("Processing payment with server-side validation:", { 
+      sourceId: sourceId?.substring(0, 20) + "...", 
+      sessionId,
+      currency 
+    });
 
-    if (!sourceId || !amount) {
+    if (!sourceId || !sessionId) {
       console.error("Missing required parameters");
-      throw new Error("Missing sourceId or amount");
+      throw new Error("Missing sourceId or sessionId");
+    }
+
+    // Initialize Supabase client with service role for server-side access
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error("Supabase configuration missing");
+      throw new Error("Server configuration error");
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Find the cart by session ID
+    const { data: cart, error: cartError } = await supabase
+      .from('carts')
+      .select('id')
+      .eq('session_id', sessionId)
+      .maybeSingle();
+
+    if (cartError) {
+      console.error("Cart lookup error:", cartError);
+      throw new Error("Failed to verify cart");
+    }
+
+    if (!cart) {
+      console.error("Cart not found for session:", sessionId);
+      throw new Error("Cart not found");
+    }
+
+    // Fetch cart items with all pricing data
+    const { data: cartItems, error: itemsError } = await supabase
+      .from('cart_items')
+      .select(`
+        quantity,
+        product:products(price),
+        size:product_sizes(price),
+        size_override:product_size_overrides(price),
+        addon_ids
+      `)
+      .eq('cart_id', cart.id);
+
+    if (itemsError) {
+      console.error("Cart items lookup error:", itemsError);
+      throw new Error("Failed to fetch cart items");
+    }
+
+    if (!cartItems || cartItems.length === 0) {
+      console.error("Cart is empty");
+      throw new Error("Cart is empty");
+    }
+
+    // Fetch addon prices separately (since addon_ids is an array)
+    const allAddonIds = cartItems.flatMap(item => (item.addon_ids as string[]) || []);
+    let addonsMap = new Map<string, number>();
+    
+    if (allAddonIds.length > 0) {
+      const { data: addons } = await supabase
+        .from('product_addons')
+        .select('id, price')
+        .in('id', allAddonIds);
+      
+      if (addons) {
+        addonsMap = new Map(addons.map(a => [a.id, Number(a.price)]));
+      }
+    }
+
+    // Calculate server-side total (matching client-side logic exactly)
+    let subtotal = 0;
+    for (const item of cartItems) {
+      // Prioritize: size_override price > size price > product price
+      let itemPrice = 0;
+      
+      // Handle the joined relations - they come back as objects, not arrays when using .single() joins
+      const product = item.product as unknown as { price: number } | null;
+      const size = item.size as unknown as { price: number } | null;
+      const sizeOverride = item.size_override as unknown as { price: number } | null;
+      
+      if (sizeOverride && sizeOverride.price != null) {
+        itemPrice = Number(sizeOverride.price);
+      } else if (size && size.price != null) {
+        itemPrice = Number(size.price);
+      } else if (product && product.price != null) {
+        itemPrice = Number(product.price);
+      }
+
+      // Add addon prices
+      const addonIds = (item.addon_ids as string[]) || [];
+      for (const addonId of addonIds) {
+        const addonPrice = addonsMap.get(addonId);
+        if (addonPrice) {
+          itemPrice += addonPrice;
+        }
+      }
+
+      subtotal += itemPrice * item.quantity;
+    }
+
+    // Apply tax rate (8% as defined in checkout config)
+    const TAX_RATE = 0.08;
+    const tax = subtotal * TAX_RATE;
+    const total = subtotal + tax;
+    
+    // Convert to cents for Square API
+    const amountInCents = Math.round(total * 100);
+
+    console.log("Calculated payment amount:", { 
+      subtotal, 
+      tax, 
+      total, 
+      amountInCents,
+      itemCount: cartItems.length 
+    });
+
+    if (amountInCents <= 0) {
+      console.error("Invalid calculated amount");
+      throw new Error("Invalid order amount");
     }
 
     // Get Square credentials from environment
@@ -41,7 +171,7 @@ serve(async (req) => {
       source_id: sourceId,
       idempotency_key: crypto.randomUUID(),
       amount_money: {
-        amount: Math.round(amount), // Amount in cents
+        amount: amountInCents,
         currency: currency,
       },
     };
@@ -85,6 +215,12 @@ serve(async (req) => {
             last4: squareData.payment.card_details.card?.last_4,
             brand: squareData.payment.card_details.card?.card_brand,
           } : null,
+        },
+        // Return calculated amounts for order creation
+        calculatedAmounts: {
+          subtotal,
+          tax,
+          total,
         }
       }),
       {

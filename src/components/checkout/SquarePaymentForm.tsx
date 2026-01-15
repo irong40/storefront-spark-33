@@ -7,6 +7,7 @@ import { SQUARE_CONFIG } from '@/config/square';
 
 interface SquarePaymentFormProps {
   amountInCents: number;
+  sessionId: string; // Cart session ID for server-side validation
   onSuccess: (paymentResult: PaymentResult) => void;
   onError: (message: string) => void;
   disabled?: boolean;
@@ -25,6 +26,7 @@ export interface PaymentResult {
 
 export function SquarePaymentForm({ 
   amountInCents, 
+  sessionId,
   onSuccess, 
   onError,
   disabled = false 
@@ -42,10 +44,11 @@ export function SquarePaymentForm({
     try {
 
 
+      // Send session ID for server-side amount validation instead of client-provided amount
       const { data, error } = await supabase.functions.invoke('process-payment', {
         body: {
           sourceId: token,
-          amount: amountInCents,
+          sessionId: sessionId,
         },
       });
 
