@@ -31,7 +31,7 @@ import { BusinessSettingsForm } from '@/components/admin/BusinessSettingsForm';
 import { ReviewsTable } from '@/components/admin/ReviewsTable';
 import { ReferralsTable } from '@/components/admin/ReferralsTable';
 import { useToast } from '@/hooks/use-toast';
-import { BarChart3, Settings, RefreshCw, MessageSquare } from 'lucide-react';
+import { BarChart3, Settings, RefreshCw, MessageSquare, Users } from 'lucide-react';
 import { Plus, Pencil, Trash2, Wand2, Loader2, Image, Package, ShoppingBag } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 

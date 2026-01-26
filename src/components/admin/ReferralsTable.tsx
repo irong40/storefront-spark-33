@@ -71,7 +71,17 @@ export function ReferralsTable() {
 
         // Let's build a simpler table first.
 
-        const formatted = data.map((r: any) => ({
+        interface ReferralJoinResult {
+            id: string;
+            referrer_id: string;
+            referee_email: string | null;
+            status: string;
+            created_at: string;
+            referrer: { user_id: string } | null;
+            order: { total: number } | null;
+        }
+
+        const formatted = (data as unknown as ReferralJoinResult[]).map((r) => ({
             id: r.id,
             referrer_email: r.referrer?.user_id || 'Unknown', // Placeholder
             referee_email: r.referee_email || (r.order ? 'From Order' : 'Pending'),
