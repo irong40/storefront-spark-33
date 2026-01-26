@@ -4,7 +4,11 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Plus } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCart } from '@/contexts/CartContext';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { AddToCartButton } from '@/components/cart/AddToCartButton';
 
+// Keep fallback images for now if image_url is missing
 const productImages: Record<string, string> = {
   // Sweet Treats
   'kiwi-kwencher': '/images/products/06-kiwi-kwencher.jpg',
@@ -42,15 +46,12 @@ const productImages: Record<string, string> = {
 };
 
 const productEmojis: Record<string, string> = {
-  // Fallbacks
   'kiwi-kwencher': '🥝',
   'pomegranate-pearadise': '🍐',
-  // ... (keep limited fallback if needed, or rely on default)
 };
 
 export function FeaturedProducts() {
   const { data: products, isLoading } = useFeaturedProducts();
-  const { addItem } = useCart();
 
   const getProductImage = (slug: string) => {
     return productImages[slug] || null;
@@ -62,11 +63,9 @@ export function FeaturedProducts() {
 
   return (
     <section className="py-24 bg-card relative">
-      {/* Gradient overlay from background */}
       <div className="absolute top-0 left-0 right-0 h-48 bg-gradient-to-b from-background to-transparent pointer-events-none" />
 
       <div className="container relative z-10">
-        {/* Header */}
         <div className="text-center mb-16">
           <span className="label-text block mb-3">Customer Favorites</span>
           <h2 className="font-display text-3xl md:text-4xl font-medium text-brand-brown mb-3">
@@ -77,7 +76,6 @@ export function FeaturedProducts() {
           </p>
         </div>
 
-        {/* Products Grid */}
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => (
@@ -94,44 +92,59 @@ export function FeaturedProducts() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {products?.map((product, index) => {
+            {products?.map((product) => {
               const imageSrc = product.image_url || getProductImage(product.slug);
+              const isSoldOut = product.stock_quantity === 0;
 
               return (
                 <div
                   key={product.id}
-                  className="group bg-background rounded-3xl p-6 text-center transition-all duration-300 hover:-translate-y-2 hover:shadow-lifted relative overflow-hidden flex flex-col h-full"
+                  className={cn(
+                    "group bg-background rounded-3xl p-6 text-center transition-all duration-300 hover:-translate-y-2 hover:shadow-lifted relative overflow-hidden flex flex-col h-full",
+                    isSoldOut && "opacity-75 grayscale-[0.5] hover:opacity-100"
+                  )}
                 >
-                  {/* Top gradient border on hover */}
                   <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand-berry to-brand-mustard transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
 
-                  {/* Image */}
-                  <Link to={`/products/${product.slug}`} className="block mb-4">
+                  <Link to={`/products/${product.slug}`} className="block mb-4 relative">
                     <div className="relative w-full aspect-[4/5] mx-auto bg-gradient-to-br from-brand-cream-dark to-brand-terracotta/20 rounded-2xl overflow-hidden flex items-center justify-center">
                       {imageSrc ? (
                         <img
                           src={imageSrc}
                           alt={product.name}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          className={cn(
+                            "w-full h-full object-cover transition-transform duration-500",
+                            !isSoldOut && "group-hover:scale-110"
+                          )}
                         />
                       ) : (
                         <span className="text-6xl">{getEmoji(product.slug)}</span>
                       )}
 
-                      {index === 0 && (
-                        <span className="absolute top-3 right-3 bg-brand-berry text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider shadow-sm z-10">
-                          Popular
-                        </span>
-                      )}
-                      {index === 3 && (
-                        <span className="absolute top-3 right-3 bg-brand-olive text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider shadow-sm z-10">
-                          New
-                        </span>
-                      )}
+                      {/* Badges */}
+                      <div className="absolute top-3 right-3 flex flex-col gap-2 items-end z-10">
+                        {isSoldOut ? (
+                          <span className="bg-slate-800 text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                            Sold Out
+                          </span>
+                        ) : (
+                          <>
+                            {product.is_bestseller && (
+                              <span className="bg-brand-mustard text-brand-brown text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                                Best Seller
+                              </span>
+                            )}
+                            {product.is_new && (
+                              <span className="bg-brand-olive text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                                New
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </div>
                   </Link>
 
-                  {/* Product info */}
                   <div className="flex-1 flex flex-col">
                     <Link to={`/products/${product.slug}`}>
                       <h3 className="font-display text-xl font-semibold text-brand-brown mb-1 group-hover:text-brand-berry transition-colors">
@@ -144,15 +157,14 @@ export function FeaturedProducts() {
 
                     <div className="mt-auto flex items-center justify-between">
                       <div className="font-display text-lg font-medium text-brand-olive">
-                        Select Size
+                        {isSoldOut ? 'Unavailable' : 'Select Size'}
                       </div>
-                      <Button
+                      <AddToCartButton
+                        productId={product.id}
                         size="icon"
-                        className="rounded-full bg-brand-berry hover:bg-brand-berry-dark hover:scale-110 transition-all shadow-sm"
-                        onClick={() => addItem(product.id)}
-                      >
-                        <Plus className="h-5 w-5" />
-                      </Button>
+                        className="rounded-full bg-brand-berry hover:bg-brand-berry-dark hover:scale-110 transition-all shadow-sm disabled:opacity-50 disabled:hover:scale-100"
+                        disabled={isSoldOut}
+                      />
                     </div>
                   </div>
                 </div>
@@ -161,7 +173,6 @@ export function FeaturedProducts() {
           </div>
         )}
 
-        {/* View All CTA */}
         <div className="text-center mt-12">
           <Button asChild variant="outline" size="lg" className="rounded-full px-8 border-2 border-brand-olive text-brand-olive hover:bg-brand-olive hover:text-white font-semibold">
             <Link to="/products">

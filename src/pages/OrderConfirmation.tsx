@@ -6,9 +6,11 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { CheckCircle, Package, Mail, ArrowRight } from 'lucide-react';
+import { ReviewForm } from '@/components/reviews/ReviewForm';
 
 interface OrderItem {
   id: string;
+  product_id: string;
   product_name: string;
   product_price: number;
   quantity: number;
@@ -147,6 +149,13 @@ export default function OrderConfirmation() {
                   </p>
                 </div>
                 <p className="font-medium">${Number(item.total).toFixed(2)}</p>
+                <div className="ml-4">
+                  <ReviewForm
+                    productId={item.product_id}
+                    productName={item.product_name}
+                    trigger={<Button variant="ghost" size="sm" className="h-8 text-xs">Write Review</Button>}
+                  />
+                </div>
               </div>
             ))}
           </div>
@@ -198,7 +207,7 @@ export default function OrderConfirmation() {
             {order.fulfillment_type === 'pickup' ? '📍 Pickup' : '🚚 Delivery'}
           </h3>
           <p className="text-muted-foreground text-sm">
-            {order.fulfillment_type === 'pickup' 
+            {order.fulfillment_type === 'pickup'
               ? "We'll notify you when your order is ready for pickup at our store."
               : "We'll notify you when your order is out for delivery."
             }
@@ -208,13 +217,13 @@ export default function OrderConfirmation() {
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-4">
           <Button asChild className="flex-1">
-            <Link to="/products">
-              Continue Shopping
+            <Link to={`/order-tracking?order=${order.order_number}&email=${encodeURIComponent(order.email)}`}>
+              Track Order Status
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
           <Button asChild variant="outline" className="flex-1">
-            <Link to="/account/orders">View All Orders</Link>
+            <Link to="/products">Continue Shopping</Link>
           </Button>
         </div>
       </div>

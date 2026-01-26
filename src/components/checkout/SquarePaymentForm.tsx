@@ -7,9 +7,12 @@ import { SQUARE_CONFIG } from '@/config/square';
 
 interface SquarePaymentFormProps {
   amountInCents: number;
-  onSuccess: (paymentResult: PaymentResult) => void;
+  onSuccess: (paymentResult: PaymentResult & { customerId?: string; cardId?: string }) => void;
   onError: (message: string) => void;
   disabled?: boolean;
+  mode?: 'payment' | 'subscription';
+  customerEmail?: string;
+  userId?: string;
 }
 
 export interface PaymentResult {
@@ -23,11 +26,11 @@ export interface PaymentResult {
   walletType?: 'apple_pay' | 'google_pay' | 'card';
 }
 
-export function SquarePaymentForm({ 
-  amountInCents, 
-  onSuccess, 
+export function SquarePaymentForm({
+  amountInCents,
+  onSuccess,
   onError,
-  disabled = false 
+  disabled = false
 }: SquarePaymentFormProps) {
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -36,40 +39,84 @@ export function SquarePaymentForm({
 
   const processPayment = async (token: string, walletType: 'apple_pay' | 'google_pay' | 'card' = 'card') => {
     if (disabled || isProcessing) return;
-    
+
     setIsProcessing(true);
-    
+
     try {
+      if (props.mode === 'subscription') {
+        if (!props.customerEmail || !props.userId) {
+          throw new Error('Missing customer details for subscription');
+        }
 
-
-      const { data, error } = await supabase.functions.invoke('process-payment', {
-        body: {
-          sourceId: token,
-          amount: amountInCents,
-        },
-      });
-
-      if (error) {
-        console.error('Edge function error:', error);
-        throw new Error(error.message || 'Payment processing failed');
-      }
-
-      if (data?.error) {
-        console.error('Payment error:', data.error);
-        throw new Error(data.error);
-      }
-
-      if (data?.success && data?.payment) {
-
-        onSuccess({
-          paymentId: data.payment.id,
-          status: data.payment.status,
-          receiptUrl: data.payment.receiptUrl,
-          cardDetails: data.payment.cardDetails,
-          walletType,
+        // 1. Create/Get Customer
+        const { data: customerData, error: customerError } = await supabase.functions.invoke('square-subscription-manager', {
+          body: {
+            action: 'create_customer',
+            email: props.customerEmail,
+            userId: props.userId,
+          },
         });
+
+        if (customerError || !customerData?.success) {
+          throw new Error(customerError?.message || 'Failed to initialize customer profile');
+        }
+
+        const customerId = customerData.data.customer.id;
+
+        // 2. Save Card
+        const { data: cardData, error: cardError } = await supabase.functions.invoke('square-subscription-manager', {
+          body: {
+            action: 'save_card',
+            customerId,
+            sourceId: token,
+          },
+        });
+
+        if (cardError || !cardData?.success) {
+          throw new Error(cardError?.message || 'Failed to save card');
+        }
+
+        // Return success with Card ID
+        onSuccess({
+          paymentId: 'SAVED_CARD', // Placeholder
+          status: 'COMPLETED',
+          cardDetails: {
+            last4: cardData.data.card.last_4,
+            brand: cardData.data.card.card_brand,
+          },
+          walletType,
+          customerId, // Pass this back
+          cardId: cardData.data.card.id // Pass this back
+        } as PaymentResult & { customerId: string, cardId: string });
+
       } else {
-        throw new Error('Unexpected payment response');
+        // Standard One-Time Payment
+        const { data, error } = await supabase.functions.invoke('process-payment', {
+          body: {
+            sourceId: token,
+            amount: amountInCents,
+          },
+        });
+
+        if (error) {
+          throw new Error(error.message || 'Payment processing failed');
+        }
+
+        if (data?.error) {
+          throw new Error(data.error);
+        }
+
+        if (data?.success && data?.payment) {
+          onSuccess({
+            paymentId: data.payment.id,
+            status: data.payment.status,
+            receiptUrl: data.payment.receiptUrl,
+            cardDetails: data.payment.cardDetails,
+            walletType,
+          });
+        } else {
+          throw new Error('Unexpected payment response');
+        }
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Payment failed. Please try again.';
@@ -97,17 +144,17 @@ export function SquarePaymentForm({
             onError(errorResult.errors?.[0]?.message || 'Payment failed. Please try again.');
             return;
           }
-          
+
           // Detect wallet type from token details
           const tokenDetails = token as { details?: { method?: string } };
           let walletType: 'apple_pay' | 'google_pay' | 'card' = 'card';
-          
+
           if (tokenDetails.details?.method === 'Apple Pay') {
             walletType = 'apple_pay';
           } else if (tokenDetails.details?.method === 'Google Pay') {
             walletType = 'google_pay';
           }
-          
+
           await processPayment(token.token, walletType);
         }}
         createPaymentRequest={() => ({
@@ -134,7 +181,7 @@ export function SquarePaymentForm({
 
         {/* Credit Card Form */}
         <div className="relative">
-          <CreditCard 
+          <CreditCard
             buttonProps={{
               css: {
                 backgroundColor: 'hsl(142, 76%, 36%)',
@@ -178,7 +225,7 @@ export function SquarePaymentForm({
             includeInputLabels
             focus="cardNumber"
           />
-          
+
           {isProcessing && (
             <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center rounded-xl">
               <div className="flex items-center gap-2 text-primary">
@@ -193,29 +240,29 @@ export function SquarePaymentForm({
       {/* Accepted Payment Methods */}
       <div className="flex items-center justify-center gap-4 pt-2">
         <CreditCardIcon className="h-6 w-6 text-muted-foreground" />
-        <img 
-          src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" 
-          alt="Visa" 
+        <img
+          src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg"
+          alt="Visa"
           className="h-4 opacity-50"
         />
-        <img 
-          src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" 
-          alt="Mastercard" 
+        <img
+          src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg"
+          alt="Mastercard"
           className="h-6 opacity-50"
         />
-        <img 
-          src="https://upload.wikimedia.org/wikipedia/commons/f/fa/American_Express_logo_%282018%29.svg" 
-          alt="American Express" 
+        <img
+          src="https://upload.wikimedia.org/wikipedia/commons/f/fa/American_Express_logo_%282018%29.svg"
+          alt="American Express"
           className="h-5 opacity-50"
         />
-        <img 
-          src="https://upload.wikimedia.org/wikipedia/commons/b/b0/Apple_Pay_logo.svg" 
-          alt="Apple Pay" 
+        <img
+          src="https://upload.wikimedia.org/wikipedia/commons/b/b0/Apple_Pay_logo.svg"
+          alt="Apple Pay"
           className="h-5 opacity-50"
         />
-        <img 
-          src="https://upload.wikimedia.org/wikipedia/commons/f/f2/Google_Pay_Logo.svg" 
-          alt="Google Pay" 
+        <img
+          src="https://upload.wikimedia.org/wikipedia/commons/f/f2/Google_Pay_Logo.svg"
+          alt="Google Pay"
           className="h-5 opacity-50"
         />
       </div>

@@ -26,17 +26,18 @@ interface OrderEmailRequest {
   total: number;
   fulfillmentType: string;
   paymentStatus?: string;
+  giftCardUsed?: number;
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
+  // ... (keep existing CORS check) ...
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const orderData: OrderEmailRequest = await req.json();
-    
+
     console.log("Sending order confirmation email to:", orderData.email);
 
     const {
@@ -50,9 +51,10 @@ const handler = async (req: Request): Promise<Response> => {
       total,
       fulfillmentType,
       paymentStatus,
+      giftCardUsed = 0,
     } = orderData;
 
-    // Build items HTML
+    // ... (keep itemsHtml generation) ... 
     const itemsHtml = items
       .map(
         (item) => `
@@ -72,6 +74,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailHtml = `
       <!DOCTYPE html>
       <html>
+        <!-- ... head ... -->
         <head>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -140,19 +143,25 @@ const handler = async (req: Request): Promise<Response> => {
                   <td style="padding: 4px 0; color: #6b7280;">Shipping</td>
                   <td style="padding: 4px 0; text-align: right;">${Number(shipping) === 0 ? 'Free' : `$${Number(shipping).toFixed(2)}`}</td>
                 </tr>
+                ${Number(giftCardUsed) > 0 ? `
+                <tr>
+                  <td style="padding: 4px 0; color: #16a34a;">Gift Card</td>
+                  <td style="padding: 4px 0; text-align: right; color: #16a34a;">-$${Number(giftCardUsed).toFixed(2)}</td>
+                </tr>
+                ` : ''}
                 <tr>
                   <td style="padding: 12px 0 4px; font-size: 18px; font-weight: 600; border-top: 2px solid #e5e7eb;">Total</td>
-                  <td style="padding: 12px 0 4px; text-align: right; font-size: 18px; font-weight: 600; border-top: 2px solid #e5e7eb;">$${Number(total).toFixed(2)}</td>
+                  <td style="padding: 12px 0 4px; text-align: right; font-size: 18px; font-weight: 600; border-top: 2px solid #e5e7eb;">$${Math.max(0, Number(total) - Number(giftCardUsed)).toFixed(2)}</td>
                 </tr>
               </table>
 
               <!-- Fulfillment Message -->
               <div style="background-color: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
                 <p style="margin: 0; color: #065f46;">
-                  ${fulfillmentType === 'pickup' 
-                    ? "📍 <strong>Pickup:</strong> We'll notify you when your order is ready for pickup at our store."
-                    : "🚚 <strong>Delivery:</strong> We'll notify you when your order is out for delivery."
-                  }
+                  ${fulfillmentType === 'pickup'
+        ? "📍 <strong>Pickup:</strong> We'll notify you when your order is ready for pickup at our store."
+        : "🚚 <strong>Delivery:</strong> We'll notify you when your order is out for delivery."
+      }
                 </p>
               </div>
 
@@ -175,6 +184,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await resend.emails.send({
       from: "Order Confirmation <onboarding@resend.dev>",
       to: [email],
+      bcc: ["orders@impressivejuice.com"],
       subject: `Order Confirmed - ${orderNumber}`,
       html: emailHtml,
     });

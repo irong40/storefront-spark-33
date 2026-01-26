@@ -12,9 +12,9 @@ serve(async (req) => {
   }
 
   try {
-    const { sourceId, amount, currency = "USD" } = await req.json();
+    const { sourceId, amount, currency = "USD", customerId } = await req.json();
 
-    console.log("Processing payment:", { sourceId: sourceId?.substring(0, 20) + "...", amount, currency });
+    console.log("Processing payment:", { sourceId: sourceId?.substring(0, 20) + "...", amount, currency, customerId });
 
     if (!sourceId || !amount) {
       console.error("Missing required parameters");
@@ -31,7 +31,7 @@ serve(async (req) => {
 
     // Determine if we're in sandbox mode based on the token prefix
     const isSandbox = squareToken.startsWith("EAAAl") || squareToken.startsWith("sandbox");
-    const squareUrl = isSandbox 
+    const squareUrl = isSandbox
       ? "https://connect.squareupsandbox.com/v2/payments"
       : "https://connect.squareup.com/v2/payments";
 
@@ -44,6 +44,7 @@ serve(async (req) => {
         amount: Math.round(amount), // Amount in cents
         currency: currency,
       },
+      customer_id: customerId, // Optional, but required if source_id is a Card ID
     };
 
     console.log("Sending payment request to Square...");
@@ -75,8 +76,8 @@ serve(async (req) => {
     console.log("Payment successful:", squareData.payment?.id);
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         payment: {
           id: squareData.payment?.id,
           status: squareData.payment?.status,

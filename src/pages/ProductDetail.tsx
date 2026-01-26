@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { ChevronLeft, Minus, Plus, Check, Leaf } from 'lucide-react';
+import { ReviewList } from '@/components/reviews/ReviewList';
 
 export default function ProductDetail() {
   // Fetch global sizes for mapping
@@ -432,6 +433,12 @@ export default function ProductDetail() {
                 </p>
               </div>
             )}
+
+            {/* Reviews Section */}
+            <div className="mt-12">
+              <h3 className="font-heading font-semibold text-xl text-brand-brown mb-6">Customer Reviews</h3>
+              <ReviewList productId={product.id} productName={product.name} />
+            </div>
           </div>
         </div>
       </div>

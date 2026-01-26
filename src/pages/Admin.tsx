@@ -28,8 +28,10 @@ import { ProductForm } from '@/components/admin/ProductForm';
 import { OrdersTable } from '@/components/admin/OrdersTable';
 import { AnalyticsDashboard } from '@/components/admin/analytics/AnalyticsDashboard';
 import { BusinessSettingsForm } from '@/components/admin/BusinessSettingsForm';
+import { ReviewsTable } from '@/components/admin/ReviewsTable';
+import { ReferralsTable } from '@/components/admin/ReferralsTable';
 import { useToast } from '@/hooks/use-toast';
-import { BarChart3, Settings, RefreshCw } from 'lucide-react';
+import { BarChart3, Settings, RefreshCw, MessageSquare } from 'lucide-react';
 import { Plus, Pencil, Trash2, Wand2, Loader2, Image, Package, ShoppingBag } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -184,6 +186,14 @@ export default function Admin() {
               <Package className="h-4 w-4" />
               Products
             </TabsTrigger>
+            <TabsTrigger value="reviews" className="gap-2">
+              <MessageSquare className="h-4 w-4" />
+              Reviews
+            </TabsTrigger>
+            <TabsTrigger value="referrals" className="gap-2">
+              <Users className="h-4 w-4" />
+              Referrals
+            </TabsTrigger>
             <TabsTrigger value="settings" className="gap-2">
               <Settings className="h-4 w-4" />
               Settings
@@ -333,6 +343,28 @@ export default function Admin() {
                     </TableBody>
                   </Table>
                 )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="reviews">
+            <Card>
+              <CardHeader>
+                <CardTitle>Reviews Moderation</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ReviewsTable />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="referrals">
+            <Card>
+              <CardHeader>
+                <CardTitle>Referral Program</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ReferralsTable />
               </CardContent>
             </Card>
           </TabsContent>

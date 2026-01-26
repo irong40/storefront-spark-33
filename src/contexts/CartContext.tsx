@@ -20,7 +20,13 @@ interface CartItem {
   gift_card_data: GiftCardData | null;
   product: Pick<Product, 'id' | 'name' | 'slug' | 'price' | 'image_url' | 'is_available'>;
   size?: { id: string; name: string; price: number } | null;
-  size_override?: { id: string; size_name: string; price: number } | null;
+  size_override?: {
+    id: string;
+    size_name: string;
+    price: number;
+    is_subscription?: boolean;
+    subscription_interval?: string | null;
+  } | null;
 }
 
 interface CartContextType {
@@ -123,7 +129,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         gift_card_data,
         product:products(id, name, slug, price, image_url, is_available),
         size:product_sizes(id, name, price),
-        size_override:product_size_overrides(id, size_name, price)
+        size_override:product_size_overrides(id, size_name, price, is_subscription, subscription_interval)
       `)
       .eq('cart_id', id);
 

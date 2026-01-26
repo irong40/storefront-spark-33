@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { Eye, Package, Truck, CheckCircle, XCircle, Clock, RefreshCw } from 'lucide-react';
 
 const ORDER_STATUSES = [
@@ -38,6 +39,23 @@ export function OrdersTable() {
     try {
       await updateStatus.mutateAsync({ orderId, status: newStatus });
       toast({ title: 'Order status updated' });
+
+      // Trigger email notification
+      const order = orders?.find(o => o.id === orderId);
+      if (order) {
+        supabase.functions.invoke('send-order-status-update', {
+          body: {
+            email: order.email,
+            customerName: order.customer_name,
+            orderNumber: order.order_number,
+            newStatus: newStatus,
+            fulfillmentType: order.fulfillment_type,
+            trackingUrl: `${window.location.origin}/order-tracking?order=${order.order_number}&email=${encodeURIComponent(order.email)}`,
+          }
+        }).then(({ error }) => {
+          if (error) console.error('Failed to send status email:', error);
+        });
+      }
     } catch {
       toast({ title: 'Failed to update status', variant: 'destructive' });
     }

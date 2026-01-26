@@ -10,7 +10,9 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { User, Package, LogOut, Loader2 } from 'lucide-react';
+import { User, Package, LogOut, Loader2, CalendarClock, Gift } from 'lucide-react';
+import { SubscriptionsTab } from '@/components/account/SubscriptionsTab';
+import { ReferralsTab } from '@/components/account/ReferralsTab';
 
 interface Order {
   id: string;
@@ -24,11 +26,11 @@ export default function Account() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, profile, signOut, updateProfile, isLoading: authLoading } = useAuth();
-  
+
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  
+
   const [profileData, setProfileData] = useState({
     full_name: profile?.full_name || '',
     phone: profile?.phone || '',
@@ -145,13 +147,21 @@ export default function Account() {
                 <Package className="h-4 w-4" />
                 Orders
               </TabsTrigger>
+              <TabsTrigger value="subscriptions" className="gap-2">
+                <CalendarClock className="h-4 w-4" />
+                Subscriptions
+              </TabsTrigger>
+              <TabsTrigger value="referrals" className="gap-2">
+                <Gift className="h-4 w-4" />
+                Refer a Friend
+              </TabsTrigger>
             </TabsList>
 
             {/* Profile Tab */}
             <TabsContent value="profile">
               <div className="bg-card rounded-2xl border border-border p-6">
                 <h2 className="text-xl font-semibold mb-6">Profile Information</h2>
-                
+
                 <form onSubmit={handleProfileUpdate} className="space-y-6 max-w-md">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
@@ -221,7 +231,7 @@ export default function Account() {
                 ) : (
                   <div className="space-y-4">
                     {orders.map((order) => (
-                      <Link 
+                      <Link
                         key={order.id}
                         to={`/order-confirmation/${order.id}`}
                         className="block p-4 rounded-xl border border-border hover:border-primary/50 transition-colors"
@@ -249,6 +259,16 @@ export default function Account() {
                   </div>
                 )}
               </div>
+            </TabsContent>
+
+            {/* Subscriptions Tab */}
+            <TabsContent value="subscriptions">
+              <SubscriptionsTab user={user} />
+            </TabsContent>
+
+            {/* Referrals Tab */}
+            <TabsContent value="referrals">
+              <ReferralsTab userId={user.id} />
             </TabsContent>
           </Tabs>
         </div>

@@ -30,7 +30,10 @@ export interface Product {
   stock_quantity: number;
   is_featured: boolean;
   is_available: boolean;
+  is_available: boolean;
   active: boolean;
+  is_new: boolean;
+  is_bestseller: boolean;
   sort_order: number;
   created_at: string;
   category?: {

@@ -31,7 +31,7 @@ serve(async (req) => {
 
     // Parse the webhook payload
     const payload: SquareWebhookEvent = await req.json();
-    
+
     console.log('Received Square webhook:', payload.type, payload.event_id);
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -41,7 +41,7 @@ serve(async (req) => {
       case 'catalog.version.updated': {
         // Catalog was updated - trigger a full catalog sync
         console.log('Catalog updated, triggering sync...');
-        
+
         // Call the sync-square-catalog function
         const syncResponse = await fetch(
           `${supabaseUrl}/functions/v1/sync-square-catalog`,
@@ -65,7 +65,7 @@ serve(async (req) => {
       case 'inventory.count.updated': {
         // Single inventory item updated
         console.log('Inventory count updated:', payload.data.id);
-        
+
         const inventoryData = payload.data.object as {
           catalog_object_id?: string;
           location_id?: string;
@@ -74,7 +74,7 @@ serve(async (req) => {
 
         if (inventoryData?.catalog_object_id && inventoryData.location_id === squareLocationId) {
           const quantity = parseInt(inventoryData.quantity || '0', 10);
-          
+
           // Update the product directly
           const { error } = await supabase
             .from('products')
@@ -99,7 +99,7 @@ serve(async (req) => {
       case 'catalog.item.deleted': {
         // Individual item change - trigger catalog sync for simplicity
         console.log(`Catalog item ${payload.type}, triggering sync...`);
-        
+
         const syncResponse = await fetch(
           `${supabaseUrl}/functions/v1/sync-square-catalog`,
           {
@@ -113,6 +113,72 @@ serve(async (req) => {
 
         if (!syncResponse.ok) {
           console.error('Failed to trigger catalog sync:', await syncResponse.text());
+        }
+        break;
+      }
+
+      case 'invoice.payment_made': {
+        console.log('Invoice payment made (Subscription Renewal):', payload.data.id);
+        const invoice = payload.data.object as any;
+        const subscriptionId = invoice.subscription_id;
+
+        if (subscriptionId) {
+          // 1. Find local subscription
+          const { data: sub, error: subError } = await supabase
+            .from('subscriptions')
+            .select('*, user:user_id(email, id)')
+            .eq('square_subscription_id', subscriptionId)
+            .single();
+
+          if (subError || !sub) {
+            console.error('Subscription not found locally:', subscriptionId);
+            break;
+          }
+
+          // 2. Create Fulfillment Order
+          const orderNumber = `SUB-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${sub.id.slice(0, 4).toUpperCase()}`;
+
+          const { data: order, error: orderError } = await supabase
+            .from('orders')
+            .insert({
+              order_number: orderNumber,
+              user_id: sub.user_id,
+              email: sub.user?.email, // Need to fetch user email or store in sub? Fetched via join
+              fulfillment_type: 'pickup', // Default for subs?
+              subtotal: sub.amount / 100,
+              tax: 0, // Simplified for now
+              shipping: 0,
+              total: sub.amount / 100,
+              payment_status: 'completed',
+              notes: 'Subscription Renewal', // Flag as subscription
+            })
+            .select()
+            .single();
+
+          if (orderError) {
+            console.error('Failed to create renewal order:', orderError);
+            break;
+          }
+
+          // 3. Create Order Item
+          await supabase.from('order_items').insert({
+            order_id: order.id,
+            product_id: sub.product_id,
+            product_name: sub.product_name,
+            quantity: 1, // Assuming 1 for now
+            product_price: sub.amount / 100,
+            total: sub.amount / 100
+          });
+
+          // 4. Log Event
+          await supabase.from('subscription_logs').insert({
+            subscription_id: sub.id,
+            event_type: 'renewed',
+            details: { invoice_id: invoice.id, order_id: order.id }
+          });
+
+          // 5. Send Email (Optional)
+          // supabase.functions.invoke('send-order-confirmation', ...)
         }
         break;
       }
