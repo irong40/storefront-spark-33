@@ -165,6 +165,14 @@ const handler = async (req: Request): Promise<Response> => {
                 </p>
               </div>
 
+              <!-- Track Order Button -->
+              <div style="text-align: center; margin-bottom: 24px;">
+                <a href="${Deno.env.get("PUBLIC_SITE_URL") || "https://impressive-juice-bar.com"}/order-tracking?order=${orderNumber}" 
+                   style="display: inline-block; background-color: #16a34a; color: #ffffff; text-decoration: none; padding: 12px 32px; border-radius: 8px; font-weight: 600;">
+                  Track Your Order
+                </a>
+              </div>
+
               <p style="margin: 0; color: #6b7280; font-size: 14px;">
                 If you have any questions about your order, please don't hesitate to contact us.
               </p>
