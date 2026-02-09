@@ -5,6 +5,7 @@ import { CategoryChart } from './CategoryChart';
 import { TopProductsPanel } from './TopProductsPanel';
 import { CustomerMetricsPanel } from './CustomerMetricsPanel';
 import { PeakHoursPanel } from './PeakHoursPanel';
+import { ReferralStatsPanel } from './ReferralStatsPanel';
 import { ActivityFeed } from './ActivityFeed';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DollarSign, ShoppingBag, Users, TrendingUp } from 'lucide-react';
@@ -78,10 +79,11 @@ export function AnalyticsDashboard() {
       </div>
 
       {/* Secondary Panels */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <TopProductsPanel />
         <CustomerMetricsPanel />
         <PeakHoursPanel />
+        <ReferralStatsPanel />
       </div>
 
       {/* Activity Feed */}

@@ -395,3 +395,103 @@ export function useCategoryDistribution() {
     },
   });
 }
+
+export interface ReferralStats {
+  totalReferrals: number;
+  completedReferrals: number;
+  referralRevenue: number;
+  conversionRate: number;
+}
+
+export interface TopReferrer {
+  userId: string;
+  referralCount: number;
+  totalRevenue: number;
+}
+
+export function useReferralStats() {
+  return useQuery({
+    queryKey: ['analytics-referrals'],
+    queryFn: async (): Promise<ReferralStats> => {
+      // Get all referrals
+      const { data: referrals, error: refError } = await supabase
+        .from('referrals')
+        .select('id, status, order_id');
+
+      if (refError) throw refError;
+
+      const totalReferrals = referrals?.length || 0;
+      const completedReferrals = referrals?.filter(r => r.status === 'completed').length || 0;
+      const conversionRate = totalReferrals > 0 ? (completedReferrals / totalReferrals) * 100 : 0;
+
+      // Get revenue from completed referral orders
+      const completedOrderIds = referrals
+        ?.filter(r => r.status === 'completed' && r.order_id)
+        .map(r => r.order_id) || [];
+
+      let referralRevenue = 0;
+      if (completedOrderIds.length > 0) {
+        const { data: orders, error: ordError } = await supabase
+          .from('orders')
+          .select('total')
+          .in('id', completedOrderIds);
+
+        if (!ordError && orders) {
+          referralRevenue = orders.reduce((sum, o) => sum + Number(o.total), 0);
+        }
+      }
+
+      return {
+        totalReferrals,
+        completedReferrals,
+        referralRevenue,
+        conversionRate,
+      };
+    },
+  });
+}
+
+export function useTopReferrers(limit: number = 5) {
+  return useQuery({
+    queryKey: ['analytics-top-referrers', limit],
+    queryFn: async (): Promise<TopReferrer[]> => {
+      // Get referrals grouped by referrer
+      const { data: referrals, error } = await supabase
+        .from('referrals')
+        .select(`
+          referrer_id,
+          status,
+          order:order_id (total)
+        `)
+        .eq('status', 'completed');
+
+      if (error) throw error;
+
+      // Aggregate by referrer
+      interface JoinedReferral {
+        referrer_id: string;
+        status: string;
+        order: { total: number } | null;
+      }
+
+      const referrerMap: Record<string, { count: number; revenue: number }> = {};
+
+      (referrals as unknown as JoinedReferral[])?.forEach(ref => {
+        if (!referrerMap[ref.referrer_id]) {
+          referrerMap[ref.referrer_id] = { count: 0, revenue: 0 };
+        }
+        referrerMap[ref.referrer_id].count += 1;
+        referrerMap[ref.referrer_id].revenue += Number(ref.order?.total || 0);
+      });
+
+      return Object.entries(referrerMap)
+        .map(([userId, stats]) => ({
+          userId,
+          referralCount: stats.count,
+          totalRevenue: stats.revenue,
+        }))
+        .sort((a, b) => b.referralCount - a.referralCount)
+        .slice(0, limit);
+    },
+  });
+}
