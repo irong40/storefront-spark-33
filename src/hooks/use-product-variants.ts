@@ -1,5 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface ProductSize {
   id: string;
@@ -33,16 +33,16 @@ export interface ProductSizeOverride {
 
 export function useProductSizes() {
   return useQuery({
-    queryKey: ['product-sizes'],
+    queryKey: ["product-sizes"],
     queryFn: async (): Promise<ProductSize[]> => {
       const { data, error } = await supabase
-        .from('product_sizes')
-        .select('*')
-        .eq('active', true)
-        .order('sort_order', { ascending: true });
+        .from("product_sizes")
+        .select("*")
+        .eq("active", true)
+        .order("sort_order", { ascending: true });
 
       if (error) {
-        console.error('Error fetching product sizes:', error);
+        console.error("Error fetching product sizes:", error);
         return [];
       }
 
@@ -53,16 +53,16 @@ export function useProductSizes() {
 
 export function useProductAddons() {
   return useQuery({
-    queryKey: ['product-addons'],
+    queryKey: ["product-addons"],
     queryFn: async (): Promise<ProductAddon[]> => {
       const { data, error } = await supabase
-        .from('product_addons')
-        .select('*')
-        .eq('active', true)
-        .order('sort_order', { ascending: true });
+        .from("product_addons")
+        .select("*")
+        .eq("active", true)
+        .order("sort_order", { ascending: true });
 
       if (error) {
-        console.error('Error fetching product addons:', error);
+        console.error("Error fetching product addons:", error);
         return [];
       }
 
@@ -73,19 +73,19 @@ export function useProductAddons() {
 
 export function useProductSizeOverrides(productId: string) {
   return useQuery({
-    queryKey: ['product-size-overrides', productId],
+    queryKey: ["product-size-overrides", productId],
     queryFn: async (): Promise<ProductSizeOverride[]> => {
       if (!productId) return [];
 
       const { data, error } = await supabase
-        .from('product_size_overrides')
-        .select('*')
-        .eq('product_id', productId)
-        .eq('active', true)
-        .order('sort_order', { ascending: true });
+        .from("product_size_overrides")
+        .select("*")
+        .eq("product_id", productId)
+        .eq("active", true)
+        .order("sort_order", { ascending: true });
 
       if (error) {
-        console.error('Error fetching product size overrides:', error);
+        console.error("Error fetching product size overrides:", error);
         return [];
       }
 
@@ -98,27 +98,29 @@ export function useProductSizeOverrides(productId: string) {
 // Helper to get effective sizes for a product (overrides or global)
 export function useEffectiveProductSizes(productId: string) {
   const { data: globalSizes, isLoading: globalLoading } = useProductSizes();
-  const { data: overrides, isLoading: overridesLoading } = useProductSizeOverrides(productId);
+  const { data: overrides, isLoading: overridesLoading } =
+    useProductSizeOverrides(productId);
 
-  const effectiveSizes = overrides && overrides.length > 0
-    ? overrides.map(o => ({
-        id: o.id,
-        name: o.size_name,
-        size_oz: o.size_oz,
-        price: o.price,
-        sort_order: o.sort_order,
-        is_subscription: o.is_subscription,
-        subscription_interval: o.subscription_interval,
-      }))
-    : globalSizes?.map(s => ({
-        id: s.id,
-        name: s.name,
-        size_oz: s.size_oz,
-        price: s.price,
-        sort_order: s.sort_order,
-        is_subscription: false,
-        subscription_interval: null,
-      })) || [];
+  const effectiveSizes =
+    overrides && overrides.length > 0
+      ? overrides.map((o) => ({
+          id: o.id,
+          name: o.size_name,
+          size_oz: o.size_oz,
+          price: o.price,
+          sort_order: o.sort_order,
+          is_subscription: o.is_subscription,
+          subscription_interval: o.subscription_interval,
+        }))
+      : globalSizes?.map((s) => ({
+          id: s.id,
+          name: s.name,
+          size_oz: s.size_oz,
+          price: s.price,
+          sort_order: s.sort_order,
+          is_subscription: false,
+          subscription_interval: null,
+        })) || [];
 
   return {
     sizes: effectiveSizes,

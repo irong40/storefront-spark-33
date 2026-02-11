@@ -1,14 +1,20 @@
-import { useState } from 'react';
-import { useProducts, Product } from '@/hooks/use-products';
-import { supabase } from '@/integrations/supabase/client';
-import { useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Star, GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
+import { useState } from "react";
+import { useProducts, Product } from "@/hooks/use-products";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Star, GripVertical, ArrowUp, ArrowDown } from "lucide-react";
 
 export function FeaturedProductsPanel() {
   const { data: products, isLoading } = useProducts();
@@ -23,26 +29,28 @@ export function FeaturedProductsPanel() {
     setUpdating(product.id);
     try {
       const { error } = await supabase
-        .from('products')
+        .from("products")
         .update({ is_featured: !product.is_featured })
-        .eq('id', product.id);
+        .eq("id", product.id);
 
       if (error) throw error;
 
       toast({
-        title: product.is_featured ? 'Removed from featured' : 'Added to featured',
+        title: product.is_featured
+          ? "Removed from featured"
+          : "Added to featured",
       });
-      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
     } catch (error) {
-      toast({ title: 'Failed to update', variant: 'destructive' });
+      toast({ title: "Failed to update", variant: "destructive" });
     } finally {
       setUpdating(null);
     }
   };
 
-  const moveFeatured = async (product: Product, direction: 'up' | 'down') => {
+  const moveFeatured = async (product: Product, direction: "up" | "down") => {
     const currentIndex = featuredProducts.findIndex((p) => p.id === product.id);
-    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    const newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
 
     if (newIndex < 0 || newIndex >= featuredProducts.length) return;
 
@@ -54,13 +62,19 @@ export function FeaturedProductsPanel() {
 
       // Swap sort orders
       await Promise.all([
-        supabase.from('products').update({ sort_order: otherOrder }).eq('id', product.id),
-        supabase.from('products').update({ sort_order: currentOrder }).eq('id', otherProduct.id),
+        supabase
+          .from("products")
+          .update({ sort_order: otherOrder })
+          .eq("id", product.id),
+        supabase
+          .from("products")
+          .update({ sort_order: currentOrder })
+          .eq("id", otherProduct.id),
       ]);
 
-      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
     } catch (error) {
-      toast({ title: 'Failed to reorder', variant: 'destructive' });
+      toast({ title: "Failed to reorder", variant: "destructive" });
     } finally {
       setUpdating(null);
     }
@@ -93,7 +107,8 @@ export function FeaturedProductsPanel() {
             Featured Products ({featuredProducts.length})
           </CardTitle>
           <CardDescription>
-            These products appear on the homepage. Drag to reorder or toggle to remove.
+            These products appear on the homepage. Drag to reorder or toggle to
+            remove.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -109,13 +124,13 @@ export function FeaturedProductsPanel() {
                   className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg border"
                 >
                   <GripVertical className="h-4 w-4 text-muted-foreground" />
-                  
+
                   <img
-                    src={product.image_url || '/placeholder.svg'}
+                    src={product.image_url || "/placeholder.svg"}
                     alt={product.name}
                     className="w-12 h-12 object-cover rounded"
                   />
-                  
+
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{product.name}</p>
                     <p className="text-sm text-muted-foreground">
@@ -127,7 +142,7 @@ export function FeaturedProductsPanel() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      onClick={() => moveFeatured(product, 'up')}
+                      onClick={() => moveFeatured(product, "up")}
                       disabled={index === 0 || updating === product.id}
                     >
                       <ArrowUp className="h-4 w-4" />
@@ -135,8 +150,11 @@ export function FeaturedProductsPanel() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      onClick={() => moveFeatured(product, 'down')}
-                      disabled={index === featuredProducts.length - 1 || updating === product.id}
+                      onClick={() => moveFeatured(product, "down")}
+                      disabled={
+                        index === featuredProducts.length - 1 ||
+                        updating === product.id
+                      }
                     >
                       <ArrowDown className="h-4 w-4" />
                     </Button>
@@ -170,11 +188,11 @@ export function FeaturedProductsPanel() {
                 className="flex items-center gap-3 p-3 hover:bg-muted/50 rounded-lg border"
               >
                 <img
-                  src={product.image_url || '/placeholder.svg'}
+                  src={product.image_url || "/placeholder.svg"}
                   alt={product.name}
                   className="w-10 h-10 object-cover rounded"
                 />
-                
+
                 <div className="flex-1 min-w-0">
                   <p className="font-medium truncate">{product.name}</p>
                   <div className="flex items-center gap-2">

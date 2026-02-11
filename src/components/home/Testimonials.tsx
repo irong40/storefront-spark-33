@@ -1,4 +1,4 @@
-import { Star } from 'lucide-react';
+import { Star } from "lucide-react";
 
 const testimonials = [
   {
@@ -48,7 +48,10 @@ export function Testimonials() {
               {/* Stars */}
               <div className="flex gap-1 mb-6">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-5 w-5 fill-brand-mustard text-brand-mustard" />
+                  <Star
+                    key={i}
+                    className="h-5 w-5 fill-brand-mustard text-brand-mustard"
+                  />
                 ))}
               </div>
 
@@ -63,8 +66,12 @@ export function Testimonials() {
                   {testimonial.initials}
                 </div>
                 <div>
-                  <div className="font-semibold text-brand-brown">{testimonial.name}</div>
-                  <div className="text-sm text-brand-warm-gray">{testimonial.role}</div>
+                  <div className="font-semibold text-brand-brown">
+                    {testimonial.name}
+                  </div>
+                  <div className="text-sm text-brand-warm-gray">
+                    {testimonial.role}
+                  </div>
                 </div>
               </div>
             </div>

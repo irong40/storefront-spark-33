@@ -1,15 +1,20 @@
-import { useState } from 'react';
-import { Navigate } from 'react-router-dom';
-import { Layout } from '@/components/layout/Layout';
-import { useAuth } from '@/contexts/AuthContext';
-import { useIsAdmin } from '@/hooks/use-admin';
-import { useProducts, Product } from '@/hooks/use-products';
-import { useCategories } from '@/hooks/use-categories';
-import { useSquareSync } from '@/hooks/use-square-sync';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useState } from "react";
+import { Navigate } from "react-router-dom";
+import { Layout } from "@/components/layout/Layout";
+import { useAuth } from "@/contexts/AuthContext";
+import { useIsAdmin } from "@/hooks/use-admin";
+import { useProducts, Product } from "@/hooks/use-products";
+import { useCategories } from "@/hooks/use-categories";
+import { useSquareSync } from "@/hooks/use-square-sync";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,25 +24,51 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ProductForm } from '@/components/admin/ProductForm';
-import { OrdersTable } from '@/components/admin/OrdersTable';
-import { AnalyticsDashboard } from '@/components/admin/analytics/AnalyticsDashboard';
-import { BusinessSettingsForm } from '@/components/admin/BusinessSettingsForm';
-import { ProductVariantsPanel } from '@/components/admin/ProductVariantsPanel';
-import { GiftCardsPanel } from '@/components/admin/GiftCardsPanel';
-import { FeaturedProductsPanel } from '@/components/admin/FeaturedProductsPanel';
-import { AnnouncementsPanel } from '@/components/admin/AnnouncementsPanel';
-import { UserManagementPanel } from '@/components/admin/UserManagementPanel';
-import { AdminHelpPanel } from '@/components/admin/AdminHelpPanel';
-import { useToast } from '@/hooks/use-toast';
-import { BarChart3, Settings, RefreshCw, Sliders, Gift, Star, Megaphone, Users, HelpCircle } from 'lucide-react';
-import { Plus, Pencil, Trash2, Wand2, Loader2, Image, Package, ShoppingBag } from 'lucide-react';
-import { useQueryClient } from '@tanstack/react-query';
+} from "@/components/ui/alert-dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ProductForm } from "@/components/admin/ProductForm";
+import { OrdersTable } from "@/components/admin/OrdersTable";
+import { AnalyticsDashboard } from "@/components/admin/analytics/AnalyticsDashboard";
+import { BusinessSettingsForm } from "@/components/admin/BusinessSettingsForm";
+import { ProductVariantsPanel } from "@/components/admin/ProductVariantsPanel";
+import { GiftCardsPanel } from "@/components/admin/GiftCardsPanel";
+import { FeaturedProductsPanel } from "@/components/admin/FeaturedProductsPanel";
+import { AnnouncementsPanel } from "@/components/admin/AnnouncementsPanel";
+import { UserManagementPanel } from "@/components/admin/UserManagementPanel";
+import { AdminHelpPanel } from "@/components/admin/AdminHelpPanel";
+import { useToast } from "@/hooks/use-toast";
+import {
+  BarChart3,
+  Settings,
+  RefreshCw,
+  Sliders,
+  Gift,
+  Star,
+  Megaphone,
+  Users,
+  HelpCircle,
+} from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Wand2,
+  Loader2,
+  Image,
+  Package,
+  ShoppingBag,
+} from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function Admin() {
   const { user, isLoading: authLoading } = useAuth();
@@ -57,14 +88,16 @@ export default function Admin() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [generatingAll, setGeneratingAll] = useState(false);
-  const [generatingProductId, setGeneratingProductId] = useState<string | null>(null);
+  const [generatingProductId, setGeneratingProductId] = useState<string | null>(
+    null,
+  );
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
   const handleSyncFromSquare = async () => {
     await syncCatalog();
     await syncInventory();
-    queryClient.invalidateQueries({ queryKey: ['products'] });
-    queryClient.invalidateQueries({ queryKey: ['categories'] });
+    queryClient.invalidateQueries({ queryKey: ["products"] });
+    queryClient.invalidateQueries({ queryKey: ["categories"] });
   };
 
   if (authLoading || adminLoading) {
@@ -86,8 +119,12 @@ export default function Admin() {
     return (
       <Layout>
         <div className="container py-12 text-center">
-          <h1 className="text-2xl font-bold text-brand-brown mb-4">Access Denied</h1>
-          <p className="text-muted-foreground">You need admin privileges to access this page.</p>
+          <h1 className="text-2xl font-bold text-brand-brown mb-4">
+            Access Denied
+          </h1>
+          <p className="text-muted-foreground">
+            You need admin privileges to access this page.
+          </p>
         </div>
       </Layout>
     );
@@ -95,15 +132,15 @@ export default function Admin() {
 
   const handleDelete = async (product: Product) => {
     const { error } = await supabase
-      .from('products')
+      .from("products")
       .delete()
-      .eq('id', product.id);
+      .eq("id", product.id);
 
     if (error) {
-      toast({ title: 'Failed to delete product', variant: 'destructive' });
+      toast({ title: "Failed to delete product", variant: "destructive" });
     } else {
-      toast({ title: 'Product deleted' });
-      queryClient.invalidateQueries({ queryKey: ['products'] });
+      toast({ title: "Product deleted" });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
     }
     setProductToDelete(null);
   };
@@ -111,29 +148,33 @@ export default function Admin() {
   const handleGenerateImage = async (product: Product) => {
     setGeneratingProductId(product.id);
     try {
-      const { data, error } = await supabase.functions.invoke('generate-product-image', {
-        body: {
-          productName: product.name,
-          productDescription: product.short_description || product.description,
-          productSlug: product.slug,
+      const { data, error } = await supabase.functions.invoke(
+        "generate-product-image",
+        {
+          body: {
+            productName: product.name,
+            productDescription:
+              product.short_description || product.description,
+            productSlug: product.slug,
+          },
         },
-      });
+      );
 
       if (error) throw error;
       toast({ title: `Image generated for ${product.name}` });
-      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
     } catch (error) {
-      console.error('Generate error:', error);
-      toast({ title: 'Failed to generate image', variant: 'destructive' });
+      console.error("Generate error:", error);
+      toast({ title: "Failed to generate image", variant: "destructive" });
     } finally {
       setGeneratingProductId(null);
     }
   };
 
   const handleGenerateAllImages = async () => {
-    const productsWithoutImages = products?.filter(p => !p.image_url) || [];
+    const productsWithoutImages = products?.filter((p) => !p.image_url) || [];
     if (productsWithoutImages.length === 0) {
-      toast({ title: 'All products already have images' });
+      toast({ title: "All products already have images" });
       return;
     }
 
@@ -142,39 +183,48 @@ export default function Admin() {
 
     for (const product of productsWithoutImages) {
       try {
-        const { error } = await supabase.functions.invoke('generate-product-image', {
-          body: {
-            productName: product.name,
-            productDescription: product.short_description || product.description,
-            productSlug: product.slug,
+        const { error } = await supabase.functions.invoke(
+          "generate-product-image",
+          {
+            body: {
+              productName: product.name,
+              productDescription:
+                product.short_description || product.description,
+              productSlug: product.slug,
+            },
           },
-        });
+        );
 
         if (!error) successCount++;
         // Add small delay to avoid rate limits
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
       } catch (error) {
         console.error(`Failed to generate image for ${product.name}:`, error);
       }
     }
 
-    toast({ title: `Generated ${successCount} of ${productsWithoutImages.length} images` });
-    queryClient.invalidateQueries({ queryKey: ['products'] });
+    toast({
+      title: `Generated ${successCount} of ${productsWithoutImages.length} images`,
+    });
+    queryClient.invalidateQueries({ queryKey: ["products"] });
     setGeneratingAll(false);
   };
 
   const handleFormSuccess = () => {
     setIsFormOpen(false);
     setEditingProduct(null);
-    queryClient.invalidateQueries({ queryKey: ['products'] });
+    queryClient.invalidateQueries({ queryKey: ["products"] });
   };
 
-  const productsWithoutImages = products?.filter(p => !p.image_url).length || 0;
+  const productsWithoutImages =
+    products?.filter((p) => !p.image_url).length || 0;
 
   return (
     <Layout>
       <div className="container py-8">
-        <h1 className="text-3xl font-heading font-bold text-brand-brown mb-6">Admin Dashboard</h1>
+        <h1 className="text-3xl font-heading font-bold text-brand-brown mb-6">
+          Admin Dashboard
+        </h1>
 
         <Tabs defaultValue="analytics" className="space-y-6">
           <TabsList>
@@ -239,7 +289,9 @@ export default function Admin() {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 {lastCatalogSync && (
-                  <span>Last synced: {lastCatalogSync.toLocaleTimeString()}</span>
+                  <span>
+                    Last synced: {lastCatalogSync.toLocaleTimeString()}
+                  </span>
                 )}
               </div>
               <div className="flex gap-2 flex-wrap">
@@ -269,7 +321,12 @@ export default function Admin() {
                     Generate All Images ({productsWithoutImages})
                   </Button>
                 )}
-                <Button onClick={() => { setEditingProduct(null); setIsFormOpen(true); }}>
+                <Button
+                  onClick={() => {
+                    setEditingProduct(null);
+                    setIsFormOpen(true);
+                  }}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Add Product
                 </Button>
@@ -315,16 +372,26 @@ export default function Admin() {
                               </div>
                             )}
                           </TableCell>
-                          <TableCell className="font-medium">{product.name}</TableCell>
+                          <TableCell className="font-medium">
+                            {product.name}
+                          </TableCell>
                           <TableCell>
-                            {categories?.find(c => c.id === product.category_id)?.name || '-'}
+                            {categories?.find(
+                              (c) => c.id === product.category_id,
+                            )?.name || "-"}
                           </TableCell>
                           <TableCell>${product.price.toFixed(2)}</TableCell>
                           <TableCell>
                             <div className="flex gap-1 flex-wrap">
-                              {product.is_featured && <Badge variant="secondary">Featured</Badge>}
-                              {!product.is_available && <Badge variant="destructive">Unavailable</Badge>}
-                              {!product.active && <Badge variant="outline">Inactive</Badge>}
+                              {product.is_featured && (
+                                <Badge variant="secondary">Featured</Badge>
+                              )}
+                              {!product.is_available && (
+                                <Badge variant="destructive">Unavailable</Badge>
+                              )}
+                              {!product.active && (
+                                <Badge variant="outline">Inactive</Badge>
+                              )}
                             </div>
                           </TableCell>
                           <TableCell className="text-right">
@@ -345,7 +412,10 @@ export default function Admin() {
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                onClick={() => { setEditingProduct(product); setIsFormOpen(true); }}
+                                onClick={() => {
+                                  setEditingProduct(product);
+                                  setIsFormOpen(true);
+                                }}
                               >
                                 <Pencil className="h-4 w-4" />
                               </Button>
@@ -421,7 +491,7 @@ export default function Admin() {
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                {editingProduct ? 'Edit Product' : 'Add New Product'}
+                {editingProduct ? "Edit Product" : "Add New Product"}
               </DialogTitle>
             </DialogHeader>
             <ProductForm
@@ -432,12 +502,16 @@ export default function Admin() {
           </DialogContent>
         </Dialog>
 
-        <AlertDialog open={!!productToDelete} onOpenChange={() => setProductToDelete(null)}>
+        <AlertDialog
+          open={!!productToDelete}
+          onOpenChange={() => setProductToDelete(null)}
+        >
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Product</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete "{productToDelete?.name}"? This action cannot be undone.
+                Are you sure you want to delete "{productToDelete?.name}"? This
+                action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

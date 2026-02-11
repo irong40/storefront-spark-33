@@ -1,15 +1,16 @@
-import { Link } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { AddToCartButton } from '@/components/cart/AddToCartButton';
-import type { Product } from '@/hooks/use-products';
+import { Link } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { AddToCartButton } from "@/components/cart/AddToCartButton";
+import type { Product } from "@/hooks/use-products";
 
 interface ProductCardProps {
   product: Product;
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const hasDiscount = product.compare_at_price && product.compare_at_price > product.price;
+  const hasDiscount =
+    product.compare_at_price && product.compare_at_price > product.price;
 
   return (
     <Card className="group overflow-hidden border-2 border-brand-terracotta/10 hover:border-brand-berry/30 hover:shadow-lg transition-all duration-300 bg-card">
@@ -51,7 +52,9 @@ export function ProductCard({ product }: ProductCardProps) {
         )}
         <div className="flex items-center justify-between">
           {/* Price Hidden by Request */}
-          <span className="text-sm font-medium text-muted-foreground">Select Size</span>
+          <span className="text-sm font-medium text-muted-foreground">
+            Select Size
+          </span>
           {hasDiscount && (
             <span className="text-sm text-muted-foreground line-through ml-2">
               Sale

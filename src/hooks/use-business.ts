@@ -1,5 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface BusinessSettings {
   id: string;
@@ -22,11 +22,11 @@ export interface BusinessSettings {
 
 export function useBusinessSettings() {
   return useQuery({
-    queryKey: ['business-settings'],
+    queryKey: ["business-settings"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('business_settings')
-        .select('*')
+        .from("business_settings")
+        .select("*")
         .single();
 
       if (error) throw error;

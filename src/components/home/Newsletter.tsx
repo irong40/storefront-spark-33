@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
+import { toast } from "sonner";
 
 export function Newsletter() {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -13,9 +13,9 @@ export function Newsletter() {
 
     setLoading(true);
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    toast.success('Welcome to the juice squad! Check your email for 15% off.');
-    setEmail('');
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    toast.success("Welcome to the juice squad! Check your email for 15% off.");
+    setEmail("");
     setLoading(false);
   };
 
@@ -33,7 +33,8 @@ export function Newsletter() {
               Get 15% Off Your First Order
             </h2>
             <p className="text-white/85 text-lg">
-              Join our juice squad for exclusive offers, new flavor alerts, and wellness tips delivered fresh to your inbox.
+              Join our juice squad for exclusive offers, new flavor alerts, and
+              wellness tips delivered fresh to your inbox.
             </p>
           </div>
 
@@ -53,7 +54,7 @@ export function Newsletter() {
               disabled={loading}
               className="rounded-full px-8 bg-white text-brand-berry hover:bg-brand-cream font-semibold transition-all hover:-translate-y-1"
             >
-              {loading ? 'Subscribing...' : 'Subscribe'}
+              {loading ? "Subscribing..." : "Subscribe"}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </form>

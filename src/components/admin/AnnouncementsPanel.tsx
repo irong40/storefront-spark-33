@@ -1,26 +1,39 @@
-import { useState } from 'react';
+import { useState } from "react";
 import {
   useAnnouncements,
   useCreateAnnouncement,
   useUpdateAnnouncement,
   useDeleteAnnouncement,
   Announcement,
-} from '@/hooks/use-announcements';
-import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+} from "@/hooks/use-announcements";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,9 +43,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Plus, Pencil, Trash2, Megaphone } from 'lucide-react';
-import { format } from 'date-fns';
+} from "@/components/ui/alert-dialog";
+import { Plus, Pencil, Trash2, Megaphone } from "lucide-react";
+import { format } from "date-fns";
 
 interface AnnouncementFormData {
   message: string;
@@ -43,11 +56,11 @@ interface AnnouncementFormData {
 }
 
 const defaultFormData: AnnouncementFormData = {
-  message: '',
-  emoji: '✨',
+  message: "",
+  emoji: "✨",
   is_active: true,
   starts_at: new Date().toISOString().slice(0, 16),
-  ends_at: '',
+  ends_at: "",
 };
 
 export function AnnouncementsPanel() {
@@ -59,7 +72,8 @@ export function AnnouncementsPanel() {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState<AnnouncementFormData>(defaultFormData);
+  const [formData, setFormData] =
+    useState<AnnouncementFormData>(defaultFormData);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const openCreateForm = () => {
@@ -72,17 +86,17 @@ export function AnnouncementsPanel() {
     setEditingId(announcement.id);
     setFormData({
       message: announcement.message,
-      emoji: announcement.emoji || '✨',
+      emoji: announcement.emoji || "✨",
       is_active: announcement.is_active,
       starts_at: announcement.starts_at.slice(0, 16),
-      ends_at: announcement.ends_at ? announcement.ends_at.slice(0, 16) : '',
+      ends_at: announcement.ends_at ? announcement.ends_at.slice(0, 16) : "",
     });
     setIsFormOpen(true);
   };
 
   const handleSubmit = async () => {
     if (!formData.message.trim()) {
-      toast({ title: 'Message is required', variant: 'destructive' });
+      toast({ title: "Message is required", variant: "destructive" });
       return;
     }
 
@@ -92,20 +106,22 @@ export function AnnouncementsPanel() {
         emoji: formData.emoji || null,
         is_active: formData.is_active,
         starts_at: new Date(formData.starts_at).toISOString(),
-        ends_at: formData.ends_at ? new Date(formData.ends_at).toISOString() : null,
+        ends_at: formData.ends_at
+          ? new Date(formData.ends_at).toISOString()
+          : null,
       };
 
       if (editingId) {
         await updateAnnouncement.mutateAsync({ id: editingId, ...payload });
-        toast({ title: 'Announcement updated' });
+        toast({ title: "Announcement updated" });
       } else {
         await createAnnouncement.mutateAsync(payload);
-        toast({ title: 'Announcement created' });
+        toast({ title: "Announcement created" });
       }
 
       setIsFormOpen(false);
     } catch (error) {
-      toast({ title: 'Failed to save announcement', variant: 'destructive' });
+      toast({ title: "Failed to save announcement", variant: "destructive" });
     }
   };
 
@@ -114,9 +130,9 @@ export function AnnouncementsPanel() {
 
     try {
       await deleteAnnouncement.mutateAsync(deleteId);
-      toast({ title: 'Announcement deleted' });
+      toast({ title: "Announcement deleted" });
     } catch (error) {
-      toast({ title: 'Failed to delete', variant: 'destructive' });
+      toast({ title: "Failed to delete", variant: "destructive" });
     }
     setDeleteId(null);
   };
@@ -128,7 +144,7 @@ export function AnnouncementsPanel() {
         is_active: !announcement.is_active,
       });
     } catch (error) {
-      toast({ title: 'Failed to update', variant: 'destructive' });
+      toast({ title: "Failed to update", variant: "destructive" });
     }
   };
 
@@ -187,17 +203,29 @@ export function AnnouncementsPanel() {
                   <TableRow key={announcement.id}>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <span className="text-lg">{announcement.emoji || '✨'}</span>
-                        <span className="max-w-xs truncate">{announcement.message}</span>
+                        <span className="text-lg">
+                          {announcement.emoji || "✨"}
+                        </span>
+                        <span className="max-w-xs truncate">
+                          {announcement.message}
+                        </span>
                       </div>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       <div>
-                        From: {format(new Date(announcement.starts_at), 'MMM d, yyyy')}
+                        From:{" "}
+                        {format(
+                          new Date(announcement.starts_at),
+                          "MMM d, yyyy",
+                        )}
                       </div>
                       {announcement.ends_at && (
                         <div>
-                          Until: {format(new Date(announcement.ends_at), 'MMM d, yyyy')}
+                          Until:{" "}
+                          {format(
+                            new Date(announcement.ends_at),
+                            "MMM d, yyyy",
+                          )}
                         </div>
                       )}
                     </TableCell>
@@ -238,7 +266,7 @@ export function AnnouncementsPanel() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingId ? 'Edit Announcement' : 'New Announcement'}
+              {editingId ? "Edit Announcement" : "New Announcement"}
             </DialogTitle>
           </DialogHeader>
 
@@ -249,7 +277,9 @@ export function AnnouncementsPanel() {
                 <Input
                   id="emoji"
                   value={formData.emoji}
-                  onChange={(e) => setFormData({ ...formData, emoji: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, emoji: e.target.value })
+                  }
                   className="text-center text-lg"
                   maxLength={4}
                 />
@@ -259,7 +289,9 @@ export function AnnouncementsPanel() {
                 <Input
                   id="message"
                   value={formData.message}
-                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, message: e.target.value })
+                  }
                   placeholder="Enter announcement message..."
                 />
               </div>
@@ -272,7 +304,9 @@ export function AnnouncementsPanel() {
                   id="starts_at"
                   type="datetime-local"
                   value={formData.starts_at}
-                  onChange={(e) => setFormData({ ...formData, starts_at: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, starts_at: e.target.value })
+                  }
                 />
               </div>
               <div>
@@ -281,7 +315,9 @@ export function AnnouncementsPanel() {
                   id="ends_at"
                   type="datetime-local"
                   value={formData.ends_at}
-                  onChange={(e) => setFormData({ ...formData, ends_at: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, ends_at: e.target.value })
+                  }
                 />
               </div>
             </div>
@@ -290,7 +326,9 @@ export function AnnouncementsPanel() {
               <Switch
                 id="is_active"
                 checked={formData.is_active}
-                onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, is_active: checked })
+                }
               />
               <Label htmlFor="is_active">Active</Label>
             </div>
@@ -302,9 +340,11 @@ export function AnnouncementsPanel() {
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={createAnnouncement.isPending || updateAnnouncement.isPending}
+              disabled={
+                createAnnouncement.isPending || updateAnnouncement.isPending
+              }
             >
-              {editingId ? 'Update' : 'Create'}
+              {editingId ? "Update" : "Create"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -316,7 +356,8 @@ export function AnnouncementsPanel() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Announcement</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this announcement? This action cannot be undone.
+              Are you sure you want to delete this announcement? This action
+              cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -1,46 +1,46 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Layout } from '@/components/layout/Layout';
-import { useAuth } from '@/contexts/AuthContext';
-import { useIsAdmin } from '@/hooks/use-admin';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Leaf } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { Layout } from "@/components/layout/Layout";
+import { useAuth } from "@/contexts/AuthContext";
+import { useIsAdmin } from "@/hooks/use-admin";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, Leaf } from "lucide-react";
 
 export default function Auth() {
   const navigate = useNavigate();
   const { user, signIn, signUp, isLoading: authLoading } = useAuth();
   const { data: isAdmin, isLoading: isAdminLoading } = useIsAdmin();
-  
+
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  
-  const [loginData, setLoginData] = useState({ email: '', password: '' });
-  const [signupData, setSignupData] = useState({ 
-    email: '', 
-    password: '', 
-    confirmPassword: '',
-    fullName: '' 
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const [loginData, setLoginData] = useState({ email: "", password: "" });
+  const [signupData, setSignupData] = useState({
+    email: "",
+    password: "",
+    confirmPassword: "",
+    fullName: "",
   });
 
   // Redirect if already logged in - admins go to /admin, others to /account
   useEffect(() => {
     if (user && !authLoading && !isAdminLoading) {
       if (isAdmin) {
-        navigate('/admin');
+        navigate("/admin");
       } else {
-        navigate('/account');
+        navigate("/account");
       }
     }
   }, [user, authLoading, isAdmin, isAdminLoading, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setIsLoading(true);
 
     const { error } = await signIn(loginData.email, loginData.password);
@@ -54,37 +54,44 @@ export default function Auth() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
 
     if (signupData.password !== signupData.confirmPassword) {
-      setError('Passwords do not match');
+      setError("Passwords do not match");
       return;
     }
 
     if (signupData.password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError("Password must be at least 6 characters");
       return;
     }
 
     setIsLoading(true);
 
     const { error } = await signUp(
-      signupData.email, 
-      signupData.password, 
-      signupData.fullName
+      signupData.email,
+      signupData.password,
+      signupData.fullName,
     );
 
     if (error) {
-      if (error.message.includes('already registered')) {
-        setError('An account with this email already exists. Please sign in instead.');
+      if (error.message.includes("already registered")) {
+        setError(
+          "An account with this email already exists. Please sign in instead.",
+        );
       } else {
         setError(error.message);
       }
       setIsLoading(false);
     } else {
-      setSuccess('Account created! You can now sign in.');
-      setSignupData({ email: '', password: '', confirmPassword: '', fullName: '' });
+      setSuccess("Account created! You can now sign in.");
+      setSignupData({
+        email: "",
+        password: "",
+        confirmPassword: "",
+        fullName: "",
+      });
       setIsLoading(false);
     }
   };
@@ -139,7 +146,12 @@ export default function Auth() {
                       id="login-email"
                       type="email"
                       value={loginData.email}
-                      onChange={(e) => setLoginData(prev => ({ ...prev, email: e.target.value }))}
+                      onChange={(e) =>
+                        setLoginData((prev) => ({
+                          ...prev,
+                          email: e.target.value,
+                        }))
+                      }
                       required
                       disabled={isLoading}
                       placeholder="you@example.com"
@@ -149,8 +161,8 @@ export default function Auth() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label htmlFor="login-password">Password</Label>
-                      <Link 
-                        to="/forgot-password" 
+                      <Link
+                        to="/forgot-password"
                         className="text-sm text-primary hover:underline"
                       >
                         Forgot password?
@@ -160,7 +172,12 @@ export default function Auth() {
                       id="login-password"
                       type="password"
                       value={loginData.password}
-                      onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
+                      onChange={(e) =>
+                        setLoginData((prev) => ({
+                          ...prev,
+                          password: e.target.value,
+                        }))
+                      }
                       required
                       disabled={isLoading}
                       placeholder="••••••••"
@@ -168,7 +185,9 @@ export default function Auth() {
                   </div>
 
                   <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isLoading && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
                     Sign In
                   </Button>
                 </form>
@@ -194,7 +213,12 @@ export default function Auth() {
                       id="signup-name"
                       type="text"
                       value={signupData.fullName}
-                      onChange={(e) => setSignupData(prev => ({ ...prev, fullName: e.target.value }))}
+                      onChange={(e) =>
+                        setSignupData((prev) => ({
+                          ...prev,
+                          fullName: e.target.value,
+                        }))
+                      }
                       disabled={isLoading}
                       placeholder="John Doe"
                     />
@@ -206,7 +230,12 @@ export default function Auth() {
                       id="signup-email"
                       type="email"
                       value={signupData.email}
-                      onChange={(e) => setSignupData(prev => ({ ...prev, email: e.target.value }))}
+                      onChange={(e) =>
+                        setSignupData((prev) => ({
+                          ...prev,
+                          email: e.target.value,
+                        }))
+                      }
                       required
                       disabled={isLoading}
                       placeholder="you@example.com"
@@ -219,7 +248,12 @@ export default function Auth() {
                       id="signup-password"
                       type="password"
                       value={signupData.password}
-                      onChange={(e) => setSignupData(prev => ({ ...prev, password: e.target.value }))}
+                      onChange={(e) =>
+                        setSignupData((prev) => ({
+                          ...prev,
+                          password: e.target.value,
+                        }))
+                      }
                       required
                       disabled={isLoading}
                       placeholder="••••••••"
@@ -232,7 +266,12 @@ export default function Auth() {
                       id="signup-confirm"
                       type="password"
                       value={signupData.confirmPassword}
-                      onChange={(e) => setSignupData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                      onChange={(e) =>
+                        setSignupData((prev) => ({
+                          ...prev,
+                          confirmPassword: e.target.value,
+                        }))
+                      }
                       required
                       disabled={isLoading}
                       placeholder="••••••••"
@@ -240,12 +279,15 @@ export default function Auth() {
                   </div>
 
                   <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isLoading && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
                     Create Account
                   </Button>
 
                   <p className="text-xs text-muted-foreground text-center">
-                    By creating an account, you agree to our terms and privacy policy.
+                    By creating an account, you agree to our terms and privacy
+                    policy.
                   </p>
                 </form>
               </TabsContent>
@@ -254,7 +296,7 @@ export default function Auth() {
 
           {/* Guest Checkout */}
           <p className="text-center text-muted-foreground mt-6">
-            Just want to order?{' '}
+            Just want to order?{" "}
             <Link to="/products" className="text-primary hover:underline">
               Continue as guest
             </Link>

@@ -1,34 +1,46 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { Tables } from '@/integrations/supabase/types';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Tables } from "@/integrations/supabase/types";
 
-export type Order = Tables<'orders'>;
-export type OrderItem = Tables<'order_items'>;
+export type Order = Tables<"orders">;
+export type OrderItem = Tables<"order_items">;
 
 export interface OrderWithItems extends Order {
   order_items: OrderItem[];
 }
 
-export type ArchiveType = 'archived_weekly' | 'archived_monthly' | 'archived_quarterly' | 'archived_yearly';
+export type ArchiveType =
+  | "archived_weekly"
+  | "archived_monthly"
+  | "archived_quarterly"
+  | "archived_yearly";
 
 export function useOrders(showArchived: boolean = false) {
   return useQuery({
-    queryKey: ['admin-orders', showArchived],
+    queryKey: ["admin-orders", showArchived],
     queryFn: async () => {
       let query = supabase
-        .from('orders')
-        .select(`
+        .from("orders")
+        .select(
+          `
           *,
           order_items (*)
-        `)
-        .order('created_at', { ascending: false });
+        `,
+        )
+        .order("created_at", { ascending: false });
 
       if (showArchived) {
         // Show only archived orders
-        query = query.or('status.eq.archived_weekly,status.eq.archived_monthly,status.eq.archived_quarterly,status.eq.archived_yearly');
+        query = query.or(
+          "status.eq.archived_weekly,status.eq.archived_monthly,status.eq.archived_quarterly,status.eq.archived_yearly",
+        );
       } else {
         // Show non-archived orders
-        query = query.not('status', 'in', '(archived_weekly,archived_monthly,archived_quarterly,archived_yearly)');
+        query = query.not(
+          "status",
+          "in",
+          "(archived_weekly,archived_monthly,archived_quarterly,archived_yearly)",
+        );
       }
 
       const { data, error } = await query;
@@ -43,16 +55,22 @@ export function useUpdateOrderStatus() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ orderId, status }: { orderId: string; status: string }) => {
+    mutationFn: async ({
+      orderId,
+      status,
+    }: {
+      orderId: string;
+      status: string;
+    }) => {
       const { error } = await supabase
-        .from('orders')
+        .from("orders")
         .update({ status, updated_at: new Date().toISOString() })
-        .eq('id', orderId);
+        .eq("id", orderId);
 
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
     },
   });
 }
@@ -61,16 +79,22 @@ export function useArchiveOrders() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ orderIds, archiveType }: { orderIds: string[]; archiveType: ArchiveType }) => {
+    mutationFn: async ({
+      orderIds,
+      archiveType,
+    }: {
+      orderIds: string[];
+      archiveType: ArchiveType;
+    }) => {
       const { error } = await supabase
-        .from('orders')
+        .from("orders")
         .update({ status: archiveType, updated_at: new Date().toISOString() })
-        .in('id', orderIds);
+        .in("id", orderIds);
 
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
     },
   });
 }
@@ -81,14 +105,14 @@ export function useUnarchiveOrders() {
   return useMutation({
     mutationFn: async ({ orderIds }: { orderIds: string[] }) => {
       const { error } = await supabase
-        .from('orders')
-        .update({ status: 'completed', updated_at: new Date().toISOString() })
-        .in('id', orderIds);
+        .from("orders")
+        .update({ status: "completed", updated_at: new Date().toISOString() })
+        .in("id", orderIds);
 
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
     },
   });
 }
@@ -105,16 +129,24 @@ export function useCreateOrder() {
       fulfillment_type: string;
       pickup_date?: string;
       pickup_time?: string;
-      items: { product_id: string; product_name: string; product_price: number; quantity: number }[];
+      items: {
+        product_id: string;
+        product_name: string;
+        product_price: number;
+        quantity: number;
+      }[];
     }) => {
-      const orderNumber = `ORD-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
-      
-      const subtotal = orderData.items.reduce((sum, item) => sum + item.product_price * item.quantity, 0);
+      const orderNumber = `ORD-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+
+      const subtotal = orderData.items.reduce(
+        (sum, item) => sum + item.product_price * item.quantity,
+        0,
+      );
       const tax = subtotal * 0.08; // 8% tax
       const total = subtotal + tax;
 
       const { data: order, error: orderError } = await supabase
-        .from('orders')
+        .from("orders")
         .insert({
           order_number: orderNumber,
           customer_name: orderData.customer_name,
@@ -127,15 +159,15 @@ export function useCreateOrder() {
           subtotal,
           tax,
           total,
-          status: 'pending',
-          payment_status: 'pending',
+          status: "pending",
+          payment_status: "pending",
         })
         .select()
         .single();
 
       if (orderError) throw orderError;
 
-      const orderItems = orderData.items.map(item => ({
+      const orderItems = orderData.items.map((item) => ({
         order_id: order.id,
         product_id: item.product_id,
         product_name: item.product_name,
@@ -145,7 +177,7 @@ export function useCreateOrder() {
       }));
 
       const { error: itemsError } = await supabase
-        .from('order_items')
+        .from("order_items")
         .insert(orderItems);
 
       if (itemsError) throw itemsError;
@@ -153,7 +185,7 @@ export function useCreateOrder() {
       return order;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
     },
   });
 }

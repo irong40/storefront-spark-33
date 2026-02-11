@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface CustomerOrderItem {
   id: string;
@@ -25,13 +25,14 @@ export function useCustomerOrders() {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ['customer-orders', user?.id],
+    queryKey: ["customer-orders", user?.id],
     queryFn: async () => {
       if (!user) return [];
 
       const { data, error } = await supabase
-        .from('orders')
-        .select(`
+        .from("orders")
+        .select(
+          `
           id,
           order_number,
           status,
@@ -46,9 +47,10 @@ export function useCustomerOrders() {
             quantity,
             total
           )
-        `)
+        `,
+        )
         .or(`user_id.eq.${user.id},email.eq.${user.email}`)
-        .order('created_at', { ascending: false });
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
       return data as CustomerOrder[];

@@ -1,6 +1,6 @@
-import { ProductCard } from './ProductCard';
-import { Skeleton } from '@/components/ui/skeleton';
-import type { Product } from '@/hooks/use-products';
+import { ProductCard } from "./ProductCard";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { Product } from "@/hooks/use-products";
 
 interface ProductGridProps {
   products: Product[] | undefined;

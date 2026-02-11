@@ -1,7 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 export interface UserWithRole {
   id: string;
@@ -13,35 +13,33 @@ export interface UserWithRole {
 
 export function useUsers() {
   return useQuery({
-    queryKey: ['admin-users'],
+    queryKey: ["admin-users"],
     queryFn: async (): Promise<UserWithRole[]> => {
       // Fetch all customer profiles (admin-only via RLS)
       const { data: profiles, error: profilesError } = await supabase
-        .from('customer_profiles')
-        .select('id, email, full_name, created_at')
-        .order('created_at', { ascending: false });
+        .from("customer_profiles")
+        .select("id, email, full_name, created_at")
+        .order("created_at", { ascending: false });
 
       if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
+        console.error("Error fetching profiles:", profilesError);
         return [];
       }
 
       // Fetch all user roles
       const { data: roles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('user_id, role');
+        .from("user_roles")
+        .select("user_id, role");
 
       if (rolesError) {
-        console.error('Error fetching roles:', rolesError);
+        console.error("Error fetching roles:", rolesError);
         return [];
       }
 
       // Map roles to users
-      return profiles.map(profile => ({
+      return profiles.map((profile) => ({
         ...profile,
-        roles: roles
-          .filter(r => r.user_id === profile.id)
-          .map(r => r.role),
+        roles: roles.filter((r) => r.user_id === profile.id).map((r) => r.role),
       }));
     },
   });
@@ -52,16 +50,16 @@ export function useCreateUser() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ 
-      email, 
-      full_name, 
-      role 
-    }: { 
-      email: string; 
-      full_name?: string; 
-      role?: 'admin' | 'moderator' 
+    mutationFn: async ({
+      email,
+      full_name,
+      role,
+    }: {
+      email: string;
+      full_name?: string;
+      role?: "admin" | "moderator";
     }) => {
-      const { data, error } = await supabase.functions.invoke('create-user', {
+      const { data, error } = await supabase.functions.invoke("create-user", {
         body: { email, full_name, role },
       });
 
@@ -70,15 +68,15 @@ export function useCreateUser() {
       return data;
     },
     onSuccess: (data) => {
-      toast({ title: 'User created successfully', description: data.message });
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      toast({ title: "User created successfully", description: data.message });
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     },
     onError: (error: Error) => {
-      console.error('Error creating user:', error);
-      toast({ 
-        title: 'Failed to create user', 
+      console.error("Error creating user:", error);
+      toast({
+        title: "Failed to create user",
         description: error.message,
-        variant: 'destructive' 
+        variant: "destructive",
       });
     },
   });
@@ -89,23 +87,29 @@ export function useAssignRole() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ userId, role }: { userId: string; role: 'admin' | 'moderator' }) => {
+    mutationFn: async ({
+      userId,
+      role,
+    }: {
+      userId: string;
+      role: "admin" | "moderator";
+    }) => {
       const { error } = await supabase
-        .from('user_roles')
+        .from("user_roles")
         .insert({ user_id: userId, role });
 
       if (error) throw error;
     },
     onSuccess: () => {
-      toast({ title: 'Role assigned successfully' });
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      toast({ title: "Role assigned successfully" });
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     },
     onError: (error: Error) => {
-      console.error('Error assigning role:', error);
-      toast({ 
-        title: 'Failed to assign role', 
+      console.error("Error assigning role:", error);
+      toast({
+        title: "Failed to assign role",
         description: error.message,
-        variant: 'destructive' 
+        variant: "destructive",
       });
     },
   });
@@ -117,30 +121,36 @@ export function useRemoveRole() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ userId, role }: { userId: string; role: 'admin' | 'moderator' | 'user' }) => {
+    mutationFn: async ({
+      userId,
+      role,
+    }: {
+      userId: string;
+      role: "admin" | "moderator" | "user";
+    }) => {
       // Prevent admins from removing their own admin role
-      if (userId === user?.id && role === 'admin') {
-        throw new Error('You cannot remove your own admin role');
+      if (userId === user?.id && role === "admin") {
+        throw new Error("You cannot remove your own admin role");
       }
 
       const { error } = await supabase
-        .from('user_roles')
+        .from("user_roles")
         .delete()
-        .eq('user_id', userId)
-        .eq('role', role);
+        .eq("user_id", userId)
+        .eq("role", role);
 
       if (error) throw error;
     },
     onSuccess: () => {
-      toast({ title: 'Role removed successfully' });
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      toast({ title: "Role removed successfully" });
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     },
     onError: (error: Error) => {
-      console.error('Error removing role:', error);
-      toast({ 
-        title: 'Failed to remove role', 
+      console.error("Error removing role:", error);
+      toast({
+        title: "Failed to remove role",
         description: error.message,
-        variant: 'destructive' 
+        variant: "destructive",
       });
     },
   });
@@ -151,23 +161,26 @@ export function useResetUserPassword() {
 
   return useMutation({
     mutationFn: async ({ email }: { email: string }) => {
-      const { data, error } = await supabase.functions.invoke('reset-user-password', {
-        body: { email },
-      });
+      const { data, error } = await supabase.functions.invoke(
+        "reset-user-password",
+        {
+          body: { email },
+        },
+      );
 
       if (error) throw error;
       if (data.error) throw new Error(data.error);
       return data;
     },
     onSuccess: (data) => {
-      toast({ title: 'Password reset email sent', description: data.message });
+      toast({ title: "Password reset email sent", description: data.message });
     },
     onError: (error: Error) => {
-      console.error('Error resetting password:', error);
-      toast({ 
-        title: 'Failed to send password reset', 
+      console.error("Error resetting password:", error);
+      toast({
+        title: "Failed to send password reset",
         description: error.message,
-        variant: 'destructive' 
+        variant: "destructive",
       });
     },
   });

@@ -1,30 +1,32 @@
-import { useState } from 'react';
-import { Layout } from '@/components/layout/Layout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
-import { useBusinessSettings } from '@/hooks/use-business';
-import { supabase } from '@/integrations/supabase/client';
-import { Mail, Phone, MapPin, Clock, Loader2, Send } from 'lucide-react';
-import { formatHoursLines } from '@/lib/format-hours';
-import { GoogleMapEmbed } from '@/components/ui/google-map-embed';
+import { useState } from "react";
+import { Layout } from "@/components/layout/Layout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { useBusinessSettings } from "@/hooks/use-business";
+import { supabase } from "@/integrations/supabase/client";
+import { Mail, Phone, MapPin, Clock, Loader2, Send } from "lucide-react";
+import { formatHoursLines } from "@/lib/format-hours";
+import { GoogleMapEmbed } from "@/components/ui/google-map-embed";
 
 export default function Contact() {
   const { toast } = useToast();
   const { data: business } = useBusinessSettings();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    subject: '',
-    message: '',
+    name: "",
+    email: "",
+    phone: "",
+    subject: "",
+    message: "",
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData(prev => ({
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
     }));
@@ -35,35 +37,33 @@ export default function Contact() {
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase
-        .from('contact_submissions')
-        .insert({
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone || null,
-          subject: formData.subject || null,
-          message: formData.message,
-        });
+      const { error } = await supabase.from("contact_submissions").insert({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || null,
+        subject: formData.subject || null,
+        message: formData.message,
+      });
 
       if (error) throw error;
 
       toast({
-        title: 'Message Sent!',
+        title: "Message Sent!",
         description: "Thank you for reaching out. We'll get back to you soon!",
       });
 
       setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        subject: '',
-        message: '',
+        name: "",
+        email: "",
+        phone: "",
+        subject: "",
+        message: "",
       });
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
-        variant: 'destructive',
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
@@ -79,8 +79,8 @@ export default function Contact() {
             Get in Touch
           </h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Have a question, feedback, or just want to say hello? 
-            We'd love to hear from you!
+            Have a question, feedback, or just want to say hello? We'd love to
+            hear from you!
           </p>
         </div>
       </section>
@@ -178,7 +178,7 @@ export default function Contact() {
               <h2 className="text-2xl font-display font-bold text-foreground mb-6">
                 Contact Information
               </h2>
-              
+
               <div className="space-y-6 mb-8">
                 <div className="flex gap-4">
                   <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
@@ -186,11 +186,11 @@ export default function Contact() {
                   </div>
                   <div>
                     <h3 className="font-semibold mb-1">Email</h3>
-                    <a 
-                      href={`mailto:${business?.email || 'hello@impressivejuicebar.com'}`}
+                    <a
+                      href={`mailto:${business?.email || "hello@impressivejuicebar.com"}`}
                       className="text-muted-foreground hover:text-primary"
                     >
-                      {business?.email || 'hello@impressivejuicebar.com'}
+                      {business?.email || "hello@impressivejuicebar.com"}
                     </a>
                   </div>
                 </div>
@@ -201,11 +201,11 @@ export default function Contact() {
                   </div>
                   <div>
                     <h3 className="font-semibold mb-1">Phone</h3>
-                    <a 
-                      href={`tel:${business?.phone?.replace(/[^0-9]/g, '') || ''}`}
+                    <a
+                      href={`tel:${business?.phone?.replace(/[^0-9]/g, "") || ""}`}
                       className="text-muted-foreground hover:text-primary"
                     >
-                      {business?.phone || '(555) 123-JUICE'}
+                      {business?.phone || "(555) 123-JUICE"}
                     </a>
                   </div>
                 </div>
@@ -217,8 +217,10 @@ export default function Contact() {
                   <div>
                     <h3 className="font-semibold mb-1">Location</h3>
                     <p className="text-muted-foreground">
-                      {business?.address_line1 || '123 Main Street'}<br />
-                      {business?.city || 'Anytown'}, {business?.state || 'USA'} {business?.zip || '12345'}
+                      {business?.address_line1 || "123 Main Street"}
+                      <br />
+                      {business?.city || "Anytown"}, {business?.state || "USA"}{" "}
+                      {business?.zip || "12345"}
                     </p>
                   </div>
                 </div>
@@ -230,7 +232,9 @@ export default function Contact() {
                   <div>
                     <h3 className="font-semibold mb-1">Hours</h3>
                     <div className="text-muted-foreground text-sm space-y-1">
-                      {formatHoursLines(business?.hours as Record<string, string> | null).map((line, i) => (
+                      {formatHoursLines(
+                        business?.hours as Record<string, string> | null,
+                      ).map((line, i) => (
                         <p key={i}>{line}</p>
                       ))}
                     </div>
@@ -240,8 +244,8 @@ export default function Contact() {
 
               {/* Map */}
               <div className="aspect-video rounded-2xl overflow-hidden border border-border">
-                <GoogleMapEmbed 
-                  address={`${business?.address_line1 || '719 High St.'}, ${business?.city || 'Portsmouth'}, ${business?.state || 'VA'} ${business?.zip || '23703'}`}
+                <GoogleMapEmbed
+                  address={`${business?.address_line1 || "719 High St."}, ${business?.city || "Portsmouth"}, ${business?.state || "VA"} ${business?.zip || "23703"}`}
                 />
               </div>
             </div>

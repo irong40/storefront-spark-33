@@ -1,37 +1,40 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
-import { useFeaturedProducts } from '@/hooks/use-products';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useState, useEffect, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
+import { useFeaturedProducts } from "@/hooks/use-products";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function Hero() {
   const { data: products, isLoading } = useFeaturedProducts();
-  
+
   // Track which product index each card shows
   const [cardIndices, setCardIndices] = useState([0, 1, 2]);
   const [fadingCard, setFadingCard] = useState<number | null>(null);
 
-  const rotateCard = useCallback((cardPosition: number) => {
-    if (!products || products.length <= 3) return;
-    
-    setFadingCard(cardPosition);
-    
-    setTimeout(() => {
-      setCardIndices(prev => {
-        const newIndices = [...prev];
-        // Get next available index that's not currently shown
-        let nextIndex = (prev[cardPosition] + 3) % products.length;
-        // Ensure we don't show duplicates
-        while (prev.includes(nextIndex) && products.length > 3) {
-          nextIndex = (nextIndex + 1) % products.length;
-        }
-        newIndices[cardPosition] = nextIndex;
-        return newIndices;
-      });
-      setFadingCard(null);
-    }, 300);
-  }, [products]);
+  const rotateCard = useCallback(
+    (cardPosition: number) => {
+      if (!products || products.length <= 3) return;
+
+      setFadingCard(cardPosition);
+
+      setTimeout(() => {
+        setCardIndices((prev) => {
+          const newIndices = [...prev];
+          // Get next available index that's not currently shown
+          let nextIndex = (prev[cardPosition] + 3) % products.length;
+          // Ensure we don't show duplicates
+          while (prev.includes(nextIndex) && products.length > 3) {
+            nextIndex = (nextIndex + 1) % products.length;
+          }
+          newIndices[cardPosition] = nextIndex;
+          return newIndices;
+        });
+        setFadingCard(null);
+      }, 300);
+    },
+    [products],
+  );
 
   // Independent timers for each card
   useEffect(() => {
@@ -77,7 +80,7 @@ export function Hero() {
 
             {/* Title */}
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-medium text-brand-brown mb-6 leading-tight">
-              Nourish Your Body,{' '}
+              Nourish Your Body,{" "}
               <span className="relative inline-block text-brand-olive">
                 Elevate Your Day
                 <span className="absolute bottom-1 left-0 right-0 h-3 bg-brand-mustard/40 -z-10 rounded-full" />
@@ -86,18 +89,28 @@ export function Hero() {
 
             {/* Description */}
             <p className="text-lg text-brand-warm-gray mb-8 max-w-md">
-              Fresh, cold-pressed juices crafted daily with love. No additives, no preservatives — just pure, vibrant nutrition in every sip.
+              Fresh, cold-pressed juices crafted daily with love. No additives,
+              no preservatives — just pure, vibrant nutrition in every sip.
             </p>
 
             {/* Actions */}
             <div className="flex flex-wrap gap-4 mb-12">
-              <Button asChild size="lg" className="rounded-full px-8 bg-brand-berry hover:bg-brand-berry-dark shadow-berry text-base font-semibold tracking-wide transition-all hover:-translate-y-1 hover:shadow-lg">
+              <Button
+                asChild
+                size="lg"
+                className="rounded-full px-8 bg-brand-berry hover:bg-brand-berry-dark shadow-berry text-base font-semibold tracking-wide transition-all hover:-translate-y-1 hover:shadow-lg"
+              >
                 <Link to="/products">
                   Explore Menu
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="rounded-full px-8 border-2 border-brand-olive text-brand-olive hover:bg-brand-olive hover:text-white text-base font-semibold tracking-wide transition-all hover:-translate-y-1">
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="rounded-full px-8 border-2 border-brand-olive text-brand-olive hover:bg-brand-olive hover:text-white text-base font-semibold tracking-wide transition-all hover:-translate-y-1"
+              >
                 <Link to="/about">Our Story</Link>
               </Button>
             </div>
@@ -105,12 +118,20 @@ export function Hero() {
             {/* Stats */}
             <div className="flex gap-12">
               <div className="text-center">
-                <div className="font-display text-3xl md:text-4xl font-semibold text-brand-brown">100%</div>
-                <div className="text-sm text-brand-warm-gray mt-1">Fresh Produce</div>
+                <div className="font-display text-3xl md:text-4xl font-semibold text-brand-brown">
+                  100%
+                </div>
+                <div className="text-sm text-brand-warm-gray mt-1">
+                  Fresh Produce
+                </div>
               </div>
               <div className="text-center">
-                <div className="font-display text-3xl md:text-4xl font-semibold text-brand-brown">24</div>
-                <div className="text-sm text-brand-warm-gray mt-1">Unique Blends</div>
+                <div className="font-display text-3xl md:text-4xl font-semibold text-brand-brown">
+                  24
+                </div>
+                <div className="text-sm text-brand-warm-gray mt-1">
+                  Unique Blends
+                </div>
               </div>
             </div>
           </div>
@@ -134,12 +155,14 @@ export function Hero() {
                     <Link
                       to={`/products/${getProduct(0)!.slug}`}
                       className={`absolute top-[10%] left-[5%] bg-card rounded-lg p-2.5 shadow-lifted z-10 w-36 hover:shadow-xl transition-all duration-300 ${
-                        fadingCard === 0 ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+                        fadingCard === 0
+                          ? "opacity-0 scale-95"
+                          : "opacity-100 scale-100"
                       }`}
                     >
                       <div className="aspect-[4/5] rounded overflow-hidden mb-2">
                         <img
-                          src={getProduct(0)!.image_url || '/placeholder.svg'}
+                          src={getProduct(0)!.image_url || "/placeholder.svg"}
                           alt={getProduct(0)!.name}
                           className="w-full h-full object-cover"
                         />
@@ -157,12 +180,14 @@ export function Hero() {
                     <Link
                       to={`/products/${getProduct(1)!.slug}`}
                       className={`absolute top-[45%] right-0 bg-card rounded-lg p-2.5 shadow-lifted z-20 w-36 hover:shadow-xl transition-all duration-300 ${
-                        fadingCard === 1 ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+                        fadingCard === 1
+                          ? "opacity-0 scale-95"
+                          : "opacity-100 scale-100"
                       }`}
                     >
                       <div className="aspect-[4/5] rounded overflow-hidden mb-2">
                         <img
-                          src={getProduct(1)!.image_url || '/placeholder.svg'}
+                          src={getProduct(1)!.image_url || "/placeholder.svg"}
                           alt={getProduct(1)!.name}
                           className="w-full h-full object-cover"
                         />
@@ -180,12 +205,14 @@ export function Hero() {
                     <Link
                       to={`/products/${getProduct(2)!.slug}`}
                       className={`absolute bottom-[5%] left-[15%] bg-card rounded-lg p-2.5 shadow-lifted z-30 w-36 hover:shadow-xl transition-all duration-300 ${
-                        fadingCard === 2 ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+                        fadingCard === 2
+                          ? "opacity-0 scale-95"
+                          : "opacity-100 scale-100"
                       }`}
                     >
                       <div className="aspect-[4/5] rounded overflow-hidden mb-2">
                         <img
-                          src={getProduct(2)!.image_url || '/placeholder.svg'}
+                          src={getProduct(2)!.image_url || "/placeholder.svg"}
                           alt={getProduct(2)!.name}
                           className="w-full h-full object-cover"
                         />

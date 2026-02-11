@@ -1,7 +1,7 @@
-import { Button } from '@/components/ui/button';
-import { useCart } from '@/contexts/CartContext';
-import { ShoppingCart, Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { useCart } from "@/contexts/CartContext";
+import { ShoppingCart, Loader2 } from "lucide-react";
+import { useState } from "react";
 
 interface GiftCardData {
   recipientEmail: string;
@@ -20,7 +20,7 @@ interface AddToCartButtonProps {
   giftCardData?: GiftCardData;
   disabled?: boolean;
   className?: string;
-  size?: 'default' | 'sm' | 'lg' | 'icon';
+  size?: "default" | "sm" | "lg" | "icon";
 }
 
 export function AddToCartButton({
@@ -33,7 +33,7 @@ export function AddToCartButton({
   giftCardData,
   disabled,
   className,
-  size = 'default'
+  size = "default",
 }: AddToCartButtonProps) {
   const { addItem } = useCart();
   const [isAdding, setIsAdding] = useState(false);
@@ -50,7 +50,15 @@ export function AddToCartButton({
       // I should assume the parent component calls me with the correct UUID if possible.
       // For this step I will just pass the arguments through.
 
-      await addItem(productId, quantity, sizeId, sizeOverrideId, addonIds, giftCardData, selectedFlavorIds);
+      await addItem(
+        productId,
+        quantity,
+        sizeId,
+        sizeOverrideId,
+        addonIds,
+        giftCardData,
+        selectedFlavorIds,
+      );
     } finally {
       setIsAdding(false);
     }

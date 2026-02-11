@@ -1,7 +1,13 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import type { Product } from '@/hooks/use-products';
-import { toast } from 'sonner';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import { supabase } from "@/integrations/supabase/client";
+import type { Product } from "@/hooks/use-products";
+import { toast } from "sonner";
 
 export interface GiftCardData {
   recipientEmail: string;
@@ -19,7 +25,10 @@ export interface CartItem {
   addon_ids: string[];
   selected_flavor_ids: string[];
   gift_card_data: GiftCardData | null;
-  product: Pick<Product, 'id' | 'name' | 'slug' | 'price' | 'image_url' | 'is_available'>;
+  product: Pick<
+    Product,
+    "id" | "name" | "slug" | "price" | "image_url" | "is_available"
+  >;
   size?: { id: string; name: string; price: number } | null;
   size_override?: { id: string; size_name: string; price: number } | null;
   addons?: { id: string; display_name: string; price: number }[];
@@ -46,21 +55,23 @@ interface CartContextType {
     sizeOverrideId?: string,
     addonIds?: string[],
     giftCardData?: GiftCardData,
-    selectedFlavorIds?: string[]
+    selectedFlavorIds?: string[],
   ) => Promise<void>;
   updateQuantity: (itemId: string, quantity: number) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
   clearCart: () => Promise<void>;
-  reorderItems: (items: ReorderItem[]) => Promise<{ success: boolean; addedCount: number; skippedCount: number }>;
+  reorderItems: (
+    items: ReorderItem[],
+  ) => Promise<{ success: boolean; addedCount: number; skippedCount: number }>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 function getSessionId(): string {
-  let sessionId = localStorage.getItem('cart_session_id');
+  let sessionId = localStorage.getItem("cart_session_id");
   if (!sessionId) {
     sessionId = crypto.randomUUID();
-    localStorage.setItem('cart_session_id', sessionId);
+    localStorage.setItem("cart_session_id", sessionId);
   }
   return sessionId;
 }
@@ -74,7 +85,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const sessionId = getSessionId();
 
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
-  
+
   const subtotal = items.reduce((sum, item) => {
     // Prioritize variant override price, then standard size price, then base price
     let itemPrice = Number(item.product.price);
@@ -85,9 +96,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
     // Add addon prices
     if (item.addons && item.addons.length > 0) {
-      itemPrice += item.addons.reduce((addonSum, addon) => addonSum + Number(addon.price), 0);
+      itemPrice += item.addons.reduce(
+        (addonSum, addon) => addonSum + Number(addon.price),
+        0,
+      );
     }
-    return sum + (itemPrice * item.quantity);
+    return sum + itemPrice * item.quantity;
   }, 0);
 
   useEffect(() => {
@@ -95,16 +109,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setIsLoading(true);
       try {
         let { data: cart } = await supabase
-          .from('carts')
-          .select('id')
-          .eq('session_id', sessionId)
+          .from("carts")
+          .select("id")
+          .eq("session_id", sessionId)
           .single();
 
         if (!cart) {
           const { data: newCart } = await supabase
-            .from('carts')
+            .from("carts")
             .insert({ session_id: sessionId })
-            .select('id')
+            .select("id")
             .single();
           cart = newCart;
         }
@@ -114,7 +128,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           await fetchCartItems(cart.id);
         }
       } catch (error) {
-        console.error('Error initializing cart:', error);
+        console.error("Error initializing cart:", error);
       } finally {
         setIsLoading(false);
       }
@@ -125,8 +139,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   async function fetchCartItems(id: string) {
     const { data, error } = await supabase
-      .from('cart_items')
-      .select(`
+      .from("cart_items")
+      .select(
+        `
         id,
         product_id,
         quantity,
@@ -136,11 +151,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
         selected_flavor_ids,
         gift_card_data,
         product:products(id, name, slug, price, image_url, is_available)
-      `)
-      .eq('cart_id', id);
+      `,
+      )
+      .eq("cart_id", id);
 
     if (error) {
-      console.error('Error fetching cart items:', error);
+      console.error("Error fetching cart items:", error);
       return;
     }
 
@@ -150,38 +166,60 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
 
     // Fetch related data for sizes, overrides, addons, and flavors
-    const validItems = data.filter(item => item.product !== null);
-    
+    const validItems = data.filter((item) => item.product !== null);
+
     // Collect all IDs we need to fetch
-    const sizeIds = validItems.map(i => i.size_id).filter(Boolean) as string[];
-    const overrideIds = validItems.map(i => i.size_override_id).filter(Boolean) as string[];
-    const allAddonIds = validItems.flatMap(i => (i.addon_ids as string[]) || []);
-    const allFlavorIds = validItems.flatMap(i => (i.selected_flavor_ids as string[]) || []);
+    const sizeIds = validItems
+      .map((i) => i.size_id)
+      .filter(Boolean) as string[];
+    const overrideIds = validItems
+      .map((i) => i.size_override_id)
+      .filter(Boolean) as string[];
+    const allAddonIds = validItems.flatMap(
+      (i) => (i.addon_ids as string[]) || [],
+    );
+    const allFlavorIds = validItems.flatMap(
+      (i) => (i.selected_flavor_ids as string[]) || [],
+    );
 
     // Fetch all related data in parallel
-    const [sizesResult, overridesResult, addonsResult, flavorsResult] = await Promise.all([
-      sizeIds.length > 0 
-        ? supabase.from('product_sizes').select('id, name, price').in('id', sizeIds)
-        : { data: [] },
-      overrideIds.length > 0
-        ? supabase.from('product_size_overrides').select('id, size_name, price').in('id', overrideIds)
-        : { data: [] },
-      allAddonIds.length > 0
-        ? supabase.from('product_addons').select('id, display_name, price').in('id', allAddonIds)
-        : { data: [] },
-      allFlavorIds.length > 0
-        ? supabase.from('products').select('id, name').in('id', allFlavorIds)
-        : { data: [] },
-    ]);
+    const [sizesResult, overridesResult, addonsResult, flavorsResult] =
+      await Promise.all([
+        sizeIds.length > 0
+          ? supabase
+              .from("product_sizes")
+              .select("id, name, price")
+              .in("id", sizeIds)
+          : { data: [] },
+        overrideIds.length > 0
+          ? supabase
+              .from("product_size_overrides")
+              .select("id, size_name, price")
+              .in("id", overrideIds)
+          : { data: [] },
+        allAddonIds.length > 0
+          ? supabase
+              .from("product_addons")
+              .select("id, display_name, price")
+              .in("id", allAddonIds)
+          : { data: [] },
+        allFlavorIds.length > 0
+          ? supabase.from("products").select("id, name").in("id", allFlavorIds)
+          : { data: [] },
+      ]);
 
     // Create lookup maps
-    const sizesMap = new Map((sizesResult.data || []).map(s => [s.id, s]));
-    const overridesMap = new Map((overridesResult.data || []).map(o => [o.id, o]));
-    const addonsMap = new Map((addonsResult.data || []).map(a => [a.id, a]));
-    const flavorsMap = new Map((flavorsResult.data || []).map(f => [f.id, f]));
+    const sizesMap = new Map((sizesResult.data || []).map((s) => [s.id, s]));
+    const overridesMap = new Map(
+      (overridesResult.data || []).map((o) => [o.id, o]),
+    );
+    const addonsMap = new Map((addonsResult.data || []).map((a) => [a.id, a]));
+    const flavorsMap = new Map(
+      (flavorsResult.data || []).map((f) => [f.id, f]),
+    );
 
     // Map items with their related data
-    const enrichedItems: CartItem[] = validItems.map(item => ({
+    const enrichedItems: CartItem[] = validItems.map((item) => ({
       id: item.id,
       product_id: item.product_id,
       quantity: item.quantity,
@@ -190,15 +228,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
       addon_ids: (item.addon_ids as string[]) || [],
       selected_flavor_ids: (item.selected_flavor_ids as string[]) || [],
       gift_card_data: item.gift_card_data as unknown as GiftCardData | null,
-      product: item.product as CartItem['product'],
+      product: item.product as CartItem["product"],
       size: item.size_id ? sizesMap.get(item.size_id) || null : null,
-      size_override: item.size_override_id ? overridesMap.get(item.size_override_id) || null : null,
+      size_override: item.size_override_id
+        ? overridesMap.get(item.size_override_id) || null
+        : null,
       addons: ((item.addon_ids as string[]) || [])
-        .map(id => addonsMap.get(id))
-        .filter(Boolean) as CartItem['addons'],
+        .map((id) => addonsMap.get(id))
+        .filter(Boolean) as CartItem["addons"],
       flavors: ((item.selected_flavor_ids as string[]) || [])
-        .map(id => flavorsMap.get(id))
-        .filter(Boolean) as CartItem['flavors'],
+        .map((id) => flavorsMap.get(id))
+        .filter(Boolean) as CartItem["flavors"],
     }));
 
     setItems(enrichedItems);
@@ -211,7 +251,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     sizeOverrideId?: string,
     addonIds: string[] = [],
     giftCardData?: GiftCardData,
-    selectedFlavorIds: string[] = []
+    selectedFlavorIds: string[] = [],
   ) {
     if (!cartId) return;
 
@@ -227,18 +267,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
         gift_card_data: giftCardData || null,
       };
 
-      const { error } = await supabase
-        .from('cart_items')
-        .insert(insertData);
+      const { error } = await supabase.from("cart_items").insert(insertData);
 
       if (error) throw error;
-      
+
       await fetchCartItems(cartId);
-      toast.success('Added to cart');
+      toast.success("Added to cart");
       setIsOpen(true);
     } catch (error) {
-      console.error('Failed to add item to cart:', error);
-      toast.error('Failed to add item to cart');
+      console.error("Failed to add item to cart:", error);
+      toast.error("Failed to add item to cart");
     }
   }
 
@@ -252,15 +290,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
 
       const { error } = await supabase
-        .from('cart_items')
+        .from("cart_items")
         .update({ quantity })
-        .eq('id', itemId);
+        .eq("id", itemId);
 
       if (error) throw error;
       await fetchCartItems(cartId);
     } catch (error) {
-      console.error('Failed to update cart item quantity:', error);
-      toast.error('Failed to update quantity');
+      console.error("Failed to update cart item quantity:", error);
+      toast.error("Failed to update quantity");
     }
   }
 
@@ -269,16 +307,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     try {
       const { error } = await supabase
-        .from('cart_items')
+        .from("cart_items")
         .delete()
-        .eq('id', itemId);
+        .eq("id", itemId);
 
       if (error) throw error;
       await fetchCartItems(cartId);
-      toast.success('Item removed from cart');
+      toast.success("Item removed from cart");
     } catch (error) {
-      console.error('Failed to remove item from cart:', error);
-      toast.error('Failed to remove item');
+      console.error("Failed to remove item from cart:", error);
+      toast.error("Failed to remove item");
     }
   }
 
@@ -287,50 +325,52 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     try {
       const { error } = await supabase
-        .from('cart_items')
+        .from("cart_items")
         .delete()
-        .eq('cart_id', cartId);
+        .eq("cart_id", cartId);
 
       if (error) throw error;
       setItems([]);
     } catch (error) {
-      console.error('Failed to clear cart:', error);
+      console.error("Failed to clear cart:", error);
     }
   }
 
-  async function reorderItems(orderItems: ReorderItem[]): Promise<{ success: boolean; addedCount: number; skippedCount: number }> {
+  async function reorderItems(
+    orderItems: ReorderItem[],
+  ): Promise<{ success: boolean; addedCount: number; skippedCount: number }> {
     if (!cartId) return { success: false, addedCount: 0, skippedCount: 0 };
 
     try {
       // Check which products are still available
-      const productIds = orderItems.map(item => item.product_id).filter(Boolean);
-      
-      const { data: availableProducts } = await supabase
-        .from('products')
-        .select('id, is_available, active')
-        .in('id', productIds)
-        .eq('is_available', true)
-        .eq('active', true);
+      const productIds = orderItems
+        .map((item) => item.product_id)
+        .filter(Boolean);
 
-      const availableIds = new Set(availableProducts?.map(p => p.id) || []);
-      
+      const { data: availableProducts } = await supabase
+        .from("products")
+        .select("id, is_available, active")
+        .in("id", productIds)
+        .eq("is_available", true)
+        .eq("active", true);
+
+      const availableIds = new Set(availableProducts?.map((p) => p.id) || []);
+
       let addedCount = 0;
       let skippedCount = 0;
 
       for (const item of orderItems) {
         if (item.product_id && availableIds.has(item.product_id)) {
-          const { error } = await supabase
-            .from('cart_items')
-            .insert({
-              cart_id: cartId,
-              product_id: item.product_id,
-              quantity: item.quantity,
-              size_id: null,
-              size_override_id: null,
-              addon_ids: [],
-              selected_flavor_ids: [],
-              gift_card_data: null,
-            });
+          const { error } = await supabase.from("cart_items").insert({
+            cart_id: cartId,
+            product_id: item.product_id,
+            quantity: item.quantity,
+            size_id: null,
+            size_override_id: null,
+            addon_ids: [],
+            selected_flavor_ids: [],
+            gift_card_data: null,
+          });
 
           if (!error) {
             addedCount++;
@@ -343,33 +383,35 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
 
       await fetchCartItems(cartId);
-      
+
       if (addedCount > 0) {
         setIsOpen(true);
       }
 
       return { success: addedCount > 0, addedCount, skippedCount };
     } catch (error) {
-      console.error('Failed to reorder items:', error);
+      console.error("Failed to reorder items:", error);
       return { success: false, addedCount: 0, skippedCount: orderItems.length };
     }
   }
 
   return (
-    <CartContext.Provider value={{
-      items,
-      itemCount,
-      subtotal,
-      isLoading,
-      isOpen,
-      openCart: () => setIsOpen(true),
-      closeCart: () => setIsOpen(false),
-      addItem,
-      updateQuantity,
-      removeItem,
-      clearCart,
-      reorderItems,
-    }}>
+    <CartContext.Provider
+      value={{
+        items,
+        itemCount,
+        subtotal,
+        isLoading,
+        isOpen,
+        openCart: () => setIsOpen(true),
+        closeCart: () => setIsOpen(false),
+        addItem,
+        updateQuantity,
+        removeItem,
+        clearCart,
+        reorderItems,
+      }}
+    >
       {children}
     </CartContext.Provider>
   );
@@ -378,7 +420,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 export function useCart() {
   const context = useContext(CartContext);
   if (!context) {
-    throw new Error('useCart must be used within CartProvider');
+    throw new Error("useCart must be used within CartProvider");
   }
   return context;
 }

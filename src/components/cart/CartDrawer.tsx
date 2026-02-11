@@ -1,9 +1,14 @@
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
-import { useCart } from '@/contexts/CartContext';
-import { CartItem } from './CartItem';
-import { Link } from 'react-router-dom';
-import { ShoppingBag } from 'lucide-react';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { useCart } from "@/contexts/CartContext";
+import { CartItem } from "./CartItem";
+import { Link } from "react-router-dom";
+import { ShoppingBag } from "lucide-react";
 
 export function CartDrawer() {
   const { items, subtotal, isOpen, closeCart, itemCount } = useCart();
@@ -22,7 +27,9 @@ export function CartDrawer() {
           <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
             <ShoppingBag className="h-12 w-12 text-muted-foreground mb-4" />
             <p className="text-lg font-medium">Your cart is empty</p>
-            <p className="text-muted-foreground mb-4">Add some juices to get started</p>
+            <p className="text-muted-foreground mb-4">
+              Add some juices to get started
+            </p>
             <Button onClick={closeCart} asChild>
               <Link to="/products">Browse Products</Link>
             </Button>

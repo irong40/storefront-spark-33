@@ -1,24 +1,24 @@
-import { useOrderHourlyDistribution } from '@/hooks/use-analytics';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
+import { useOrderHourlyDistribution } from "@/hooks/use-analytics";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
-const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const HOURS = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21];
 
 function formatHour(hour: number): string {
-  if (hour === 12) return '12p';
+  if (hour === 12) return "12p";
   if (hour > 12) return `${hour - 12}p`;
   return `${hour}a`;
 }
 
 function getHeatColor(count: number, max: number): string {
-  if (count === 0) return 'bg-muted/30';
+  if (count === 0) return "bg-muted/30";
   const intensity = count / max;
-  if (intensity > 0.75) return 'bg-brand-berry';
-  if (intensity > 0.5) return 'bg-brand-terracotta';
-  if (intensity > 0.25) return 'bg-brand-mustard';
-  return 'bg-brand-olive/50';
+  if (intensity > 0.75) return "bg-brand-berry";
+  if (intensity > 0.5) return "bg-brand-terracotta";
+  if (intensity > 0.25) return "bg-brand-mustard";
+  return "bg-brand-olive/50";
 }
 
 export function PeakHoursPanel() {
@@ -52,10 +52,10 @@ export function PeakHoursPanel() {
     );
   }
 
-  const maxCount = Math.max(...data.map(d => d.count), 1);
-  
+  const maxCount = Math.max(...data.map((d) => d.count), 1);
+
   // Create a lookup map for quick access
-  const dataMap = new Map(data.map(d => [`${d.day}-${d.hour}`, d.count]));
+  const dataMap = new Map(data.map((d) => [`${d.day}-${d.hour}`, d.count]));
 
   return (
     <Card className="shadow-soft h-full">
@@ -68,9 +68,11 @@ export function PeakHoursPanel() {
             {/* Hour labels */}
             <div className="flex mb-1">
               <div className="w-10" /> {/* Spacer for day labels */}
-              {HOURS.filter((_, i) => i % 2 === 0).map(hour => (
+              {HOURS.filter((_, i) => i % 2 === 0).map((hour) => (
                 <div key={hour} className="flex-1 text-center">
-                  <span className="text-[10px] text-muted-foreground">{formatHour(hour)}</span>
+                  <span className="text-[10px] text-muted-foreground">
+                    {formatHour(hour)}
+                  </span>
                 </div>
               ))}
             </div>
@@ -81,14 +83,14 @@ export function PeakHoursPanel() {
                 <div className="w-10 text-xs text-muted-foreground pr-2 text-right">
                   {day}
                 </div>
-                {HOURS.map(hour => {
+                {HOURS.map((hour) => {
                   const count = dataMap.get(`${dayIndex}-${hour}`) || 0;
                   return (
                     <div
                       key={hour}
                       className={cn(
-                        'flex-1 aspect-square rounded-sm transition-colors',
-                        getHeatColor(count, maxCount)
+                        "flex-1 aspect-square rounded-sm transition-colors",
+                        getHeatColor(count, maxCount),
                       )}
                       title={`${day} ${formatHour(hour)}: ${count} orders`}
                     />

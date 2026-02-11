@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 
 interface GoogleMapEmbedProps {
   address: string;
@@ -15,7 +15,7 @@ export function GoogleMapEmbed({ address, className }: GoogleMapEmbedProps) {
   return (
     <iframe
       src={mapUrl}
-      className={cn('w-full h-full border-0 rounded-2xl', className)}
+      className={cn("w-full h-full border-0 rounded-2xl", className)}
       allowFullScreen
       loading="lazy"
       referrerPolicy="no-referrer-when-downgrade"

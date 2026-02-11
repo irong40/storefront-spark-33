@@ -9,15 +9,23 @@ interface HoursGroup {
   hours: string;
 }
 
-const dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+const dayOrder = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+];
 const dayAbbreviations: Record<string, string> = {
-  monday: 'Mon',
-  tuesday: 'Tue',
-  wednesday: 'Wed',
-  thursday: 'Thu',
-  friday: 'Fri',
-  saturday: 'Sat',
-  sunday: 'Sun',
+  monday: "Mon",
+  tuesday: "Tue",
+  wednesday: "Wed",
+  thursday: "Thu",
+  friday: "Fri",
+  saturday: "Sat",
+  sunday: "Sun",
 };
 
 /**
@@ -29,7 +37,8 @@ export function formatHoursGrouped(hours: HoursRecord | null): HoursGroup[] {
   if (!hours) return [];
 
   const groups: HoursGroup[] = [];
-  let currentGroup: { startDay: string; endDay: string; hours: string } | null = null;
+  let currentGroup: { startDay: string; endDay: string; hours: string } | null =
+    null;
 
   for (const day of dayOrder) {
     const dayHours = hours[day];
@@ -42,9 +51,10 @@ export function formatHoursGrouped(hours: HoursRecord | null): HoursGroup[] {
       // Save previous group and start new one
       if (currentGroup) {
         groups.push({
-          days: currentGroup.startDay === currentGroup.endDay
-            ? dayAbbreviations[currentGroup.startDay]
-            : `${dayAbbreviations[currentGroup.startDay]} - ${dayAbbreviations[currentGroup.endDay]}`,
+          days:
+            currentGroup.startDay === currentGroup.endDay
+              ? dayAbbreviations[currentGroup.startDay]
+              : `${dayAbbreviations[currentGroup.startDay]} - ${dayAbbreviations[currentGroup.endDay]}`,
           hours: currentGroup.hours,
         });
       }
@@ -55,9 +65,10 @@ export function formatHoursGrouped(hours: HoursRecord | null): HoursGroup[] {
   // Don't forget the last group
   if (currentGroup) {
     groups.push({
-      days: currentGroup.startDay === currentGroup.endDay
-        ? dayAbbreviations[currentGroup.startDay]
-        : `${dayAbbreviations[currentGroup.startDay]} - ${dayAbbreviations[currentGroup.endDay]}`,
+      days:
+        currentGroup.startDay === currentGroup.endDay
+          ? dayAbbreviations[currentGroup.startDay]
+          : `${dayAbbreviations[currentGroup.startDay]} - ${dayAbbreviations[currentGroup.endDay]}`,
       hours: currentGroup.hours,
     });
   }
@@ -69,9 +80,12 @@ export function formatHoursGrouped(hours: HoursRecord | null): HoursGroup[] {
  * Formats hours as simple lines for display
  * Filters out "Closed" days by default
  */
-export function formatHoursLines(hours: HoursRecord | null, showClosed = false): string[] {
+export function formatHoursLines(
+  hours: HoursRecord | null,
+  showClosed = false,
+): string[] {
   const groups = formatHoursGrouped(hours);
   return groups
-    .filter(g => showClosed || g.hours.toLowerCase() !== 'closed')
-    .map(g => `${g.days}: ${g.hours}`);
+    .filter((g) => showClosed || g.hours.toLowerCase() !== "closed")
+    .map((g) => `${g.days}: ${g.hours}`);
 }

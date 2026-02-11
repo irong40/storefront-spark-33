@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface SyncResult {
   categories: { created: number; updated: number; removed: number };
@@ -23,10 +23,12 @@ export function useSquareSync() {
   const syncCatalog = async (): Promise<SyncResult | null> => {
     setIsSyncingCatalog(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      const response = await supabase.functions.invoke('sync-square-catalog', {
-        headers: session?.access_token 
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const response = await supabase.functions.invoke("sync-square-catalog", {
+        headers: session?.access_token
           ? { Authorization: `Bearer ${session.access_token}` }
           : undefined,
       });
@@ -39,26 +41,27 @@ export function useSquareSync() {
       setLastCatalogSync(new Date());
 
       toast({
-        title: 'Catalog Synced',
+        title: "Catalog Synced",
         description: `Created ${result.products.created}, updated ${result.products.updated}, removed ${result.products.removed} products`,
       });
 
       if (result.errors.length > 0) {
-        console.warn('Sync errors:', result.errors);
+        console.warn("Sync errors:", result.errors);
         toast({
-          title: 'Sync Warnings',
+          title: "Sync Warnings",
           description: `${result.errors.length} items had issues. Check console for details.`,
-          variant: 'destructive',
+          variant: "destructive",
         });
       }
 
       return result;
     } catch (error) {
-      console.error('Catalog sync error:', error);
+      console.error("Catalog sync error:", error);
       toast({
-        title: 'Sync Failed',
-        description: error instanceof Error ? error.message : 'Failed to sync catalog',
-        variant: 'destructive',
+        title: "Sync Failed",
+        description:
+          error instanceof Error ? error.message : "Failed to sync catalog",
+        variant: "destructive",
       });
       return null;
     } finally {
@@ -69,13 +72,18 @@ export function useSquareSync() {
   const syncInventory = async (): Promise<InventorySyncResult | null> => {
     setIsSyncingInventory(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      const response = await supabase.functions.invoke('sync-square-inventory', {
-        headers: session?.access_token 
-          ? { Authorization: `Bearer ${session.access_token}` }
-          : undefined,
-      });
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const response = await supabase.functions.invoke(
+        "sync-square-inventory",
+        {
+          headers: session?.access_token
+            ? { Authorization: `Bearer ${session.access_token}` }
+            : undefined,
+        },
+      );
 
       if (response.error) {
         throw new Error(response.error.message);
@@ -85,21 +93,22 @@ export function useSquareSync() {
       setLastInventorySync(new Date());
 
       toast({
-        title: 'Inventory Synced',
+        title: "Inventory Synced",
         description: `Updated ${result.updated} products`,
       });
 
       if (result.errors && result.errors.length > 0) {
-        console.warn('Inventory sync errors:', result.errors);
+        console.warn("Inventory sync errors:", result.errors);
       }
 
       return result;
     } catch (error) {
-      console.error('Inventory sync error:', error);
+      console.error("Inventory sync error:", error);
       toast({
-        title: 'Sync Failed',
-        description: error instanceof Error ? error.message : 'Failed to sync inventory',
-        variant: 'destructive',
+        title: "Sync Failed",
+        description:
+          error instanceof Error ? error.message : "Failed to sync inventory",
+        variant: "destructive",
       });
       return null;
     } finally {

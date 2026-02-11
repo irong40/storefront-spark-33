@@ -1,22 +1,33 @@
-import { useState, useEffect } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useBusinessSettings, BusinessSettings } from '@/hooks/use-business';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, MapPin, Clock, Phone, Mail, Globe } from 'lucide-react';
-import { z } from 'zod';
+import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useBusinessSettings, BusinessSettings } from "@/hooks/use-business";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2, Save, MapPin, Clock, Phone, Mail, Globe } from "lucide-react";
+import { z } from "zod";
 
 const businessSettingsSchema = z.object({
-  business_name: z.string().min(1, 'Business name is required').max(100),
+  business_name: z.string().min(1, "Business name is required").max(100),
   tagline: z.string().max(200).nullable(),
   description: z.string().max(1000).nullable(),
-  email: z.string().email('Invalid email').max(255).nullable().or(z.literal('')),
+  email: z
+    .string()
+    .email("Invalid email")
+    .max(255)
+    .nullable()
+    .or(z.literal("")),
   phone: z.string().max(20).nullable(),
   address_line1: z.string().max(200).nullable(),
   address_line2: z.string().max(200).nullable(),
@@ -25,15 +36,23 @@ const businessSettingsSchema = z.object({
   zip: z.string().max(20).nullable(),
 });
 
-const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
+const DAYS = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+] as const;
 const DAY_LABELS: Record<string, string> = {
-  monday: 'Monday',
-  tuesday: 'Tuesday',
-  wednesday: 'Wednesday',
-  thursday: 'Thursday',
-  friday: 'Friday',
-  saturday: 'Saturday',
-  sunday: 'Sunday',
+  monday: "Monday",
+  tuesday: "Tuesday",
+  wednesday: "Wednesday",
+  thursday: "Thursday",
+  friday: "Friday",
+  saturday: "Saturday",
+  sunday: "Sunday",
 };
 
 export function BusinessSettingsForm() {
@@ -44,86 +63,88 @@ export function BusinessSettingsForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [formData, setFormData] = useState({
-    business_name: '',
-    tagline: '',
-    description: '',
-    email: '',
-    phone: '',
-    address_line1: '',
-    address_line2: '',
-    city: '',
-    state: '',
-    zip: '',
+    business_name: "",
+    tagline: "",
+    description: "",
+    email: "",
+    phone: "",
+    address_line1: "",
+    address_line2: "",
+    city: "",
+    state: "",
+    zip: "",
   });
 
   const [hours, setHours] = useState<Record<string, string>>({
-    monday: '',
-    tuesday: '',
-    wednesday: '',
-    thursday: '',
-    friday: '',
-    saturday: '',
-    sunday: '',
+    monday: "",
+    tuesday: "",
+    wednesday: "",
+    thursday: "",
+    friday: "",
+    saturday: "",
+    sunday: "",
   });
 
   const [socialLinks, setSocialLinks] = useState({
-    instagram: '',
-    facebook: '',
+    instagram: "",
+    facebook: "",
   });
 
   useEffect(() => {
     if (business) {
       setFormData({
-        business_name: business.business_name || '',
-        tagline: business.tagline || '',
-        description: business.description || '',
-        email: business.email || '',
-        phone: business.phone || '',
-        address_line1: business.address_line1 || '',
-        address_line2: business.address_line2 || '',
-        city: business.city || '',
-        state: business.state || '',
-        zip: business.zip || '',
+        business_name: business.business_name || "",
+        tagline: business.tagline || "",
+        description: business.description || "",
+        email: business.email || "",
+        phone: business.phone || "",
+        address_line1: business.address_line1 || "",
+        address_line2: business.address_line2 || "",
+        city: business.city || "",
+        state: business.state || "",
+        zip: business.zip || "",
       });
 
       if (business.hours) {
         const hoursData = business.hours as Record<string, string>;
         setHours({
-          monday: hoursData.monday || '',
-          tuesday: hoursData.tuesday || '',
-          wednesday: hoursData.wednesday || '',
-          thursday: hoursData.thursday || '',
-          friday: hoursData.friday || '',
-          saturday: hoursData.saturday || '',
-          sunday: hoursData.sunday || '',
+          monday: hoursData.monday || "",
+          tuesday: hoursData.tuesday || "",
+          wednesday: hoursData.wednesday || "",
+          thursday: hoursData.thursday || "",
+          friday: hoursData.friday || "",
+          saturday: hoursData.saturday || "",
+          sunday: hoursData.sunday || "",
         });
       }
 
       if (business.social_links) {
         const links = business.social_links as Record<string, string>;
         setSocialLinks({
-          instagram: links.instagram || '',
-          facebook: links.facebook || '',
+          instagram: links.instagram || "",
+          facebook: links.facebook || "",
         });
       }
     }
   }, [business]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
     // Clear error on change
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
   const handleHoursChange = (day: string, value: string) => {
-    setHours(prev => ({ ...prev, [day]: value }));
+    setHours((prev) => ({ ...prev, [day]: value }));
   };
 
   const handleSocialChange = (platform: string, value: string) => {
-    setSocialLinks(prev => ({ ...prev, [platform]: value }));
+    setSocialLinks((prev) => ({ ...prev, [platform]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -146,7 +167,7 @@ export function BusinessSettingsForm() {
 
     if (!result.success) {
       const fieldErrors: Record<string, string> = {};
-      result.error.errors.forEach(err => {
+      result.error.errors.forEach((err) => {
         if (err.path[0]) {
           fieldErrors[err.path[0] as string] = err.message;
         }
@@ -159,7 +180,7 @@ export function BusinessSettingsForm() {
 
     try {
       const { error } = await supabase
-        .from('business_settings')
+        .from("business_settings")
         .update({
           business_name: formData.business_name,
           tagline: formData.tagline || null,
@@ -175,17 +196,17 @@ export function BusinessSettingsForm() {
           social_links: socialLinks,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', business?.id);
+        .eq("id", business?.id);
 
       if (error) throw error;
 
-      toast({ title: 'Business settings updated successfully' });
-      queryClient.invalidateQueries({ queryKey: ['business-settings'] });
+      toast({ title: "Business settings updated successfully" });
+      queryClient.invalidateQueries({ queryKey: ["business-settings"] });
     } catch (error) {
       toast({
-        title: 'Failed to update settings',
-        description: 'Please try again.',
-        variant: 'destructive',
+        title: "Failed to update settings",
+        description: "Please try again.",
+        variant: "destructive",
       });
     } finally {
       setIsSaving(false);
@@ -224,7 +245,9 @@ export function BusinessSettingsForm() {
                 required
               />
               {errors.business_name && (
-                <p className="text-sm text-destructive">{errors.business_name}</p>
+                <p className="text-sm text-destructive">
+                  {errors.business_name}
+                </p>
               )}
             </div>
             <div className="space-y-2">
@@ -360,11 +383,13 @@ export function BusinessSettingsForm() {
             <Clock className="h-5 w-5" />
             Hours of Operation
           </CardTitle>
-          <CardDescription>Enter hours or "Closed" for each day</CardDescription>
+          <CardDescription>
+            Enter hours or "Closed" for each day
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid sm:grid-cols-2 gap-4">
-            {DAYS.map(day => (
+            {DAYS.map((day) => (
               <div key={day} className="flex items-center gap-3">
                 <Label htmlFor={`hours-${day}`} className="w-24 text-right">
                   {DAY_LABELS[day]}
@@ -372,7 +397,7 @@ export function BusinessSettingsForm() {
                 <Input
                   id={`hours-${day}`}
                   value={hours[day]}
-                  onChange={e => handleHoursChange(day, e.target.value)}
+                  onChange={(e) => handleHoursChange(day, e.target.value)}
                   placeholder="e.g., 10am - 6pm"
                   className="flex-1"
                 />
@@ -398,7 +423,9 @@ export function BusinessSettingsForm() {
               <Input
                 id="instagram"
                 value={socialLinks.instagram}
-                onChange={e => handleSocialChange('instagram', e.target.value)}
+                onChange={(e) =>
+                  handleSocialChange("instagram", e.target.value)
+                }
                 placeholder="https://instagram.com/yourbusiness"
               />
             </div>
@@ -407,7 +434,7 @@ export function BusinessSettingsForm() {
               <Input
                 id="facebook"
                 value={socialLinks.facebook}
-                onChange={e => handleSocialChange('facebook', e.target.value)}
+                onChange={(e) => handleSocialChange("facebook", e.target.value)}
                 placeholder="https://facebook.com/yourbusiness"
               />
             </div>

@@ -1,4 +1,4 @@
-import { useActiveAnnouncements } from '@/hooks/use-announcements';
+import { useActiveAnnouncements } from "@/hooks/use-announcements";
 
 export function AnnouncementBanner() {
   const { data: announcements, isLoading } = useActiveAnnouncements();
@@ -9,19 +9,15 @@ export function AnnouncementBanner() {
 
   // Combine all announcements into a single scrolling message
   const combinedMessage = announcements
-    .map((a) => `${a.emoji || '✨'} ${a.message}`)
-    .join('     •     ');
+    .map((a) => `${a.emoji || "✨"} ${a.message}`)
+    .join("     •     ");
 
   return (
     <div className="bg-brand-berry text-white py-2 overflow-hidden">
       <div className="relative">
         <div className="animate-marquee whitespace-nowrap">
-          <span className="mx-4 text-sm font-medium">
-            {combinedMessage}
-          </span>
-          <span className="mx-4 text-sm font-medium">
-            {combinedMessage}
-          </span>
+          <span className="mx-4 text-sm font-medium">{combinedMessage}</span>
+          <span className="mx-4 text-sm font-medium">{combinedMessage}</span>
         </div>
       </div>
     </div>

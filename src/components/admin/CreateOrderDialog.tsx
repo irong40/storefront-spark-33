@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { useProducts } from '@/hooks/use-products';
-import { useCreateOrder } from '@/hooks/use-orders';
-import { useToast } from '@/hooks/use-toast';
+import { useState } from "react";
+import { useProducts } from "@/hooks/use-products";
+import { useCreateOrder } from "@/hooks/use-orders";
+import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
   DialogContent,
@@ -9,19 +9,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Plus, Minus, Trash2 } from 'lucide-react';
+} from "@/components/ui/select";
+import { Plus, Minus, Trash2 } from "lucide-react";
 
 interface OrderItem {
   product_id: string;
@@ -35,36 +35,39 @@ interface CreateOrderDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function CreateOrderDialog({ open, onOpenChange }: CreateOrderDialogProps) {
+export function CreateOrderDialog({
+  open,
+  onOpenChange,
+}: CreateOrderDialogProps) {
   const { data: products } = useProducts();
   const createOrder = useCreateOrder();
   const { toast } = useToast();
 
-  const [customerName, setCustomerName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [notes, setNotes] = useState('');
-  const [fulfillmentType, setFulfillmentType] = useState('pickup');
-  const [pickupDate, setPickupDate] = useState('');
-  const [pickupTime, setPickupTime] = useState('');
+  const [customerName, setCustomerName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [notes, setNotes] = useState("");
+  const [fulfillmentType, setFulfillmentType] = useState("pickup");
+  const [pickupDate, setPickupDate] = useState("");
+  const [pickupTime, setPickupTime] = useState("");
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
-  const [selectedProduct, setSelectedProduct] = useState('');
+  const [selectedProduct, setSelectedProduct] = useState("");
 
   const handleAddProduct = () => {
-    const product = products?.find(p => p.id === selectedProduct);
+    const product = products?.find((p) => p.id === selectedProduct);
     if (!product) return;
 
-    const existing = orderItems.find(item => item.product_id === product.id);
+    const existing = orderItems.find((item) => item.product_id === product.id);
     if (existing) {
-      setOrderItems(items =>
-        items.map(item =>
+      setOrderItems((items) =>
+        items.map((item) =>
           item.product_id === product.id
             ? { ...item, quantity: item.quantity + 1 }
-            : item
-        )
+            : item,
+        ),
       );
     } else {
-      setOrderItems(items => [
+      setOrderItems((items) => [
         ...items,
         {
           product_id: product.id,
@@ -74,32 +77,40 @@ export function CreateOrderDialog({ open, onOpenChange }: CreateOrderDialogProps
         },
       ]);
     }
-    setSelectedProduct('');
+    setSelectedProduct("");
   };
 
   const handleQuantityChange = (productId: string, delta: number) => {
-    setOrderItems(items =>
+    setOrderItems((items) =>
       items
-        .map(item =>
+        .map((item) =>
           item.product_id === productId
             ? { ...item, quantity: Math.max(0, item.quantity + delta) }
-            : item
+            : item,
         )
-        .filter(item => item.quantity > 0)
+        .filter((item) => item.quantity > 0),
     );
   };
 
   const handleRemoveItem = (productId: string) => {
-    setOrderItems(items => items.filter(item => item.product_id !== productId));
+    setOrderItems((items) =>
+      items.filter((item) => item.product_id !== productId),
+    );
   };
 
-  const subtotal = orderItems.reduce((sum, item) => sum + item.product_price * item.quantity, 0);
+  const subtotal = orderItems.reduce(
+    (sum, item) => sum + item.product_price * item.quantity,
+    0,
+  );
   const tax = subtotal * 0.08;
   const total = subtotal + tax;
 
   const handleSubmit = async () => {
     if (!customerName || !email || orderItems.length === 0) {
-      toast({ title: 'Please fill in required fields', variant: 'destructive' });
+      toast({
+        title: "Please fill in required fields",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -114,24 +125,24 @@ export function CreateOrderDialog({ open, onOpenChange }: CreateOrderDialogProps
         pickup_time: pickupTime || undefined,
         items: orderItems,
       });
-      toast({ title: 'Order created successfully' });
+      toast({ title: "Order created successfully" });
       onOpenChange(false);
       resetForm();
     } catch {
-      toast({ title: 'Failed to create order', variant: 'destructive' });
+      toast({ title: "Failed to create order", variant: "destructive" });
     }
   };
 
   const resetForm = () => {
-    setCustomerName('');
-    setEmail('');
-    setPhone('');
-    setNotes('');
-    setFulfillmentType('pickup');
-    setPickupDate('');
-    setPickupTime('');
+    setCustomerName("");
+    setEmail("");
+    setPhone("");
+    setNotes("");
+    setFulfillmentType("pickup");
+    setPickupDate("");
+    setPickupTime("");
     setOrderItems([]);
-    setSelectedProduct('');
+    setSelectedProduct("");
   };
 
   return (
@@ -179,7 +190,10 @@ export function CreateOrderDialog({ open, onOpenChange }: CreateOrderDialogProps
               </div>
               <div className="space-y-2">
                 <Label htmlFor="fulfillment">Fulfillment Type</Label>
-                <Select value={fulfillmentType} onValueChange={setFulfillmentType}>
+                <Select
+                  value={fulfillmentType}
+                  onValueChange={setFulfillmentType}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -190,7 +204,7 @@ export function CreateOrderDialog({ open, onOpenChange }: CreateOrderDialogProps
                 </Select>
               </div>
             </div>
-            {fulfillmentType === 'pickup' && (
+            {fulfillmentType === "pickup" && (
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="pickupDate">Pickup Date</Label>
@@ -218,16 +232,21 @@ export function CreateOrderDialog({ open, onOpenChange }: CreateOrderDialogProps
           <div className="space-y-4">
             <h3 className="font-semibold">Order Items</h3>
             <div className="flex gap-2">
-              <Select value={selectedProduct} onValueChange={setSelectedProduct}>
+              <Select
+                value={selectedProduct}
+                onValueChange={setSelectedProduct}
+              >
                 <SelectTrigger className="flex-1">
                   <SelectValue placeholder="Select a product" />
                 </SelectTrigger>
                 <SelectContent>
-                  {products?.filter(p => p.active && p.is_available).map((product) => (
-                    <SelectItem key={product.id} value={product.id}>
-                      {product.name} - ${product.price.toFixed(2)}
-                    </SelectItem>
-                  ))}
+                  {products
+                    ?.filter((p) => p.active && p.is_available)
+                    .map((product) => (
+                      <SelectItem key={product.id} value={product.id}>
+                        {product.name} - ${product.price.toFixed(2)}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
               <Button onClick={handleAddProduct} disabled={!selectedProduct}>
@@ -238,7 +257,10 @@ export function CreateOrderDialog({ open, onOpenChange }: CreateOrderDialogProps
             {orderItems.length > 0 && (
               <div className="border rounded-lg divide-y">
                 {orderItems.map((item) => (
-                  <div key={item.product_id} className="p-3 flex items-center justify-between">
+                  <div
+                    key={item.product_id}
+                    className="p-3 flex items-center justify-between"
+                  >
                     <div>
                       <p className="font-medium">{item.product_name}</p>
                       <p className="text-sm text-muted-foreground">
@@ -250,7 +272,9 @@ export function CreateOrderDialog({ open, onOpenChange }: CreateOrderDialogProps
                         size="icon"
                         variant="outline"
                         className="h-8 w-8"
-                        onClick={() => handleQuantityChange(item.product_id, -1)}
+                        onClick={() =>
+                          handleQuantityChange(item.product_id, -1)
+                        }
                       >
                         <Minus className="h-4 w-4" />
                       </Button>
@@ -317,9 +341,14 @@ export function CreateOrderDialog({ open, onOpenChange }: CreateOrderDialogProps
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={createOrder.isPending || !customerName || !email || orderItems.length === 0}
+            disabled={
+              createOrder.isPending ||
+              !customerName ||
+              !email ||
+              orderItems.length === 0
+            }
           >
-            {createOrder.isPending ? 'Creating...' : 'Create Order'}
+            {createOrder.isPending ? "Creating..." : "Create Order"}
           </Button>
         </DialogFooter>
       </DialogContent>

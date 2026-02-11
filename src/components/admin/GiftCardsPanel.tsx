@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -11,19 +11,19 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from 'sonner';
-import { Plus, Search, Gift, Eye, Ban, RefreshCw } from 'lucide-react';
-import { format } from 'date-fns';
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
+import { Plus, Search, Gift, Eye, Ban, RefreshCw } from "lucide-react";
+import { format } from "date-fns";
 
 interface GiftCard {
   id: string;
@@ -47,24 +47,26 @@ interface GiftCardTransaction {
 
 export function GiftCardsPanel() {
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState<GiftCard | null>(null);
-  const [newCardAmount, setNewCardAmount] = useState('');
-  const [newCardRecipientEmail, setNewCardRecipientEmail] = useState('');
-  const [newCardRecipientName, setNewCardRecipientName] = useState('');
+  const [newCardAmount, setNewCardAmount] = useState("");
+  const [newCardRecipientEmail, setNewCardRecipientEmail] = useState("");
+  const [newCardRecipientName, setNewCardRecipientName] = useState("");
 
   // Fetch gift cards
   const { data: giftCards = [], isLoading } = useQuery({
-    queryKey: ['admin-gift-cards', search],
+    queryKey: ["admin-gift-cards", search],
     queryFn: async () => {
       let query = supabase
-        .from('gift_cards')
-        .select('*')
-        .order('purchased_at', { ascending: false });
+        .from("gift_cards")
+        .select("*")
+        .order("purchased_at", { ascending: false });
 
       if (search) {
-        query = query.or(`code.ilike.%${search}%,recipient_email.ilike.%${search}%`);
+        query = query.or(
+          `code.ilike.%${search}%,recipient_email.ilike.%${search}%`,
+        );
       }
 
       const { data, error } = await query.limit(100);
@@ -75,14 +77,14 @@ export function GiftCardsPanel() {
 
   // Fetch transactions for selected card
   const { data: transactions = [] } = useQuery({
-    queryKey: ['gift-card-transactions', selectedCard?.id],
+    queryKey: ["gift-card-transactions", selectedCard?.id],
     queryFn: async () => {
       if (!selectedCard) return [];
       const { data, error } = await supabase
-        .from('gift_card_transactions')
-        .select('*')
-        .eq('gift_card_id', selectedCard.id)
-        .order('created_at', { ascending: false });
+        .from("gift_card_transactions")
+        .select("*")
+        .eq("gift_card_id", selectedCard.id)
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data as GiftCardTransaction[];
     },
@@ -93,7 +95,7 @@ export function GiftCardsPanel() {
   const createMutation = useMutation({
     mutationFn: async () => {
       const amount = parseFloat(newCardAmount);
-      if (isNaN(amount) || amount <= 0) throw new Error('Invalid amount');
+      if (isNaN(amount) || amount <= 0) throw new Error("Invalid amount");
 
       const insertData = {
         original_amount: amount,
@@ -103,7 +105,7 @@ export function GiftCardsPanel() {
       };
 
       const { data, error } = await supabase
-        .from('gift_cards')
+        .from("gift_cards")
         .insert(insertData as never)
         .select()
         .single();
@@ -111,22 +113,22 @@ export function GiftCardsPanel() {
       if (error) throw error;
 
       // Record purchase transaction
-      await supabase.from('gift_card_transactions').insert({
+      await supabase.from("gift_card_transactions").insert({
         gift_card_id: data.id,
-        type: 'purchase',
+        type: "purchase",
         amount: amount,
-        description: 'Gift card created by admin',
+        description: "Gift card created by admin",
       });
 
       return data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['admin-gift-cards'] });
+      queryClient.invalidateQueries({ queryKey: ["admin-gift-cards"] });
       toast.success(`Gift card created: ${data.code}`);
       setIsCreateOpen(false);
-      setNewCardAmount('');
-      setNewCardRecipientEmail('');
-      setNewCardRecipientName('');
+      setNewCardAmount("");
+      setNewCardRecipientEmail("");
+      setNewCardRecipientName("");
     },
     onError: (err) => {
       toast.error(`Failed to create gift card: ${err.message}`);
@@ -137,28 +139,31 @@ export function GiftCardsPanel() {
   const cancelMutation = useMutation({
     mutationFn: async (cardId: string) => {
       const { error } = await supabase
-        .from('gift_cards')
-        .update({ status: 'cancelled' })
-        .eq('id', cardId);
+        .from("gift_cards")
+        .update({ status: "cancelled" })
+        .eq("id", cardId);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-gift-cards'] });
-      toast.success('Gift card cancelled');
+      queryClient.invalidateQueries({ queryKey: ["admin-gift-cards"] });
+      toast.success("Gift card cancelled");
     },
     onError: () => {
-      toast.error('Failed to cancel gift card');
+      toast.error("Failed to cancel gift card");
     },
   });
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-      active: 'default',
-      depleted: 'secondary',
-      expired: 'outline',
-      cancelled: 'destructive',
+    const variants: Record<
+      string,
+      "default" | "secondary" | "destructive" | "outline"
+    > = {
+      active: "default",
+      depleted: "secondary",
+      expired: "outline",
+      cancelled: "destructive",
     };
-    return <Badge variant={variants[status] || 'outline'}>{status}</Badge>;
+    return <Badge variant={variants[status] || "outline"}>{status}</Badge>;
   };
 
   return (
@@ -263,21 +268,33 @@ export function GiftCardsPanel() {
             <TableBody>
               {giftCards.map((card) => (
                 <TableRow key={card.id}>
-                  <TableCell className="font-mono text-sm">{card.code}</TableCell>
+                  <TableCell className="font-mono text-sm">
+                    {card.code}
+                  </TableCell>
                   <TableCell>
                     {card.recipient_email ? (
                       <div>
-                        <div className="font-medium">{card.recipient_name || '-'}</div>
-                        <div className="text-xs text-muted-foreground">{card.recipient_email}</div>
+                        <div className="font-medium">
+                          {card.recipient_name || "-"}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {card.recipient_email}
+                        </div>
                       </div>
                     ) : (
                       <span className="text-muted-foreground">-</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-right">${card.original_amount.toFixed(2)}</TableCell>
-                  <TableCell className="text-right font-medium">${card.balance.toFixed(2)}</TableCell>
+                  <TableCell className="text-right">
+                    ${card.original_amount.toFixed(2)}
+                  </TableCell>
+                  <TableCell className="text-right font-medium">
+                    ${card.balance.toFixed(2)}
+                  </TableCell>
                   <TableCell>{getStatusBadge(card.status)}</TableCell>
-                  <TableCell>{format(new Date(card.purchased_at), 'MMM d, yyyy')}</TableCell>
+                  <TableCell>
+                    {format(new Date(card.purchased_at), "MMM d, yyyy")}
+                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Dialog>
@@ -297,26 +314,42 @@ export function GiftCardsPanel() {
                           <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4 text-sm">
                               <div>
-                                <div className="text-muted-foreground">Code</div>
-                                <div className="font-mono font-medium">{card.code}</div>
+                                <div className="text-muted-foreground">
+                                  Code
+                                </div>
+                                <div className="font-mono font-medium">
+                                  {card.code}
+                                </div>
                               </div>
                               <div>
-                                <div className="text-muted-foreground">Status</div>
+                                <div className="text-muted-foreground">
+                                  Status
+                                </div>
                                 <div>{getStatusBadge(card.status)}</div>
                               </div>
                               <div>
-                                <div className="text-muted-foreground">Original Amount</div>
+                                <div className="text-muted-foreground">
+                                  Original Amount
+                                </div>
                                 <div>${card.original_amount.toFixed(2)}</div>
                               </div>
                               <div>
-                                <div className="text-muted-foreground">Current Balance</div>
-                                <div className="font-bold text-primary">${card.balance.toFixed(2)}</div>
+                                <div className="text-muted-foreground">
+                                  Current Balance
+                                </div>
+                                <div className="font-bold text-primary">
+                                  ${card.balance.toFixed(2)}
+                                </div>
                               </div>
                             </div>
                             <div>
-                              <div className="text-sm font-medium mb-2">Transaction History</div>
+                              <div className="text-sm font-medium mb-2">
+                                Transaction History
+                              </div>
                               {transactions.length === 0 ? (
-                                <p className="text-sm text-muted-foreground">No transactions</p>
+                                <p className="text-sm text-muted-foreground">
+                                  No transactions
+                                </p>
                               ) : (
                                 <div className="space-y-2 max-h-48 overflow-y-auto">
                                   {transactions.map((tx) => (
@@ -325,13 +358,25 @@ export function GiftCardsPanel() {
                                       className="flex justify-between items-center text-sm p-2 bg-muted rounded"
                                     >
                                       <div>
-                                        <div className="capitalize">{tx.type}</div>
+                                        <div className="capitalize">
+                                          {tx.type}
+                                        </div>
                                         <div className="text-xs text-muted-foreground">
-                                          {format(new Date(tx.created_at), 'MMM d, yyyy h:mm a')}
+                                          {format(
+                                            new Date(tx.created_at),
+                                            "MMM d, yyyy h:mm a",
+                                          )}
                                         </div>
                                       </div>
-                                      <div className={tx.type === 'redemption' ? 'text-destructive' : 'text-primary'}>
-                                        {tx.type === 'redemption' ? '-' : '+'}${tx.amount.toFixed(2)}
+                                      <div
+                                        className={
+                                          tx.type === "redemption"
+                                            ? "text-destructive"
+                                            : "text-primary"
+                                        }
+                                      >
+                                        {tx.type === "redemption" ? "-" : "+"}$
+                                        {tx.amount.toFixed(2)}
                                       </div>
                                     </div>
                                   ))}
@@ -341,7 +386,7 @@ export function GiftCardsPanel() {
                           </div>
                         </DialogContent>
                       </Dialog>
-                      {card.status === 'active' && (
+                      {card.status === "active" && (
                         <Button
                           variant="ghost"
                           size="icon"

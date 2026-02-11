@@ -1,6 +1,13 @@
-import { useState } from 'react';
-import { useUsers, useAssignRole, useRemoveRole, useCreateUser, useResetUserPassword, UserWithRole } from '@/hooks/use-users';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState } from "react";
+import {
+  useUsers,
+  useAssignRole,
+  useRemoveRole,
+  useCreateUser,
+  useResetUserPassword,
+  UserWithRole,
+} from "@/hooks/use-users";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Table,
   TableBody,
@@ -8,12 +15,12 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Skeleton } from '@/components/ui/skeleton';
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -21,14 +28,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,9 +45,17 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Search, UserPlus, X, Shield, ShieldCheck, Plus, KeyRound } from 'lucide-react';
-import { format } from 'date-fns';
+} from "@/components/ui/alert-dialog";
+import {
+  Search,
+  UserPlus,
+  X,
+  Shield,
+  ShieldCheck,
+  Plus,
+  KeyRound,
+} from "lucide-react";
+import { format } from "date-fns";
 
 export function UserManagementPanel() {
   const { user: currentUser } = useAuth();
@@ -50,28 +65,35 @@ export function UserManagementPanel() {
   const createUser = useCreateUser();
   const resetPassword = useResetUserPassword();
 
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserWithRole | null>(null);
-  const [selectedRole, setSelectedRole] = useState<'admin' | 'moderator'>('admin');
+  const [selectedRole, setSelectedRole] = useState<"admin" | "moderator">(
+    "admin",
+  );
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
-  const [roleToRemove, setRoleToRemove] = useState<{ user: UserWithRole; role: 'admin' | 'moderator' | 'user' } | null>(null);
-  
+  const [roleToRemove, setRoleToRemove] = useState<{
+    user: UserWithRole;
+    role: "admin" | "moderator" | "user";
+  } | null>(null);
+
   // Add user dialog state
   const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
-  const [newUserEmail, setNewUserEmail] = useState('');
-  const [newUserName, setNewUserName] = useState('');
-  const [newUserRole, setNewUserRole] = useState<'none' | 'admin' | 'moderator'>('none');
+  const [newUserEmail, setNewUserEmail] = useState("");
+  const [newUserName, setNewUserName] = useState("");
+  const [newUserRole, setNewUserRole] = useState<
+    "none" | "admin" | "moderator"
+  >("none");
 
   // Reset password dialog state
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
   const [userToReset, setUserToReset] = useState<UserWithRole | null>(null);
 
-  const filteredUsers = users?.filter(user => {
+  const filteredUsers = users?.filter((user) => {
     const query = searchQuery.toLowerCase();
     return (
       user.email.toLowerCase().includes(query) ||
-      (user.full_name?.toLowerCase() || '').includes(query)
+      (user.full_name?.toLowerCase() || "").includes(query)
     );
   });
 
@@ -84,7 +106,7 @@ export function UserManagementPanel() {
           setAssignDialogOpen(false);
           setSelectedUser(null);
         },
-      }
+      },
     );
   };
 
@@ -97,35 +119,38 @@ export function UserManagementPanel() {
           setRemoveDialogOpen(false);
           setRoleToRemove(null);
         },
-      }
+      },
     );
   };
 
   const openAssignDialog = (user: UserWithRole) => {
     setSelectedUser(user);
-    setSelectedRole('admin');
+    setSelectedRole("admin");
     setAssignDialogOpen(true);
   };
 
-  const openRemoveDialog = (user: UserWithRole, role: 'admin' | 'moderator' | 'user') => {
+  const openRemoveDialog = (
+    user: UserWithRole,
+    role: "admin" | "moderator" | "user",
+  ) => {
     setRoleToRemove({ user, role });
     setRemoveDialogOpen(true);
   };
 
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
-      case 'admin':
-        return 'destructive';
-      case 'moderator':
-        return 'default';
+      case "admin":
+        return "destructive";
+      case "moderator":
+        return "default";
       default:
-        return 'secondary';
+        return "secondary";
     }
   };
 
   const canRemoveRole = (user: UserWithRole, role: string) => {
     // Prevent current admin from removing their own admin role
-    if (user.id === currentUser?.id && role === 'admin') {
+    if (user.id === currentUser?.id && role === "admin") {
       return false;
     }
     return true;
@@ -133,19 +158,19 @@ export function UserManagementPanel() {
 
   const handleCreateUser = () => {
     createUser.mutate(
-      { 
-        email: newUserEmail, 
+      {
+        email: newUserEmail,
         full_name: newUserName || undefined,
-        role: newUserRole === 'none' ? undefined : newUserRole
+        role: newUserRole === "none" ? undefined : newUserRole,
       },
       {
         onSuccess: () => {
           setAddUserDialogOpen(false);
-          setNewUserEmail('');
-          setNewUserName('');
-          setNewUserRole('none');
+          setNewUserEmail("");
+          setNewUserName("");
+          setNewUserRole("none");
         },
-      }
+      },
     );
   };
 
@@ -163,7 +188,7 @@ export function UserManagementPanel() {
           setResetPasswordDialogOpen(false);
           setUserToReset(null);
         },
-      }
+      },
     );
   };
 
@@ -212,8 +237,12 @@ export function UserManagementPanel() {
             <TableRow key={user.id}>
               <TableCell>
                 <div>
-                  <div className="font-medium">{user.full_name || 'No name'}</div>
-                  <div className="text-sm text-muted-foreground">{user.email}</div>
+                  <div className="font-medium">
+                    {user.full_name || "No name"}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {user.email}
+                  </div>
                 </div>
               </TableCell>
               <TableCell>
@@ -225,7 +254,7 @@ export function UserManagementPanel() {
                         variant={getRoleBadgeVariant(role)}
                         className="flex items-center gap-1"
                       >
-                        {role === 'admin' ? (
+                        {role === "admin" ? (
                           <ShieldCheck className="h-3 w-3" />
                         ) : (
                           <Shield className="h-3 w-3" />
@@ -233,7 +262,12 @@ export function UserManagementPanel() {
                         {role}
                         {canRemoveRole(user, role) && (
                           <button
-                            onClick={() => openRemoveDialog(user, role as 'admin' | 'moderator' | 'user')}
+                            onClick={() =>
+                              openRemoveDialog(
+                                user,
+                                role as "admin" | "moderator" | "user",
+                              )
+                            }
                             className="ml-1 hover:bg-white/20 rounded-full p-0.5"
                           >
                             <X className="h-3 w-3" />
@@ -248,7 +282,7 @@ export function UserManagementPanel() {
               </TableCell>
               <TableCell>
                 <span className="text-sm text-muted-foreground">
-                  {format(new Date(user.created_at), 'MMM d, yyyy')}
+                  {format(new Date(user.created_at), "MMM d, yyyy")}
                 </span>
               </TableCell>
               <TableCell className="text-right">
@@ -265,7 +299,10 @@ export function UserManagementPanel() {
                     size="sm"
                     variant="outline"
                     onClick={() => openAssignDialog(user)}
-                    disabled={user.roles.includes('admin') && user.roles.includes('moderator')}
+                    disabled={
+                      user.roles.includes("admin") &&
+                      user.roles.includes("moderator")
+                    }
                   >
                     <UserPlus className="h-4 w-4 mr-1" />
                     Assign Role
@@ -276,7 +313,10 @@ export function UserManagementPanel() {
           ))}
           {filteredUsers?.length === 0 && (
             <TableRow>
-              <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+              <TableCell
+                colSpan={4}
+                className="text-center py-8 text-muted-foreground"
+              >
                 No users found
               </TableCell>
             </TableRow>
@@ -296,13 +336,15 @@ export function UserManagementPanel() {
           <div className="py-4">
             <Select
               value={selectedRole}
-              onValueChange={(value: 'admin' | 'moderator') => setSelectedRole(value)}
+              onValueChange={(value: "admin" | "moderator") =>
+                setSelectedRole(value)
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select a role" />
               </SelectTrigger>
               <SelectContent>
-                {!selectedUser?.roles.includes('admin') && (
+                {!selectedUser?.roles.includes("admin") && (
                   <SelectItem value="admin">
                     <div className="flex items-center gap-2">
                       <ShieldCheck className="h-4 w-4" />
@@ -310,7 +352,7 @@ export function UserManagementPanel() {
                     </div>
                   </SelectItem>
                 )}
-                {!selectedUser?.roles.includes('moderator') && (
+                {!selectedUser?.roles.includes("moderator") && (
                   <SelectItem value="moderator">
                     <div className="flex items-center gap-2">
                       <Shield className="h-4 w-4" />
@@ -322,11 +364,14 @@ export function UserManagementPanel() {
             </Select>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAssignDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setAssignDialogOpen(false)}
+            >
               Cancel
             </Button>
             <Button onClick={handleAssignRole} disabled={assignRole.isPending}>
-              {assignRole.isPending ? 'Assigning...' : 'Assign Role'}
+              {assignRole.isPending ? "Assigning..." : "Assign Role"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -338,8 +383,8 @@ export function UserManagementPanel() {
           <AlertDialogHeader>
             <AlertDialogTitle>Remove Role</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to remove the "{roleToRemove?.role}" role from{' '}
-              {roleToRemove?.user.full_name || roleToRemove?.user.email}?
+              Are you sure you want to remove the "{roleToRemove?.role}" role
+              from {roleToRemove?.user.full_name || roleToRemove?.user.email}?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -348,7 +393,7 @@ export function UserManagementPanel() {
               onClick={handleRemoveRole}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {removeRole.isPending ? 'Removing...' : 'Remove Role'}
+              {removeRole.isPending ? "Removing..." : "Remove Role"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -360,7 +405,8 @@ export function UserManagementPanel() {
           <DialogHeader>
             <DialogTitle>Add New User</DialogTitle>
             <DialogDescription>
-              Create a new user account. They will receive an email to set their password.
+              Create a new user account. They will receive an email to set their
+              password.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -387,7 +433,9 @@ export function UserManagementPanel() {
               <Label>Assign Role (Optional)</Label>
               <Select
                 value={newUserRole}
-                onValueChange={(value: 'none' | 'admin' | 'moderator') => setNewUserRole(value)}
+                onValueChange={(value: "none" | "admin" | "moderator") =>
+                  setNewUserRole(value)
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a role" />
@@ -411,26 +459,33 @@ export function UserManagementPanel() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAddUserDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setAddUserDialogOpen(false)}
+            >
               Cancel
             </Button>
-            <Button 
-              onClick={handleCreateUser} 
+            <Button
+              onClick={handleCreateUser}
               disabled={createUser.isPending || !newUserEmail}
             >
-              {createUser.isPending ? 'Creating...' : 'Create User'}
+              {createUser.isPending ? "Creating..." : "Create User"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Reset Password Confirmation */}
-      <AlertDialog open={resetPasswordDialogOpen} onOpenChange={setResetPasswordDialogOpen}>
+      <AlertDialog
+        open={resetPasswordDialogOpen}
+        onOpenChange={setResetPasswordDialogOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Reset Password</AlertDialogTitle>
             <AlertDialogDescription>
-              Send a password reset email to {userToReset?.email}? They will receive a link to set a new password.
+              Send a password reset email to {userToReset?.email}? They will
+              receive a link to set a new password.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -439,7 +494,7 @@ export function UserManagementPanel() {
               onClick={handleResetPassword}
               disabled={resetPassword.isPending}
             >
-              {resetPassword.isPending ? 'Sending...' : 'Send Reset Email'}
+              {resetPassword.isPending ? "Sending..." : "Send Reset Email"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

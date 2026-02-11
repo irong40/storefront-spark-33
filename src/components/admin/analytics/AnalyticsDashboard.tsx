@@ -1,19 +1,25 @@
-import { useRevenueStats, useCustomerStats, TimePeriod } from '@/hooks/use-analytics';
-import { KPICard } from './KPICard';
-import { RevenueChart } from './RevenueChart';
-import { CategoryChart } from './CategoryChart';
-import { TopProductsPanel } from './TopProductsPanel';
-import { CustomerMetricsPanel } from './CustomerMetricsPanel';
-import { PeakHoursPanel } from './PeakHoursPanel';
-import { ActivityFeed } from './ActivityFeed';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DollarSign, ShoppingBag, Users, TrendingUp } from 'lucide-react';
-import { useState } from 'react';
+import {
+  useRevenueStats,
+  useCustomerStats,
+  TimePeriod,
+} from "@/hooks/use-analytics";
+import { KPICard } from "./KPICard";
+import { RevenueChart } from "./RevenueChart";
+import { CategoryChart } from "./CategoryChart";
+import { TopProductsPanel } from "./TopProductsPanel";
+import { CustomerMetricsPanel } from "./CustomerMetricsPanel";
+import { PeakHoursPanel } from "./PeakHoursPanel";
+import { ActivityFeed } from "./ActivityFeed";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DollarSign, ShoppingBag, Users, TrendingUp } from "lucide-react";
+import { useState } from "react";
 
 export function AnalyticsDashboard() {
-  const [period, setPeriod] = useState<TimePeriod>('month');
-  const { data: revenueStats, isLoading: revenueLoading } = useRevenueStats(period);
-  const { data: customerStats, isLoading: customerLoading } = useCustomerStats(period);
+  const [period, setPeriod] = useState<TimePeriod>("month");
+  const { data: revenueStats, isLoading: revenueLoading } =
+    useRevenueStats(period);
+  const { data: customerStats, isLoading: customerLoading } =
+    useCustomerStats(period);
 
   const formatCurrency = (value: number) => {
     if (value >= 1000) {
@@ -39,28 +45,38 @@ export function AnalyticsDashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <KPICard
           title="Total Revenue"
-          value={revenueLoading ? '...' : formatCurrency(revenueStats?.totalRevenue || 0)}
+          value={
+            revenueLoading
+              ? "..."
+              : formatCurrency(revenueStats?.totalRevenue || 0)
+          }
           change={revenueStats?.revenueChange}
           icon={DollarSign}
           variant="olive"
         />
         <KPICard
           title="Total Orders"
-          value={revenueLoading ? '...' : String(revenueStats?.orderCount || 0)}
+          value={revenueLoading ? "..." : String(revenueStats?.orderCount || 0)}
           change={revenueStats?.orderChange}
           icon={ShoppingBag}
           variant="terracotta"
         />
         <KPICard
           title="New Customers"
-          value={customerLoading ? '...' : String(customerStats?.newCustomers || 0)}
+          value={
+            customerLoading ? "..." : String(customerStats?.newCustomers || 0)
+          }
           change={customerStats?.customerChange}
           icon={Users}
           variant="berry"
         />
         <KPICard
           title="Avg Order Value"
-          value={revenueLoading ? '...' : formatCurrency(revenueStats?.avgOrderValue || 0)}
+          value={
+            revenueLoading
+              ? "..."
+              : formatCurrency(revenueStats?.avgOrderValue || 0)
+          }
           icon={TrendingUp}
           variant="mustard"
           subtitle="Per transaction"

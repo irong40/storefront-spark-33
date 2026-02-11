@@ -1,7 +1,7 @@
-import { Button } from '@/components/ui/button';
-import { useCart, CartItem as CartItemType } from '@/contexts/CartContext';
-import { Minus, Plus, Trash2, Gift } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
+import { useCart, CartItem as CartItemType } from "@/contexts/CartContext";
+import { Minus, Plus, Trash2, Gift } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface CartItemProps {
   item: CartItemType;
@@ -9,7 +9,15 @@ interface CartItemProps {
 
 export function CartItem({ item }: CartItemProps) {
   const { updateQuantity, removeItem } = useCart();
-  const { product, quantity, size, size_override, addons, flavors, gift_card_data } = item;
+  const {
+    product,
+    quantity,
+    size,
+    size_override,
+    addons,
+    flavors,
+    gift_card_data,
+  } = item;
 
   // Calculate item price: variant override > standard size > base price
   let basePrice = Number(product.price);
@@ -20,7 +28,8 @@ export function CartItem({ item }: CartItemProps) {
   }
 
   // Add addon prices
-  const addonsTotal = addons?.reduce((sum, addon) => sum + Number(addon.price), 0) || 0;
+  const addonsTotal =
+    addons?.reduce((sum, addon) => sum + Number(addon.price), 0) || 0;
   const itemPrice = basePrice + addonsTotal;
   const lineTotal = itemPrice * quantity;
 
@@ -31,7 +40,11 @@ export function CartItem({ item }: CartItemProps) {
       <Link to={`/products/${product.slug}`} className="shrink-0">
         <div className="h-20 w-20 rounded-lg bg-secondary flex items-center justify-center overflow-hidden">
           {product.image_url ? (
-            <img src={product.image_url} alt={product.name} className="h-full w-full object-cover" />
+            <img
+              src={product.image_url}
+              alt={product.name}
+              className="h-full w-full object-cover"
+            />
           ) : isGiftCard ? (
             <Gift className="h-8 w-8 text-muted-foreground" />
           ) : (
@@ -47,7 +60,7 @@ export function CartItem({ item }: CartItemProps) {
         >
           {product.name}
         </Link>
-        
+
         {/* Size info */}
         {size_override && (
           <p className="text-xs text-muted-foreground">
@@ -55,22 +68,21 @@ export function CartItem({ item }: CartItemProps) {
           </p>
         )}
         {size && !size_override && (
-          <p className="text-xs text-muted-foreground">
-            Size: {size.name}
-          </p>
+          <p className="text-xs text-muted-foreground">Size: {size.name}</p>
         )}
 
         {/* Flavors */}
         {flavors && flavors.length > 0 && (
           <p className="text-xs text-muted-foreground">
-            Flavors: {flavors.map(f => f.name).join(', ')}
+            Flavors: {flavors.map((f) => f.name).join(", ")}
           </p>
         )}
 
         {/* Add-ons */}
         {addons && addons.length > 0 && (
           <p className="text-xs text-muted-foreground">
-            Add-ons: {addons.map(a => a.display_name).join(', ')} (+${addonsTotal.toFixed(2)})
+            Add-ons: {addons.map((a) => a.display_name).join(", ")} (+$
+            {addonsTotal.toFixed(2)})
           </p>
         )}
 
@@ -79,10 +91,14 @@ export function CartItem({ item }: CartItemProps) {
           <div className="text-xs text-muted-foreground space-y-0.5 mt-1">
             <p className="flex items-center gap-1">
               <Gift className="h-3 w-3" />
-              To: {gift_card_data.recipientName || gift_card_data.recipientEmail}
+              To:{" "}
+              {gift_card_data.recipientName || gift_card_data.recipientEmail}
             </p>
             {gift_card_data.deliveryDate && (
-              <p>Deliver: {new Date(gift_card_data.deliveryDate).toLocaleDateString()}</p>
+              <p>
+                Deliver:{" "}
+                {new Date(gift_card_data.deliveryDate).toLocaleDateString()}
+              </p>
             )}
           </div>
         )}
@@ -121,9 +137,7 @@ export function CartItem({ item }: CartItemProps) {
       </div>
 
       <div className="text-right">
-        <p className="font-medium">
-          ${lineTotal.toFixed(2)}
-        </p>
+        <p className="font-medium">${lineTotal.toFixed(2)}</p>
       </div>
     </div>
   );

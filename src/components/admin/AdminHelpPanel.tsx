@@ -6,10 +6,20 @@ import {
 } from "@/components/ui/accordion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Package, ShoppingBag, Users, Settings, Gift, Star, 
-  Megaphone, Sliders, BarChart3, HelpCircle, Info,
-  CheckCircle, XCircle
+import {
+  Package,
+  ShoppingBag,
+  Users,
+  Settings,
+  Gift,
+  Star,
+  Megaphone,
+  Sliders,
+  BarChart3,
+  HelpCircle,
+  Info,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 
 export function AdminHelpPanel() {
@@ -34,27 +44,35 @@ export function AdminHelpPanel() {
               </AccordionTrigger>
               <AccordionContent className="space-y-4 text-sm">
                 <div>
-                  <h4 className="font-semibold mb-2">Adding & Editing Products</h4>
+                  <h4 className="font-semibold mb-2">
+                    Adding & Editing Products
+                  </h4>
                   <ul className="list-disc list-inside space-y-1 text-muted-foreground">
                     <li>Click "Add Product" to create a new product</li>
-                    <li>Fill in name, price, description, and select a category</li>
+                    <li>
+                      Fill in name, price, description, and select a category
+                    </li>
                     <li>Upload an image or use AI generation</li>
                     <li>Toggle "Featured" to show on homepage</li>
-                    <li>Toggle "Available" to control if customers can order it</li>
+                    <li>
+                      Toggle "Available" to control if customers can order it
+                    </li>
                   </ul>
                 </div>
                 <div>
                   <h4 className="font-semibold mb-2">Square Sync</h4>
                   <p className="text-muted-foreground">
-                    Click "Sync from Square" to import products from your Square catalog. 
-                    This will update prices and availability automatically.
+                    Click "Sync from Square" to import products from your Square
+                    catalog. This will update prices and availability
+                    automatically.
                   </p>
                 </div>
                 <div>
                   <h4 className="font-semibold mb-2">AI Image Generation</h4>
                   <p className="text-muted-foreground">
-                    Click the wand icon to generate an AI image for any product. 
-                    Use "Generate All Images" to batch generate for products without images.
+                    Click the wand icon to generate an AI image for any product.
+                    Use "Generate All Images" to batch generate for products
+                    without images.
                   </p>
                 </div>
               </AccordionContent>
@@ -72,12 +90,14 @@ export function AdminHelpPanel() {
                 <p className="text-muted-foreground mb-4">
                   Different product types have different configuration options:
                 </p>
-                
+
                 <div className="rounded-lg border overflow-hidden">
                   <table className="w-full text-sm">
                     <thead className="bg-muted">
                       <tr>
-                        <th className="p-3 text-left font-medium">Product Type</th>
+                        <th className="p-3 text-left font-medium">
+                          Product Type
+                        </th>
                         <th className="p-3 text-center font-medium">Sizes</th>
                         <th className="p-3 text-center font-medium">Add-ons</th>
                         <th className="p-3 text-center font-medium">Flavors</th>
@@ -86,45 +106,87 @@ export function AdminHelpPanel() {
                     <tbody className="divide-y">
                       <tr>
                         <td className="p-3">Standard Juices</td>
-                        <td className="p-3 text-center"><CheckCircle className="h-4 w-4 text-green-600 mx-auto" /></td>
-                        <td className="p-3 text-center"><CheckCircle className="h-4 w-4 text-green-600 mx-auto" /></td>
-                        <td className="p-3 text-center"><XCircle className="h-4 w-4 text-muted-foreground mx-auto" /></td>
+                        <td className="p-3 text-center">
+                          <CheckCircle className="h-4 w-4 text-green-600 mx-auto" />
+                        </td>
+                        <td className="p-3 text-center">
+                          <CheckCircle className="h-4 w-4 text-green-600 mx-auto" />
+                        </td>
+                        <td className="p-3 text-center">
+                          <XCircle className="h-4 w-4 text-muted-foreground mx-auto" />
+                        </td>
                       </tr>
                       <tr>
                         <td className="p-3">Wellness Shots</td>
-                        <td className="p-3 text-center"><XCircle className="h-4 w-4 text-muted-foreground mx-auto" /></td>
-                        <td className="p-3 text-center"><XCircle className="h-4 w-4 text-muted-foreground mx-auto" /></td>
-                        <td className="p-3 text-center"><XCircle className="h-4 w-4 text-muted-foreground mx-auto" /></td>
+                        <td className="p-3 text-center">
+                          <XCircle className="h-4 w-4 text-muted-foreground mx-auto" />
+                        </td>
+                        <td className="p-3 text-center">
+                          <XCircle className="h-4 w-4 text-muted-foreground mx-auto" />
+                        </td>
+                        <td className="p-3 text-center">
+                          <XCircle className="h-4 w-4 text-muted-foreground mx-auto" />
+                        </td>
                       </tr>
                       <tr>
                         <td className="p-3">Detox Packages (1-Day, 3-Day)</td>
-                        <td className="p-3 text-center"><XCircle className="h-4 w-4 text-muted-foreground mx-auto" /></td>
-                        <td className="p-3 text-center"><XCircle className="h-4 w-4 text-muted-foreground mx-auto" /></td>
-                        <td className="p-3 text-center"><XCircle className="h-4 w-4 text-muted-foreground mx-auto" /></td>
+                        <td className="p-3 text-center">
+                          <XCircle className="h-4 w-4 text-muted-foreground mx-auto" />
+                        </td>
+                        <td className="p-3 text-center">
+                          <XCircle className="h-4 w-4 text-muted-foreground mx-auto" />
+                        </td>
+                        <td className="p-3 text-center">
+                          <XCircle className="h-4 w-4 text-muted-foreground mx-auto" />
+                        </td>
                       </tr>
                       <tr>
                         <td className="p-3">4-Pack Sample Box</td>
-                        <td className="p-3 text-center"><CheckCircle className="h-4 w-4 text-green-600 mx-auto" /></td>
-                        <td className="p-3 text-center"><XCircle className="h-4 w-4 text-muted-foreground mx-auto" /></td>
-                        <td className="p-3 text-center"><Badge variant="secondary">4 Flavors</Badge></td>
+                        <td className="p-3 text-center">
+                          <CheckCircle className="h-4 w-4 text-green-600 mx-auto" />
+                        </td>
+                        <td className="p-3 text-center">
+                          <XCircle className="h-4 w-4 text-muted-foreground mx-auto" />
+                        </td>
+                        <td className="p-3 text-center">
+                          <Badge variant="secondary">4 Flavors</Badge>
+                        </td>
                       </tr>
                       <tr>
                         <td className="p-3">Half Gallon Subscription</td>
-                        <td className="p-3 text-center"><XCircle className="h-4 w-4 text-muted-foreground mx-auto" /></td>
-                        <td className="p-3 text-center"><XCircle className="h-4 w-4 text-muted-foreground mx-auto" /></td>
-                        <td className="p-3 text-center"><Badge variant="secondary">1 Flavor</Badge></td>
+                        <td className="p-3 text-center">
+                          <XCircle className="h-4 w-4 text-muted-foreground mx-auto" />
+                        </td>
+                        <td className="p-3 text-center">
+                          <XCircle className="h-4 w-4 text-muted-foreground mx-auto" />
+                        </td>
+                        <td className="p-3 text-center">
+                          <Badge variant="secondary">1 Flavor</Badge>
+                        </td>
                       </tr>
                       <tr>
                         <td className="p-3">Full Gallon Subscription</td>
-                        <td className="p-3 text-center"><XCircle className="h-4 w-4 text-muted-foreground mx-auto" /></td>
-                        <td className="p-3 text-center"><XCircle className="h-4 w-4 text-muted-foreground mx-auto" /></td>
-                        <td className="p-3 text-center"><Badge variant="secondary">1 Flavor</Badge></td>
+                        <td className="p-3 text-center">
+                          <XCircle className="h-4 w-4 text-muted-foreground mx-auto" />
+                        </td>
+                        <td className="p-3 text-center">
+                          <XCircle className="h-4 w-4 text-muted-foreground mx-auto" />
+                        </td>
+                        <td className="p-3 text-center">
+                          <Badge variant="secondary">1 Flavor</Badge>
+                        </td>
                       </tr>
                       <tr>
                         <td className="p-3">3-Pack Subscription</td>
-                        <td className="p-3 text-center"><XCircle className="h-4 w-4 text-muted-foreground mx-auto" /></td>
-                        <td className="p-3 text-center"><XCircle className="h-4 w-4 text-muted-foreground mx-auto" /></td>
-                        <td className="p-3 text-center"><Badge variant="secondary">3 Flavors</Badge></td>
+                        <td className="p-3 text-center">
+                          <XCircle className="h-4 w-4 text-muted-foreground mx-auto" />
+                        </td>
+                        <td className="p-3 text-center">
+                          <XCircle className="h-4 w-4 text-muted-foreground mx-auto" />
+                        </td>
+                        <td className="p-3 text-center">
+                          <Badge variant="secondary">3 Flavors</Badge>
+                        </td>
                       </tr>
                     </tbody>
                   </table>
@@ -133,10 +195,22 @@ export function AdminHelpPanel() {
                 <div className="bg-muted/50 rounded-lg p-4 mt-4">
                   <h4 className="font-semibold mb-2">Important Notes:</h4>
                   <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                    <li><strong>Wellness Shots:</strong> Fixed at $3, no customization options</li>
-                    <li><strong>Detox Packages:</strong> Sold as complete packages with fixed contents</li>
-                    <li><strong>Flavor Selection:</strong> Customers choose from regular juices only (no wellness shots or detox packages)</li>
-                    <li><strong>Subscriptions:</strong> Gallon subscriptions allow 1 flavor choice from regular juices</li>
+                    <li>
+                      <strong>Wellness Shots:</strong> Fixed at $3, no
+                      customization options
+                    </li>
+                    <li>
+                      <strong>Detox Packages:</strong> Sold as complete packages
+                      with fixed contents
+                    </li>
+                    <li>
+                      <strong>Flavor Selection:</strong> Customers choose from
+                      regular juices only (no wellness shots or detox packages)
+                    </li>
+                    <li>
+                      <strong>Subscriptions:</strong> Gallon subscriptions allow
+                      1 flavor choice from regular juices
+                    </li>
                   </ul>
                 </div>
               </AccordionContent>
@@ -154,22 +228,26 @@ export function AdminHelpPanel() {
                 <div>
                   <h4 className="font-semibold mb-2">Global Sizes</h4>
                   <p className="text-muted-foreground">
-                    These sizes apply to all standard juice products (not wellness shots or detox packages).
-                    Edit prices here to update across all products.
+                    These sizes apply to all standard juice products (not
+                    wellness shots or detox packages). Edit prices here to
+                    update across all products.
                   </p>
                 </div>
                 <div>
-                  <h4 className="font-semibold mb-2">Product-Specific Overrides</h4>
+                  <h4 className="font-semibold mb-2">
+                    Product-Specific Overrides
+                  </h4>
                   <p className="text-muted-foreground">
-                    Use overrides to set custom prices or sizes for specific products.
-                    Overrides take priority over global sizes.
+                    Use overrides to set custom prices or sizes for specific
+                    products. Overrides take priority over global sizes.
                   </p>
                 </div>
                 <div>
                   <h4 className="font-semibold mb-2">Add-ons</h4>
                   <p className="text-muted-foreground">
-                    Add-ons are extras customers can add to standard juices (e.g., protein, collagen).
-                    Set the display name and price for each add-on.
+                    Add-ons are extras customers can add to standard juices
+                    (e.g., protein, collagen). Set the display name and price
+                    for each add-on.
                   </p>
                 </div>
               </AccordionContent>
@@ -187,26 +265,41 @@ export function AdminHelpPanel() {
                 <div>
                   <h4 className="font-semibold mb-2">Order Statuses</h4>
                   <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                    <li><strong>Pending:</strong> New order waiting to be processed</li>
-                    <li><strong>Processing:</strong> Order is being prepared</li>
-                    <li><strong>Completed:</strong> Order has been fulfilled</li>
-                    <li><strong>Cancelled:</strong> Order was cancelled</li>
+                    <li>
+                      <strong>Pending:</strong> New order waiting to be
+                      processed
+                    </li>
+                    <li>
+                      <strong>Processing:</strong> Order is being prepared
+                    </li>
+                    <li>
+                      <strong>Completed:</strong> Order has been fulfilled
+                    </li>
+                    <li>
+                      <strong>Cancelled:</strong> Order was cancelled
+                    </li>
                   </ul>
                 </div>
                 <div>
                   <h4 className="font-semibold mb-2">Creating Manual Orders</h4>
                   <p className="text-muted-foreground">
-                    Click "Add Order" to create an order manually (e.g., phone orders, walk-ins).
-                    Select products, set quantities, and enter customer information.
+                    Click "Add Order" to create an order manually (e.g., phone
+                    orders, walk-ins). Select products, set quantities, and
+                    enter customer information.
                   </p>
                 </div>
                 <div>
                   <h4 className="font-semibold mb-2">Archiving Orders</h4>
                   <ul className="list-disc list-inside space-y-1 text-muted-foreground">
                     <li>Select orders using checkboxes</li>
-                    <li>Use the Archive dropdown to move to Weekly, Monthly, Quarterly, or Yearly archive</li>
+                    <li>
+                      Use the Archive dropdown to move to Weekly, Monthly,
+                      Quarterly, or Yearly archive
+                    </li>
                     <li>Archived orders can be viewed in the "Archived" tab</li>
-                    <li>Use "Restore" to move archived orders back to active</li>
+                    <li>
+                      Use "Restore" to move archived orders back to active
+                    </li>
                   </ul>
                 </div>
               </AccordionContent>
@@ -224,16 +317,25 @@ export function AdminHelpPanel() {
                 <div>
                   <h4 className="font-semibold mb-2">Adding New Users</h4>
                   <p className="text-muted-foreground">
-                    Enter an email and temporary password to create a new user account.
-                    The user will receive an email to complete their registration.
+                    Enter an email and temporary password to create a new user
+                    account. The user will receive an email to complete their
+                    registration.
                   </p>
                 </div>
                 <div>
                   <h4 className="font-semibold mb-2">Role Assignments</h4>
                   <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                    <li><strong>Admin:</strong> Full access to all dashboard features</li>
-                    <li><strong>Moderator:</strong> Limited admin access (future feature)</li>
-                    <li><strong>User:</strong> Regular customer account</li>
+                    <li>
+                      <strong>Admin:</strong> Full access to all dashboard
+                      features
+                    </li>
+                    <li>
+                      <strong>Moderator:</strong> Limited admin access (future
+                      feature)
+                    </li>
+                    <li>
+                      <strong>User:</strong> Regular customer account
+                    </li>
                   </ul>
                 </div>
                 <div>
@@ -258,15 +360,16 @@ export function AdminHelpPanel() {
                 <div>
                   <h4 className="font-semibold mb-2">Viewing Gift Cards</h4>
                   <p className="text-muted-foreground">
-                    See all issued gift cards, their balances, and transaction history.
-                    Filter by status (active, redeemed, expired).
+                    See all issued gift cards, their balances, and transaction
+                    history. Filter by status (active, redeemed, expired).
                   </p>
                 </div>
                 <div>
                   <h4 className="font-semibold mb-2">Balance Adjustments</h4>
                   <p className="text-muted-foreground">
-                    Manually adjust gift card balances if needed (e.g., customer service issues).
-                    All adjustments are logged in the transaction history.
+                    Manually adjust gift card balances if needed (e.g., customer
+                    service issues). All adjustments are logged in the
+                    transaction history.
                   </p>
                 </div>
               </AccordionContent>
@@ -282,12 +385,15 @@ export function AdminHelpPanel() {
               </AccordionTrigger>
               <AccordionContent className="space-y-4 text-sm">
                 <p className="text-muted-foreground">
-                  Featured products appear in the "Best Sellers" section on the homepage.
+                  Featured products appear in the "Best Sellers" section on the
+                  homepage.
                 </p>
                 <ul className="list-disc list-inside space-y-1 text-muted-foreground">
                   <li>Drag and drop to reorder featured products</li>
                   <li>Toggle the star icon to add/remove from featured</li>
-                  <li>Recommended: Keep 4-6 featured products for best display</li>
+                  <li>
+                    Recommended: Keep 4-6 featured products for best display
+                  </li>
                 </ul>
               </AccordionContent>
             </AccordionItem>
@@ -302,7 +408,8 @@ export function AdminHelpPanel() {
               </AccordionTrigger>
               <AccordionContent className="space-y-4 text-sm">
                 <p className="text-muted-foreground">
-                  Announcements appear in the scrolling banner at the top of the website.
+                  Announcements appear in the scrolling banner at the top of the
+                  website.
                 </p>
                 <ul className="list-disc list-inside space-y-1 text-muted-foreground">
                   <li>Add emojis for visual appeal</li>
@@ -325,22 +432,22 @@ export function AdminHelpPanel() {
                 <div>
                   <h4 className="font-semibold mb-2">Contact Information</h4>
                   <p className="text-muted-foreground">
-                    Update your business address, phone number, and email.
-                    This information appears on the Contact page and footer.
+                    Update your business address, phone number, and email. This
+                    information appears on the Contact page and footer.
                   </p>
                 </div>
                 <div>
                   <h4 className="font-semibold mb-2">Store Hours</h4>
                   <p className="text-muted-foreground">
-                    Set your operating hours for each day of the week.
-                    Hours display on the Contact and Locations pages.
+                    Set your operating hours for each day of the week. Hours
+                    display on the Contact and Locations pages.
                   </p>
                 </div>
                 <div>
                   <h4 className="font-semibold mb-2">Social Links</h4>
                   <p className="text-muted-foreground">
-                    Add links to your Instagram, Facebook, and other social media.
-                    Icons appear in the footer and contact page.
+                    Add links to your Instagram, Facebook, and other social
+                    media. Icons appear in the footer and contact page.
                   </p>
                 </div>
               </AccordionContent>
@@ -358,8 +465,9 @@ export function AdminHelpPanel() {
                 <div>
                   <h4 className="font-semibold mb-2">Dashboard Overview</h4>
                   <p className="text-muted-foreground">
-                    View key metrics: total revenue, orders, average order value, and customer count.
-                    Data updates in real-time as orders come in.
+                    View key metrics: total revenue, orders, average order
+                    value, and customer count. Data updates in real-time as
+                    orders come in.
                   </p>
                 </div>
                 <div>

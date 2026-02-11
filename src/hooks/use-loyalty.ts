@@ -1,14 +1,14 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export interface LoyaltyMember {
   id: string;
   user_id: string;
   points_balance: number;
   lifetime_points: number;
-  tier: 'bronze' | 'silver' | 'gold' | 'platinum';
+  tier: "bronze" | "silver" | "gold" | "platinum";
   joined_at: string;
   updated_at: string;
 }
@@ -16,7 +16,7 @@ export interface LoyaltyMember {
 export interface LoyaltyTransaction {
   id: string;
   member_id: string;
-  type: 'earn' | 'redeem' | 'bonus' | 'expire' | 'adjustment';
+  type: "earn" | "redeem" | "bonus" | "expire" | "adjustment";
   points: number;
   order_id: string | null;
   description: string;
@@ -28,7 +28,11 @@ export interface LoyaltyReward {
   name: string;
   description: string | null;
   points_required: number;
-  reward_type: 'discount_percent' | 'discount_fixed' | 'free_product' | 'free_shipping';
+  reward_type:
+    | "discount_percent"
+    | "discount_fixed"
+    | "free_product"
+    | "free_shipping";
   reward_value: number | null;
   product_id: string | null;
   min_order_amount: number;
@@ -42,7 +46,7 @@ export interface LoyaltyRedemption {
   reward_id: string;
   points_spent: number;
   code: string;
-  status: 'active' | 'used' | 'expired';
+  status: "active" | "used" | "expired";
   expires_at: string;
   used_at: string | null;
   created_at: string;
@@ -53,18 +57,18 @@ export function useLoyaltyMember() {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ['loyalty-member', user?.id],
+    queryKey: ["loyalty-member", user?.id],
     queryFn: async (): Promise<LoyaltyMember | null> => {
       if (!user) return null;
 
       const { data, error } = await supabase
-        .from('loyalty_members')
-        .select('*')
-        .eq('user_id', user.id)
+        .from("loyalty_members")
+        .select("*")
+        .eq("user_id", user.id)
         .maybeSingle();
 
       if (error) {
-        console.error('Error fetching loyalty member:', error);
+        console.error("Error fetching loyalty member:", error);
         return null;
       }
 
@@ -79,19 +83,19 @@ export function useLoyaltyTransactions(limit = 10) {
   const { data: member } = useLoyaltyMember();
 
   return useQuery({
-    queryKey: ['loyalty-transactions', member?.id, limit],
+    queryKey: ["loyalty-transactions", member?.id, limit],
     queryFn: async (): Promise<LoyaltyTransaction[]> => {
       if (!member) return [];
 
       const { data, error } = await supabase
-        .from('loyalty_transactions')
-        .select('*')
-        .eq('member_id', member.id)
-        .order('created_at', { ascending: false })
+        .from("loyalty_transactions")
+        .select("*")
+        .eq("member_id", member.id)
+        .order("created_at", { ascending: false })
         .limit(limit);
 
       if (error) {
-        console.error('Error fetching loyalty transactions:', error);
+        console.error("Error fetching loyalty transactions:", error);
         return [];
       }
 
@@ -103,16 +107,16 @@ export function useLoyaltyTransactions(limit = 10) {
 
 export function useLoyaltyRewards() {
   return useQuery({
-    queryKey: ['loyalty-rewards'],
+    queryKey: ["loyalty-rewards"],
     queryFn: async (): Promise<LoyaltyReward[]> => {
       const { data, error } = await supabase
-        .from('loyalty_rewards')
-        .select('*')
-        .eq('active', true)
-        .order('sort_order', { ascending: true });
+        .from("loyalty_rewards")
+        .select("*")
+        .eq("active", true)
+        .order("sort_order", { ascending: true });
 
       if (error) {
-        console.error('Error fetching loyalty rewards:', error);
+        console.error("Error fetching loyalty rewards:", error);
         return [];
       }
 
@@ -126,21 +130,23 @@ export function useLoyaltyRedemptions() {
   const { data: member } = useLoyaltyMember();
 
   return useQuery({
-    queryKey: ['loyalty-redemptions', member?.id],
+    queryKey: ["loyalty-redemptions", member?.id],
     queryFn: async (): Promise<LoyaltyRedemption[]> => {
       if (!member) return [];
 
       const { data, error } = await supabase
-        .from('loyalty_redemptions')
-        .select(`
+        .from("loyalty_redemptions")
+        .select(
+          `
           *,
           reward:loyalty_rewards(*)
-        `)
-        .eq('member_id', member.id)
-        .order('created_at', { ascending: false });
+        `,
+        )
+        .eq("member_id", member.id)
+        .order("created_at", { ascending: false });
 
       if (error) {
-        console.error('Error fetching loyalty redemptions:', error);
+        console.error("Error fetching loyalty redemptions:", error);
         return [];
       }
 
@@ -157,59 +163,64 @@ export function useRedeemReward() {
   return useMutation({
     mutationFn: async (rewardId: string): Promise<{ code: string }> => {
       if (!member) {
-        throw new Error('You must be a loyalty member to redeem rewards');
+        throw new Error("You must be a loyalty member to redeem rewards");
       }
 
       // Fetch the reward to validate
       const { data: reward, error: rewardError } = await supabase
-        .from('loyalty_rewards')
-        .select('*')
-        .eq('id', rewardId)
+        .from("loyalty_rewards")
+        .select("*")
+        .eq("id", rewardId)
         .single();
 
       if (rewardError || !reward) {
-        throw new Error('Reward not found');
+        throw new Error("Reward not found");
       }
 
       if (member.points_balance < reward.points_required) {
-        throw new Error(`You need ${reward.points_required - member.points_balance} more points to redeem this reward`);
+        throw new Error(
+          `You need ${reward.points_required - member.points_balance} more points to redeem this reward`,
+        );
       }
 
       // Create the redemption (code is auto-generated by trigger)
       const { data: redemption, error: redemptionError } = await supabase
-        .from('loyalty_redemptions')
+        .from("loyalty_redemptions")
         .insert({
           member_id: member.id,
           reward_id: rewardId,
           points_spent: reward.points_required,
-          code: '', // Will be set by trigger
+          code: "", // Will be set by trigger
         })
         .select()
         .single();
 
       if (redemptionError) {
-        console.error('Redemption error:', redemptionError);
-        throw new Error('Failed to redeem reward');
+        console.error("Redemption error:", redemptionError);
+        throw new Error("Failed to redeem reward");
       }
 
       // Deduct points from member
       const newBalance = member.points_balance - reward.points_required;
       const { error: updateError } = await supabase
-        .from('loyalty_members')
+        .from("loyalty_members")
         .update({ points_balance: newBalance })
-        .eq('id', member.id);
+        .eq("id", member.id);
 
       if (updateError) {
-        console.error('Update error:', updateError);
+        console.error("Update error:", updateError);
         // Try to rollback the redemption
-        await supabase.from('loyalty_redemptions').delete().eq('id', redemption.id);
-        throw new Error('Failed to update points balance');
+        await supabase
+          .from("loyalty_redemptions")
+          .delete()
+          .eq("id", redemption.id);
+        throw new Error("Failed to update points balance");
       }
 
       // Create transaction record
-      await supabase.from('loyalty_transactions').insert({
+      await supabase.from("loyalty_transactions").insert({
         member_id: member.id,
-        type: 'redeem',
+        type: "redeem",
         points: -reward.points_required,
         description: `Redeemed: ${reward.name}`,
       });
@@ -218,9 +229,9 @@ export function useRedeemReward() {
     },
     onSuccess: (data) => {
       toast.success(`Reward redeemed! Your code: ${data.code}`);
-      queryClient.invalidateQueries({ queryKey: ['loyalty-member'] });
-      queryClient.invalidateQueries({ queryKey: ['loyalty-redemptions'] });
-      queryClient.invalidateQueries({ queryKey: ['loyalty-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ["loyalty-member"] });
+      queryClient.invalidateQueries({ queryKey: ["loyalty-redemptions"] });
+      queryClient.invalidateQueries({ queryKey: ["loyalty-transactions"] });
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -235,14 +246,14 @@ export function useJoinLoyalty() {
   return useMutation({
     mutationFn: async (): Promise<LoyaltyMember> => {
       if (!user) {
-        throw new Error('You must be logged in to join the loyalty program');
+        throw new Error("You must be logged in to join the loyalty program");
       }
 
       // Check if already a member
       const { data: existing } = await supabase
-        .from('loyalty_members')
-        .select('*')
-        .eq('user_id', user.id)
+        .from("loyalty_members")
+        .select("*")
+        .eq("user_id", user.id)
         .maybeSingle();
 
       if (existing) {
@@ -251,7 +262,7 @@ export function useJoinLoyalty() {
 
       // Create new member with 25 bonus points
       const { data, error } = await supabase
-        .from('loyalty_members')
+        .from("loyalty_members")
         .insert({
           user_id: user.id,
           points_balance: 25,
@@ -261,24 +272,26 @@ export function useJoinLoyalty() {
         .single();
 
       if (error) {
-        console.error('Join loyalty error:', error);
-        throw new Error('Failed to join loyalty program');
+        console.error("Join loyalty error:", error);
+        throw new Error("Failed to join loyalty program");
       }
 
       // Create welcome bonus transaction
-      await supabase.from('loyalty_transactions').insert({
+      await supabase.from("loyalty_transactions").insert({
         member_id: data.id,
-        type: 'bonus',
+        type: "bonus",
         points: 25,
-        description: 'Welcome bonus for joining the loyalty program',
+        description: "Welcome bonus for joining the loyalty program",
       });
 
       return data as LoyaltyMember;
     },
     onSuccess: () => {
-      toast.success('Welcome to our loyalty program! You earned 25 bonus points!');
-      queryClient.invalidateQueries({ queryKey: ['loyalty-member'] });
-      queryClient.invalidateQueries({ queryKey: ['loyalty-transactions'] });
+      toast.success(
+        "Welcome to our loyalty program! You earned 25 bonus points!",
+      );
+      queryClient.invalidateQueries({ queryKey: ["loyalty-member"] });
+      queryClient.invalidateQueries({ queryKey: ["loyalty-transactions"] });
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -287,17 +300,21 @@ export function useJoinLoyalty() {
 }
 
 // Calculate tier based on lifetime points
-export function getTier(lifetimePoints: number): LoyaltyMember['tier'] {
-  if (lifetimePoints >= 1000) return 'platinum';
-  if (lifetimePoints >= 500) return 'gold';
-  if (lifetimePoints >= 200) return 'silver';
-  return 'bronze';
+export function getTier(lifetimePoints: number): LoyaltyMember["tier"] {
+  if (lifetimePoints >= 1000) return "platinum";
+  if (lifetimePoints >= 500) return "gold";
+  if (lifetimePoints >= 200) return "silver";
+  return "bronze";
 }
 
 // Get points to next tier
-export function getPointsToNextTier(lifetimePoints: number): { nextTier: string; pointsNeeded: number } | null {
+export function getPointsToNextTier(
+  lifetimePoints: number,
+): { nextTier: string; pointsNeeded: number } | null {
   if (lifetimePoints >= 1000) return null;
-  if (lifetimePoints >= 500) return { nextTier: 'Platinum', pointsNeeded: 1000 - lifetimePoints };
-  if (lifetimePoints >= 200) return { nextTier: 'Gold', pointsNeeded: 500 - lifetimePoints };
-  return { nextTier: 'Silver', pointsNeeded: 200 - lifetimePoints };
+  if (lifetimePoints >= 500)
+    return { nextTier: "Platinum", pointsNeeded: 1000 - lifetimePoints };
+  if (lifetimePoints >= 200)
+    return { nextTier: "Gold", pointsNeeded: 500 - lifetimePoints };
+  return { nextTier: "Silver", pointsNeeded: 200 - lifetimePoints };
 }

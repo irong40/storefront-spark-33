@@ -1,16 +1,20 @@
-import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Layout } from '@/components/layout/Layout';
-import { ProductGrid } from '@/components/products/ProductGrid';
-import { CategoryFilter } from '@/components/products/CategoryFilter';
-import { useProducts } from '@/hooks/use-products';
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import { Layout } from "@/components/layout/Layout";
+import { ProductGrid } from "@/components/products/ProductGrid";
+import { CategoryFilter } from "@/components/products/CategoryFilter";
+import { useProducts } from "@/hooks/use-products";
 
 export default function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const categoryParam = searchParams.get('category');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(categoryParam);
+  const categoryParam = searchParams.get("category");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(
+    categoryParam,
+  );
 
-  const { data: products, isLoading } = useProducts(selectedCategory || undefined);
+  const { data: products, isLoading } = useProducts(
+    selectedCategory || undefined,
+  );
 
   useEffect(() => {
     setSelectedCategory(categoryParam);
@@ -36,13 +40,15 @@ export default function Products() {
         </div>
 
         <div className="container px-4 relative z-10">
-          <span className="font-script text-2xl text-brand-terracotta mb-2 block">Fresh & Natural</span>
+          <span className="font-script text-2xl text-brand-terracotta mb-2 block">
+            Fresh & Natural
+          </span>
           <h1 className="text-4xl md:text-5xl font-heading font-bold text-brand-brown mb-4">
             Our Products
           </h1>
           <p className="text-muted-foreground text-lg max-w-2xl">
-            Fresh cold-pressed juices made daily. Choose from our selection of juices,
-            wellness shots, and cleanse programs.
+            Fresh cold-pressed juices made daily. Choose from our selection of
+            juices, wellness shots, and cleanse programs.
           </p>
         </div>
       </div>

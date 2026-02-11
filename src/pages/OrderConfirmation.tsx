@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { Layout } from '@/components/layout/Layout';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
-import { supabase } from '@/integrations/supabase/client';
-import { CheckCircle, Package, Mail, ArrowRight } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import { Layout } from "@/components/layout/Layout";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { supabase } from "@/integrations/supabase/client";
+import { CheckCircle, Package, Mail, ArrowRight } from "lucide-react";
 
 interface OrderItem {
   id: string;
@@ -44,18 +44,18 @@ export default function OrderConfirmation() {
       if (!id) return;
 
       const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('id', id)
+        .from("orders")
+        .select("*")
+        .eq("id", id)
         .single();
 
       if (!orderError && orderData) {
         setOrder(orderData);
 
         const { data: itemsData } = await supabase
-          .from('order_items')
-          .select('*')
-          .eq('order_id', id);
+          .from("order_items")
+          .select("*")
+          .eq("order_id", id);
 
         if (itemsData) {
           setItems(itemsData);
@@ -145,7 +145,8 @@ export default function OrderConfirmation() {
                 <div>
                   <p className="font-medium">{item.product_name}</p>
                   <p className="text-sm text-muted-foreground">
-                    Qty: {item.quantity} × ${Number(item.product_price).toFixed(2)}
+                    Qty: {item.quantity} × $
+                    {Number(item.product_price).toFixed(2)}
                   </p>
                 </div>
                 <p className="font-medium">${Number(item.total).toFixed(2)}</p>
@@ -167,7 +168,9 @@ export default function OrderConfirmation() {
             <div className="flex justify-between">
               <span className="text-muted-foreground">Shipping</span>
               <span>
-                {Number(order.shipping) === 0 ? 'Free' : `$${Number(order.shipping).toFixed(2)}`}
+                {Number(order.shipping) === 0
+                  ? "Free"
+                  : `$${Number(order.shipping).toFixed(2)}`}
               </span>
             </div>
           </div>
@@ -184,7 +187,10 @@ export default function OrderConfirmation() {
         {order.payment_status && (
           <div className="bg-primary/10 rounded-2xl p-6 mb-8 border border-primary/20">
             <h3 className="font-semibold mb-2 flex items-center gap-2">
-              💳 Payment {order.payment_status === 'completed' ? 'Successful' : order.payment_status}
+              💳 Payment{" "}
+              {order.payment_status === "completed"
+                ? "Successful"
+                : order.payment_status}
             </h3>
             {order.payment_id && (
               <p className="text-muted-foreground text-sm">
@@ -197,19 +203,24 @@ export default function OrderConfirmation() {
         {/* Fulfillment Info */}
         <div className="bg-secondary/50 rounded-2xl p-6 mb-8 border border-border">
           <h3 className="font-semibold mb-2">
-            {order.fulfillment_type === 'pickup' ? '📍 Pickup' : '🚚 Delivery'}
+            {order.fulfillment_type === "pickup" ? "📍 Pickup" : "🚚 Delivery"}
           </h3>
-          {order.fulfillment_type === 'pickup' && order.pickup_date && order.pickup_time ? (
+          {order.fulfillment_type === "pickup" &&
+          order.pickup_date &&
+          order.pickup_time ? (
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm">
                 <span className="text-muted-foreground">Date:</span>
                 <span className="font-medium">
-                  {new Date(order.pickup_date + 'T00:00:00').toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    month: 'long',
-                    day: 'numeric',
-                    year: 'numeric'
-                  })}
+                  {new Date(order.pickup_date + "T00:00:00").toLocaleDateString(
+                    "en-US",
+                    {
+                      weekday: "long",
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    },
+                  )}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-sm">
@@ -222,10 +233,9 @@ export default function OrderConfirmation() {
             </div>
           ) : (
             <p className="text-muted-foreground text-sm">
-              {order.fulfillment_type === 'pickup' 
+              {order.fulfillment_type === "pickup"
                 ? "We'll notify you when your order is ready for pickup at our store."
-                : "Delivery is FREE and available Monday-Friday. We'll notify you when your order is on the way."
-              }
+                : "Delivery is FREE and available Monday-Friday. We'll notify you when your order is on the way."}
             </p>
           )}
         </div>

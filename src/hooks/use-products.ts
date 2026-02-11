@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import type { Json } from '@/integrations/supabase/types';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 
 export interface ProductVariant {
   id: string;
@@ -43,29 +43,33 @@ export interface Product {
 
 export function useProducts(categorySlug?: string) {
   return useQuery({
-    queryKey: ['products', categorySlug],
+    queryKey: ["products", categorySlug],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('products')
-        .select(`
+        .from("products")
+        .select(
+          `
           *,
           category:categories(id, name, slug)
-        `)
-        .eq('active', true)
-        .eq('is_available', true)
-        .order('sort_order', { ascending: true });
+        `,
+        )
+        .eq("active", true)
+        .eq("is_available", true)
+        .order("sort_order", { ascending: true });
 
       if (error) throw error;
 
       let filteredData = data || [];
-      if (categorySlug && categorySlug !== 'all') {
+      if (categorySlug && categorySlug !== "all") {
         filteredData = filteredData.filter(
-          (product) => (product.category as { slug: string } | null)?.slug === categorySlug
+          (product) =>
+            (product.category as { slug: string } | null)?.slug ===
+            categorySlug,
         );
       }
 
       // Add empty variants array (table doesn't exist yet)
-      const productsWithVariants = filteredData.map(product => ({
+      const productsWithVariants = filteredData.map((product) => ({
         ...product,
         variants: [] as ProductVariant[],
       }));
@@ -77,32 +81,34 @@ export function useProducts(categorySlug?: string) {
 
 export function useProduct(slug: string) {
   return useQuery({
-    queryKey: ['product', slug],
+    queryKey: ["product", slug],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('products')
-        .select(`
+        .from("products")
+        .select(
+          `
           *,
           category:categories(id, name, slug)
-        `)
-        .eq('slug', slug)
-        .eq('active', true)
+        `,
+        )
+        .eq("slug", slug)
+        .eq("active", true)
         .single();
 
       if (error) throw error;
 
       // Fetch product size overrides (variants) for this product
       const { data: overrides, error: overridesError } = await supabase
-        .from('product_size_overrides')
-        .select('*')
-        .eq('product_id', data.id)
-        .eq('active', true)
-        .order('sort_order', { ascending: true });
+        .from("product_size_overrides")
+        .select("*")
+        .eq("product_id", data.id)
+        .eq("active", true)
+        .order("sort_order", { ascending: true });
 
       if (overridesError) throw overridesError;
 
       // Map overrides to variant format
-      const variants: ProductVariant[] = (overrides || []).map(o => ({
+      const variants: ProductVariant[] = (overrides || []).map((o) => ({
         id: o.id,
         size_name: o.size_name,
         size_oz: o.size_oz,
@@ -123,23 +129,25 @@ export function useProduct(slug: string) {
 
 export function useFeaturedProducts() {
   return useQuery({
-    queryKey: ['products', 'featured'],
+    queryKey: ["products", "featured"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('products')
-        .select(`
+        .from("products")
+        .select(
+          `
           *,
           category:categories(id, name, slug)
-        `)
-        .eq('active', true)
-        .eq('is_featured', true)
-        .order('sort_order', { ascending: true })
+        `,
+        )
+        .eq("active", true)
+        .eq("is_featured", true)
+        .order("sort_order", { ascending: true })
         .limit(4);
 
       if (error) throw error;
-      
+
       // Add empty variants array
-      return (data || []).map(p => ({
+      return (data || []).map((p) => ({
         ...p,
         variants: [] as ProductVariant[],
       })) as Product[];
@@ -148,5 +156,5 @@ export function useFeaturedProducts() {
 }
 
 // Re-export addon types from use-product-variants for backward compatibility
-export { useProductAddons as useAddons } from './use-product-variants';
-export type { ProductAddon } from './use-product-variants';
+export { useProductAddons as useAddons } from "./use-product-variants";
+export type { ProductAddon } from "./use-product-variants";

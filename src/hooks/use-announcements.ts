@@ -1,5 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface Announcement {
   id: string;
@@ -15,12 +15,12 @@ export interface Announcement {
 
 export function useAnnouncements() {
   return useQuery({
-    queryKey: ['announcements'],
+    queryKey: ["announcements"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('announcements')
-        .select('*')
-        .order('sort_order', { ascending: true });
+        .from("announcements")
+        .select("*")
+        .order("sort_order", { ascending: true });
 
       if (error) throw error;
       return data as Announcement[];
@@ -30,16 +30,16 @@ export function useAnnouncements() {
 
 export function useActiveAnnouncements() {
   return useQuery({
-    queryKey: ['announcements', 'active'],
+    queryKey: ["announcements", "active"],
     queryFn: async () => {
       const now = new Date().toISOString();
       const { data, error } = await supabase
-        .from('announcements')
-        .select('*')
-        .eq('is_active', true)
-        .lte('starts_at', now)
+        .from("announcements")
+        .select("*")
+        .eq("is_active", true)
+        .lte("starts_at", now)
         .or(`ends_at.is.null,ends_at.gt.${now}`)
-        .order('sort_order', { ascending: true });
+        .order("sort_order", { ascending: true });
 
       if (error) throw error;
       return data as Announcement[];
@@ -49,11 +49,16 @@ export function useActiveAnnouncements() {
 
 export function useCreateAnnouncement() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: async (announcement: Omit<Partial<Announcement>, 'id' | 'created_at' | 'updated_at'> & { message: string }) => {
+    mutationFn: async (
+      announcement: Omit<
+        Partial<Announcement>,
+        "id" | "created_at" | "updated_at"
+      > & { message: string },
+    ) => {
       const { data, error } = await supabase
-        .from('announcements')
+        .from("announcements")
         .insert([announcement])
         .select()
         .single();
@@ -62,20 +67,23 @@ export function useCreateAnnouncement() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['announcements'] });
+      queryClient.invalidateQueries({ queryKey: ["announcements"] });
     },
   });
 }
 
 export function useUpdateAnnouncement() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<Announcement> & { id: string }) => {
+    mutationFn: async ({
+      id,
+      ...updates
+    }: Partial<Announcement> & { id: string }) => {
       const { data, error } = await supabase
-        .from('announcements')
+        .from("announcements")
         .update(updates)
-        .eq('id', id)
+        .eq("id", id)
         .select()
         .single();
 
@@ -83,25 +91,25 @@ export function useUpdateAnnouncement() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['announcements'] });
+      queryClient.invalidateQueries({ queryKey: ["announcements"] });
     },
   });
 }
 
 export function useDeleteAnnouncement() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from('announcements')
+        .from("announcements")
         .delete()
-        .eq('id', id);
+        .eq("id", id);
 
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['announcements'] });
+      queryClient.invalidateQueries({ queryKey: ["announcements"] });
     },
   });
 }

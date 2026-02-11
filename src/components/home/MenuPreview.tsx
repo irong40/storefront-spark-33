@@ -1,16 +1,57 @@
-import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 
-const categories = ['All', 'Sweet Treats', 'Wellness Shots', 'Energy & Immunity'];
+const categories = [
+  "All",
+  "Sweet Treats",
+  "Wellness Shots",
+  "Energy & Immunity",
+];
 
 const menuItems = [
-  { emoji: '🥝', name: 'Kiwi Kwencher', desc: 'Kiwi, Green Apple, Pear, Lemon, Mint', price: 10.99, cal: 120 },
-  { emoji: '🍐', name: 'Pomegranate PEARadise', desc: 'Pomegranate, Pear, Apple, Lemon', price: 11.99, cal: 130 },
-  { emoji: '🧡', name: 'Wellness Shot - Turmeric', desc: 'Turmeric, Ginger, Lemon, Black Pepper', price: 5.99, cal: 25 },
-  { emoji: '✨', name: 'Glowin', desc: 'Carrot, Orange, Ginger, Turmeric', price: 12.99, cal: 140 },
-  { emoji: '🛡️', name: 'Immunity Boost', desc: 'Orange, Grapefruit, Lemon, Ginger, Cayenne', price: 11.99, cal: 110 },
-  { emoji: '🍍', name: 'Pineapple Express', desc: 'Pineapple, Grapefruit, Lemon, Ginger, Cayenne', price: 12.99, cal: 150 },
+  {
+    emoji: "🥝",
+    name: "Kiwi Kwencher",
+    desc: "Kiwi, Green Apple, Pear, Lemon, Mint",
+    price: 10.99,
+    cal: 120,
+  },
+  {
+    emoji: "🍐",
+    name: "Pomegranate PEARadise",
+    desc: "Pomegranate, Pear, Apple, Lemon",
+    price: 11.99,
+    cal: 130,
+  },
+  {
+    emoji: "🧡",
+    name: "Wellness Shot - Turmeric",
+    desc: "Turmeric, Ginger, Lemon, Black Pepper",
+    price: 5.99,
+    cal: 25,
+  },
+  {
+    emoji: "✨",
+    name: "Glowin",
+    desc: "Carrot, Orange, Ginger, Turmeric",
+    price: 12.99,
+    cal: 140,
+  },
+  {
+    emoji: "🛡️",
+    name: "Immunity Boost",
+    desc: "Orange, Grapefruit, Lemon, Ginger, Cayenne",
+    price: 11.99,
+    cal: 110,
+  },
+  {
+    emoji: "🍍",
+    name: "Pineapple Express",
+    desc: "Pineapple, Grapefruit, Lemon, Ginger, Cayenne",
+    price: 12.99,
+    cal: 150,
+  },
 ];
 
 export function MenuPreview() {
@@ -38,10 +79,11 @@ export function MenuPreview() {
           {categories.map((category, index) => (
             <button
               key={category}
-              className={`px-6 py-2.5 rounded-full text-sm font-medium border transition-all ${index === 0
-                  ? 'bg-white text-brand-olive border-white'
-                  : 'bg-white/10 text-white border-white/20 hover:bg-white hover:text-brand-olive hover:border-white'
-                }`}
+              className={`px-6 py-2.5 rounded-full text-sm font-medium border transition-all ${
+                index === 0
+                  ? "bg-white text-brand-olive border-white"
+                  : "bg-white/10 text-white border-white/20 hover:bg-white hover:text-brand-olive hover:border-white"
+              }`}
             >
               {category}
             </button>
@@ -72,9 +114,7 @@ export function MenuPreview() {
                   <span className="font-display text-xl font-semibold text-brand-mustard">
                     ${item.price.toFixed(2)}
                   </span>
-                  <span className="text-xs text-white/50">
-                    {item.cal} cal
-                  </span>
+                  <span className="text-xs text-white/50">{item.cal} cal</span>
                 </div>
               </div>
             </div>
@@ -83,7 +123,11 @@ export function MenuPreview() {
 
         {/* CTA */}
         <div className="text-center mt-12">
-          <Button asChild size="lg" className="rounded-full px-8 bg-white text-brand-olive hover:bg-brand-cream shadow-medium font-semibold transition-all hover:-translate-y-1">
+          <Button
+            asChild
+            size="lg"
+            className="rounded-full px-8 bg-white text-brand-olive hover:bg-brand-cream shadow-medium font-semibold transition-all hover:-translate-y-1"
+          >
             <Link to="/products">
               View Full Menu
               <ArrowRight className="ml-2 h-5 w-5" />
