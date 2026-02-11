@@ -1,19 +1,56 @@
-import { useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useProductSizes, useProductAddons, ProductSize, ProductAddon } from '@/hooks/use-product-variants';
-import { useProducts } from '@/hooks/use-products';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, Loader2, Ruler, Sparkles, Package } from 'lucide-react';
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  useProductSizes,
+  useProductAddons,
+  ProductSize,
+  ProductAddon,
+} from "@/hooks/use-product-variants";
+import { useProducts } from "@/hooks/use-products";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Loader2,
+  Ruler,
+  Sparkles,
+  Package,
+} from "lucide-react";
 
 interface SizeFormData {
   name: string;
@@ -27,6 +64,18 @@ interface AddonFormData {
   name: string;
   display_name: string;
   price: number;
+  sort_order: number;
+  active: boolean;
+}
+
+interface ProductSizeOverride {
+  id: string;
+  product_id: string;
+  size_name: string;
+  size_oz: number | null;
+  price: number;
+  is_subscription: boolean;
+  subscription_interval: string | null;
   sort_order: number;
   active: boolean;
 }
@@ -53,7 +102,7 @@ export function ProductVariantsPanel() {
   const [sizeDialogOpen, setSizeDialogOpen] = useState(false);
   const [editingSize, setEditingSize] = useState<ProductSize | null>(null);
   const [sizeForm, setSizeForm] = useState<SizeFormData>({
-    name: '',
+    name: "",
     size_oz: null,
     price: 0,
     sort_order: 0,
@@ -65,8 +114,8 @@ export function ProductVariantsPanel() {
   const [addonDialogOpen, setAddonDialogOpen] = useState(false);
   const [editingAddon, setEditingAddon] = useState<ProductAddon | null>(null);
   const [addonForm, setAddonForm] = useState<AddonFormData>({
-    name: '',
-    display_name: '',
+    name: "",
+    display_name: "",
     price: 0,
     sort_order: 0,
     active: true,
@@ -75,12 +124,13 @@ export function ProductVariantsPanel() {
 
   // Override state
   const [overrideDialogOpen, setOverrideDialogOpen] = useState(false);
-  const [overrides, setOverrides] = useState<any[]>([]);
+  const [overrides, setOverrides] = useState<ProductSizeOverride[]>([]);
   const [overridesLoading, setOverridesLoading] = useState(false);
-  const [editingOverride, setEditingOverride] = useState<any | null>(null);
+  const [editingOverride, setEditingOverride] =
+    useState<ProductSizeOverride | null>(null);
   const [overrideForm, setOverrideForm] = useState<OverrideFormData>({
-    product_id: '',
-    size_name: '',
+    product_id: "",
+    size_name: "",
     size_oz: null,
     price: 0,
     is_subscription: false,
@@ -94,10 +144,10 @@ export function ProductVariantsPanel() {
   const loadOverrides = async () => {
     setOverridesLoading(true);
     const { data, error } = await supabase
-      .from('product_size_overrides')
-      .select('*')
-      .order('sort_order', { ascending: true });
-    
+      .from("product_size_overrides")
+      .select("*")
+      .order("sort_order", { ascending: true });
+
     if (!error && data) {
       setOverrides(data);
     }
@@ -117,7 +167,13 @@ export function ProductVariantsPanel() {
       });
     } else {
       setEditingSize(null);
-      setSizeForm({ name: '', size_oz: null, price: 0, sort_order: (sizes?.length || 0) + 1, active: true });
+      setSizeForm({
+        name: "",
+        size_oz: null,
+        price: 0,
+        sort_order: (sizes?.length || 0) + 1,
+        active: true,
+      });
     }
     setSizeDialogOpen(true);
   };
@@ -127,34 +183,40 @@ export function ProductVariantsPanel() {
     try {
       if (editingSize) {
         const { error } = await supabase
-          .from('product_sizes')
+          .from("product_sizes")
           .update(sizeForm)
-          .eq('id', editingSize.id);
+          .eq("id", editingSize.id);
         if (error) throw error;
-        toast({ title: 'Size updated' });
+        toast({ title: "Size updated" });
       } else {
-        const { error } = await supabase
-          .from('product_sizes')
-          .insert(sizeForm);
+        const { error } = await supabase.from("product_sizes").insert(sizeForm);
         if (error) throw error;
-        toast({ title: 'Size created' });
+        toast({ title: "Size created" });
       }
-      queryClient.invalidateQueries({ queryKey: ['product-sizes'] });
+      queryClient.invalidateQueries({ queryKey: ["product-sizes"] });
       setSizeDialogOpen(false);
-    } catch (error: any) {
-      toast({ title: 'Failed to save size', description: error.message, variant: 'destructive' });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      toast({
+        title: "Failed to save size",
+        description: message,
+        variant: "destructive",
+      });
     } finally {
       setSavingSize(false);
     }
   };
 
   const deleteSize = async (id: string) => {
-    const { error } = await supabase.from('product_sizes').delete().eq('id', id);
+    const { error } = await supabase
+      .from("product_sizes")
+      .delete()
+      .eq("id", id);
     if (error) {
-      toast({ title: 'Failed to delete size', variant: 'destructive' });
+      toast({ title: "Failed to delete size", variant: "destructive" });
     } else {
-      toast({ title: 'Size deleted' });
-      queryClient.invalidateQueries({ queryKey: ['product-sizes'] });
+      toast({ title: "Size deleted" });
+      queryClient.invalidateQueries({ queryKey: ["product-sizes"] });
     }
   };
 
@@ -171,7 +233,13 @@ export function ProductVariantsPanel() {
       });
     } else {
       setEditingAddon(null);
-      setAddonForm({ name: '', display_name: '', price: 0, sort_order: (addons?.length || 0) + 1, active: true });
+      setAddonForm({
+        name: "",
+        display_name: "",
+        price: 0,
+        sort_order: (addons?.length || 0) + 1,
+        active: true,
+      });
     }
     setAddonDialogOpen(true);
   };
@@ -181,39 +249,47 @@ export function ProductVariantsPanel() {
     try {
       if (editingAddon) {
         const { error } = await supabase
-          .from('product_addons')
+          .from("product_addons")
           .update(addonForm)
-          .eq('id', editingAddon.id);
+          .eq("id", editingAddon.id);
         if (error) throw error;
-        toast({ title: 'Add-on updated' });
+        toast({ title: "Add-on updated" });
       } else {
         const { error } = await supabase
-          .from('product_addons')
+          .from("product_addons")
           .insert(addonForm);
         if (error) throw error;
-        toast({ title: 'Add-on created' });
+        toast({ title: "Add-on created" });
       }
-      queryClient.invalidateQueries({ queryKey: ['product-addons'] });
+      queryClient.invalidateQueries({ queryKey: ["product-addons"] });
       setAddonDialogOpen(false);
-    } catch (error: any) {
-      toast({ title: 'Failed to save add-on', description: error.message, variant: 'destructive' });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      toast({
+        title: "Failed to save add-on",
+        description: message,
+        variant: "destructive",
+      });
     } finally {
       setSavingAddon(false);
     }
   };
 
   const deleteAddon = async (id: string) => {
-    const { error } = await supabase.from('product_addons').delete().eq('id', id);
+    const { error } = await supabase
+      .from("product_addons")
+      .delete()
+      .eq("id", id);
     if (error) {
-      toast({ title: 'Failed to delete add-on', variant: 'destructive' });
+      toast({ title: "Failed to delete add-on", variant: "destructive" });
     } else {
-      toast({ title: 'Add-on deleted' });
-      queryClient.invalidateQueries({ queryKey: ['product-addons'] });
+      toast({ title: "Add-on deleted" });
+      queryClient.invalidateQueries({ queryKey: ["product-addons"] });
     }
   };
 
   // Override handlers
-  const openOverrideDialog = (override?: any) => {
+  const openOverrideDialog = (override?: ProductSizeOverride) => {
     if (override) {
       setEditingOverride(override);
       setOverrideForm({
@@ -229,8 +305,8 @@ export function ProductVariantsPanel() {
     } else {
       setEditingOverride(null);
       setOverrideForm({
-        product_id: '',
-        size_name: '',
+        product_id: "",
+        size_name: "",
         size_oz: null,
         price: 0,
         is_subscription: false,
@@ -247,33 +323,41 @@ export function ProductVariantsPanel() {
     try {
       if (editingOverride) {
         const { error } = await supabase
-          .from('product_size_overrides')
+          .from("product_size_overrides")
           .update(overrideForm)
-          .eq('id', editingOverride.id);
+          .eq("id", editingOverride.id);
         if (error) throw error;
-        toast({ title: 'Override updated' });
+        toast({ title: "Override updated" });
       } else {
         const { error } = await supabase
-          .from('product_size_overrides')
+          .from("product_size_overrides")
           .insert(overrideForm);
         if (error) throw error;
-        toast({ title: 'Override created' });
+        toast({ title: "Override created" });
       }
       loadOverrides();
       setOverrideDialogOpen(false);
-    } catch (error: any) {
-      toast({ title: 'Failed to save override', description: error.message, variant: 'destructive' });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      toast({
+        title: "Failed to save override",
+        description: message,
+        variant: "destructive",
+      });
     } finally {
       setSavingOverride(false);
     }
   };
 
   const deleteOverride = async (id: string) => {
-    const { error } = await supabase.from('product_size_overrides').delete().eq('id', id);
+    const { error } = await supabase
+      .from("product_size_overrides")
+      .delete()
+      .eq("id", id);
     if (error) {
-      toast({ title: 'Failed to delete override', variant: 'destructive' });
+      toast({ title: "Failed to delete override", variant: "destructive" });
     } else {
-      toast({ title: 'Override deleted' });
+      toast({ title: "Override deleted" });
       loadOverrides();
     }
   };
@@ -307,7 +391,9 @@ export function ProductVariantsPanel() {
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>Global Sizes</CardTitle>
-                <CardDescription>Default size options available for all products</CardDescription>
+                <CardDescription>
+                  Default size options available for all products
+                </CardDescription>
               </div>
               <Button onClick={() => openSizeDialog()}>
                 <Plus className="h-4 w-4 mr-2" />
@@ -332,20 +418,36 @@ export function ProductVariantsPanel() {
                   <TableBody>
                     {sizes?.map((size) => (
                       <TableRow key={size.id}>
-                        <TableCell className="font-medium">{size.name}</TableCell>
-                        <TableCell>{size.size_oz || '-'}</TableCell>
+                        <TableCell className="font-medium">
+                          {size.name}
+                        </TableCell>
+                        <TableCell>{size.size_oz || "-"}</TableCell>
                         <TableCell>${size.price.toFixed(2)}</TableCell>
                         <TableCell>{size.sort_order}</TableCell>
                         <TableCell>
-                          <span className={size.active ? 'text-green-600' : 'text-muted-foreground'}>
-                            {size.active ? 'Active' : 'Inactive'}
+                          <span
+                            className={
+                              size.active
+                                ? "text-green-600"
+                                : "text-muted-foreground"
+                            }
+                          >
+                            {size.active ? "Active" : "Inactive"}
                           </span>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button size="sm" variant="ghost" onClick={() => openSizeDialog(size)}>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => openSizeDialog(size)}
+                          >
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button size="sm" variant="ghost" onClick={() => deleteSize(size.id)}>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => deleteSize(size.id)}
+                          >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </TableCell>
@@ -364,7 +466,9 @@ export function ProductVariantsPanel() {
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>Add-ons</CardTitle>
-                <CardDescription>Extra ingredients customers can add to products</CardDescription>
+                <CardDescription>
+                  Extra ingredients customers can add to products
+                </CardDescription>
               </div>
               <Button onClick={() => openAddonDialog()}>
                 <Plus className="h-4 w-4 mr-2" />
@@ -389,20 +493,36 @@ export function ProductVariantsPanel() {
                   <TableBody>
                     {addons?.map((addon) => (
                       <TableRow key={addon.id}>
-                        <TableCell className="font-medium">{addon.name}</TableCell>
+                        <TableCell className="font-medium">
+                          {addon.name}
+                        </TableCell>
                         <TableCell>{addon.display_name}</TableCell>
                         <TableCell>+${addon.price.toFixed(2)}</TableCell>
                         <TableCell>{addon.sort_order}</TableCell>
                         <TableCell>
-                          <span className={addon.active ? 'text-green-600' : 'text-muted-foreground'}>
-                            {addon.active ? 'Active' : 'Inactive'}
+                          <span
+                            className={
+                              addon.active
+                                ? "text-green-600"
+                                : "text-muted-foreground"
+                            }
+                          >
+                            {addon.active ? "Active" : "Inactive"}
                           </span>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button size="sm" variant="ghost" onClick={() => openAddonDialog(addon)}>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => openAddonDialog(addon)}
+                          >
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button size="sm" variant="ghost" onClick={() => deleteAddon(addon.id)}>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => deleteAddon(addon.id)}
+                          >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </TableCell>
@@ -421,7 +541,10 @@ export function ProductVariantsPanel() {
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>Product Size Overrides</CardTitle>
-                <CardDescription>Custom sizes for specific products (e.g., subscriptions, special packs)</CardDescription>
+                <CardDescription>
+                  Custom sizes for specific products (e.g., subscriptions,
+                  special packs)
+                </CardDescription>
               </div>
               <Button onClick={() => openOverrideDialog()}>
                 <Plus className="h-4 w-4 mr-2" />
@@ -447,27 +570,44 @@ export function ProductVariantsPanel() {
                     {overrides.map((override) => (
                       <TableRow key={override.id}>
                         <TableCell className="font-medium">
-                          {products?.find(p => p.id === override.product_id)?.name || override.product_id}
+                          {products?.find((p) => p.id === override.product_id)
+                            ?.name || override.product_id}
                         </TableCell>
                         <TableCell>{override.size_name}</TableCell>
                         <TableCell>${override.price.toFixed(2)}</TableCell>
                         <TableCell>
                           {override.is_subscription ? (
-                            <span className="text-primary">{override.subscription_interval}</span>
+                            <span className="text-primary">
+                              {override.subscription_interval}
+                            </span>
                           ) : (
                             <span className="text-muted-foreground">-</span>
                           )}
                         </TableCell>
                         <TableCell>
-                          <span className={override.active ? 'text-green-600' : 'text-muted-foreground'}>
-                            {override.active ? 'Active' : 'Inactive'}
+                          <span
+                            className={
+                              override.active
+                                ? "text-green-600"
+                                : "text-muted-foreground"
+                            }
+                          >
+                            {override.active ? "Active" : "Inactive"}
                           </span>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button size="sm" variant="ghost" onClick={() => openOverrideDialog(override)}>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => openOverrideDialog(override)}
+                          >
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button size="sm" variant="ghost" onClick={() => deleteOverride(override.id)}>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => deleteOverride(override.id)}
+                          >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </TableCell>
@@ -485,7 +625,7 @@ export function ProductVariantsPanel() {
       <Dialog open={sizeDialogOpen} onOpenChange={setSizeDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingSize ? 'Edit Size' : 'Add Size'}</DialogTitle>
+            <DialogTitle>{editingSize ? "Edit Size" : "Add Size"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -493,7 +633,9 @@ export function ProductVariantsPanel() {
               <Input
                 id="size-name"
                 value={sizeForm.name}
-                onChange={(e) => setSizeForm({ ...sizeForm, name: e.target.value })}
+                onChange={(e) =>
+                  setSizeForm({ ...sizeForm, name: e.target.value })
+                }
                 placeholder="e.g., Small, Medium, Large"
               />
             </div>
@@ -502,8 +644,13 @@ export function ProductVariantsPanel() {
               <Input
                 id="size-oz"
                 type="number"
-                value={sizeForm.size_oz || ''}
-                onChange={(e) => setSizeForm({ ...sizeForm, size_oz: e.target.value ? Number(e.target.value) : null })}
+                value={sizeForm.size_oz || ""}
+                onChange={(e) =>
+                  setSizeForm({
+                    ...sizeForm,
+                    size_oz: e.target.value ? Number(e.target.value) : null,
+                  })
+                }
                 placeholder="e.g., 16"
               />
             </div>
@@ -514,7 +661,9 @@ export function ProductVariantsPanel() {
                 type="number"
                 step="0.01"
                 value={sizeForm.price}
-                onChange={(e) => setSizeForm({ ...sizeForm, price: Number(e.target.value) })}
+                onChange={(e) =>
+                  setSizeForm({ ...sizeForm, price: Number(e.target.value) })
+                }
               />
             </div>
             <div>
@@ -523,20 +672,27 @@ export function ProductVariantsPanel() {
                 id="size-order"
                 type="number"
                 value={sizeForm.sort_order}
-                onChange={(e) => setSizeForm({ ...sizeForm, sort_order: Number(e.target.value) })}
+                onChange={(e) =>
+                  setSizeForm({
+                    ...sizeForm,
+                    sort_order: Number(e.target.value),
+                  })
+                }
               />
             </div>
             <div className="flex items-center gap-2">
               <Switch
                 id="size-active"
                 checked={sizeForm.active}
-                onCheckedChange={(checked) => setSizeForm({ ...sizeForm, active: checked })}
+                onCheckedChange={(checked) =>
+                  setSizeForm({ ...sizeForm, active: checked })
+                }
               />
               <Label htmlFor="size-active">Active</Label>
             </div>
             <Button onClick={saveSize} disabled={savingSize} className="w-full">
               {savingSize && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              {editingSize ? 'Update Size' : 'Create Size'}
+              {editingSize ? "Update Size" : "Create Size"}
             </Button>
           </div>
         </DialogContent>
@@ -546,7 +702,9 @@ export function ProductVariantsPanel() {
       <Dialog open={addonDialogOpen} onOpenChange={setAddonDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingAddon ? 'Edit Add-on' : 'Add Add-on'}</DialogTitle>
+            <DialogTitle>
+              {editingAddon ? "Edit Add-on" : "Add Add-on"}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -554,7 +712,9 @@ export function ProductVariantsPanel() {
               <Input
                 id="addon-name"
                 value={addonForm.name}
-                onChange={(e) => setAddonForm({ ...addonForm, name: e.target.value })}
+                onChange={(e) =>
+                  setAddonForm({ ...addonForm, name: e.target.value })
+                }
                 placeholder="e.g., extra_ginger"
               />
             </div>
@@ -563,7 +723,9 @@ export function ProductVariantsPanel() {
               <Input
                 id="addon-display"
                 value={addonForm.display_name}
-                onChange={(e) => setAddonForm({ ...addonForm, display_name: e.target.value })}
+                onChange={(e) =>
+                  setAddonForm({ ...addonForm, display_name: e.target.value })
+                }
                 placeholder="e.g., Extra Ginger"
               />
             </div>
@@ -574,7 +736,9 @@ export function ProductVariantsPanel() {
                 type="number"
                 step="0.01"
                 value={addonForm.price}
-                onChange={(e) => setAddonForm({ ...addonForm, price: Number(e.target.value) })}
+                onChange={(e) =>
+                  setAddonForm({ ...addonForm, price: Number(e.target.value) })
+                }
               />
             </div>
             <div>
@@ -583,20 +747,31 @@ export function ProductVariantsPanel() {
                 id="addon-order"
                 type="number"
                 value={addonForm.sort_order}
-                onChange={(e) => setAddonForm({ ...addonForm, sort_order: Number(e.target.value) })}
+                onChange={(e) =>
+                  setAddonForm({
+                    ...addonForm,
+                    sort_order: Number(e.target.value),
+                  })
+                }
               />
             </div>
             <div className="flex items-center gap-2">
               <Switch
                 id="addon-active"
                 checked={addonForm.active}
-                onCheckedChange={(checked) => setAddonForm({ ...addonForm, active: checked })}
+                onCheckedChange={(checked) =>
+                  setAddonForm({ ...addonForm, active: checked })
+                }
               />
               <Label htmlFor="addon-active">Active</Label>
             </div>
-            <Button onClick={saveAddon} disabled={savingAddon} className="w-full">
+            <Button
+              onClick={saveAddon}
+              disabled={savingAddon}
+              className="w-full"
+            >
               {savingAddon && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              {editingAddon ? 'Update Add-on' : 'Create Add-on'}
+              {editingAddon ? "Update Add-on" : "Create Add-on"}
             </Button>
           </div>
         </DialogContent>
@@ -606,14 +781,18 @@ export function ProductVariantsPanel() {
       <Dialog open={overrideDialogOpen} onOpenChange={setOverrideDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingOverride ? 'Edit Override' : 'Add Override'}</DialogTitle>
+            <DialogTitle>
+              {editingOverride ? "Edit Override" : "Add Override"}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
               <Label htmlFor="override-product">Product</Label>
               <Select
                 value={overrideForm.product_id}
-                onValueChange={(value) => setOverrideForm({ ...overrideForm, product_id: value })}
+                onValueChange={(value) =>
+                  setOverrideForm({ ...overrideForm, product_id: value })
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a product" />
@@ -632,7 +811,12 @@ export function ProductVariantsPanel() {
               <Input
                 id="override-size-name"
                 value={overrideForm.size_name}
-                onChange={(e) => setOverrideForm({ ...overrideForm, size_name: e.target.value })}
+                onChange={(e) =>
+                  setOverrideForm({
+                    ...overrideForm,
+                    size_name: e.target.value,
+                  })
+                }
                 placeholder="e.g., Weekly Pack, Monthly Subscription"
               />
             </div>
@@ -641,8 +825,13 @@ export function ProductVariantsPanel() {
               <Input
                 id="override-oz"
                 type="number"
-                value={overrideForm.size_oz || ''}
-                onChange={(e) => setOverrideForm({ ...overrideForm, size_oz: e.target.value ? Number(e.target.value) : null })}
+                value={overrideForm.size_oz || ""}
+                onChange={(e) =>
+                  setOverrideForm({
+                    ...overrideForm,
+                    size_oz: e.target.value ? Number(e.target.value) : null,
+                  })
+                }
               />
             </div>
             <div>
@@ -652,14 +841,21 @@ export function ProductVariantsPanel() {
                 type="number"
                 step="0.01"
                 value={overrideForm.price}
-                onChange={(e) => setOverrideForm({ ...overrideForm, price: Number(e.target.value) })}
+                onChange={(e) =>
+                  setOverrideForm({
+                    ...overrideForm,
+                    price: Number(e.target.value),
+                  })
+                }
               />
             </div>
             <div className="flex items-center gap-2">
               <Switch
                 id="override-subscription"
                 checked={overrideForm.is_subscription}
-                onCheckedChange={(checked) => setOverrideForm({ ...overrideForm, is_subscription: checked })}
+                onCheckedChange={(checked) =>
+                  setOverrideForm({ ...overrideForm, is_subscription: checked })
+                }
               />
               <Label htmlFor="override-subscription">Is Subscription</Label>
             </div>
@@ -667,8 +863,13 @@ export function ProductVariantsPanel() {
               <div>
                 <Label htmlFor="override-interval">Subscription Interval</Label>
                 <Select
-                  value={overrideForm.subscription_interval || ''}
-                  onValueChange={(value) => setOverrideForm({ ...overrideForm, subscription_interval: value })}
+                  value={overrideForm.subscription_interval || ""}
+                  onValueChange={(value) =>
+                    setOverrideForm({
+                      ...overrideForm,
+                      subscription_interval: value,
+                    })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select interval" />
@@ -687,20 +888,33 @@ export function ProductVariantsPanel() {
                 id="override-order"
                 type="number"
                 value={overrideForm.sort_order}
-                onChange={(e) => setOverrideForm({ ...overrideForm, sort_order: Number(e.target.value) })}
+                onChange={(e) =>
+                  setOverrideForm({
+                    ...overrideForm,
+                    sort_order: Number(e.target.value),
+                  })
+                }
               />
             </div>
             <div className="flex items-center gap-2">
               <Switch
                 id="override-active"
                 checked={overrideForm.active}
-                onCheckedChange={(checked) => setOverrideForm({ ...overrideForm, active: checked })}
+                onCheckedChange={(checked) =>
+                  setOverrideForm({ ...overrideForm, active: checked })
+                }
               />
               <Label htmlFor="override-active">Active</Label>
             </div>
-            <Button onClick={saveOverride} disabled={savingOverride} className="w-full">
-              {savingOverride && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              {editingOverride ? 'Update Override' : 'Create Override'}
+            <Button
+              onClick={saveOverride}
+              disabled={savingOverride}
+              className="w-full"
+            >
+              {savingOverride && (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              )}
+              {editingOverride ? "Update Override" : "Create Override"}
             </Button>
           </div>
         </DialogContent>
