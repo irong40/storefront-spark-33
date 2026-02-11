@@ -1,10 +1,16 @@
-import { useState } from 'react';
-import { Layout } from '@/components/layout/Layout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, CreditCard, AlertCircle, CheckCircle } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState } from "react";
+import { Layout } from "@/components/layout/Layout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Loader2, CreditCard, AlertCircle, CheckCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface GiftCardResult {
   id: string;
@@ -15,21 +21,21 @@ interface GiftCardResult {
 }
 
 export default function GiftCardBalance() {
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState("");
   const [result, setResult] = useState<GiftCardResult | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const formatCode = (value: string) => {
     // Remove all non-alphanumeric characters
-    const clean = value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    const clean = value.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
     // Add dashes: GC-XXXX-XXXX-XXXX format
     const parts = [];
     if (clean.length > 0) parts.push(clean.slice(0, 2)); // GC
     if (clean.length > 2) parts.push(clean.slice(2, 6)); // XXXX
     if (clean.length > 6) parts.push(clean.slice(6, 10)); // XXXX
     if (clean.length > 10) parts.push(clean.slice(10, 14)); // XXXX
-    return parts.join('-');
+    return parts.join("-");
   };
 
   const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,24 +47,29 @@ export default function GiftCardBalance() {
     if (!code) return;
 
     setLoading(true);
-    setError('');
+    setError("");
     setResult(null);
 
     try {
-      const { data, error: rpcError } = await supabase.rpc('check_gift_card_balance', {
-        gift_card_code: code,
-      });
+      const { data, error: rpcError } = await supabase.rpc(
+        "check_gift_card_balance",
+        {
+          gift_card_code: code,
+        },
+      );
 
       if (rpcError) throw rpcError;
 
       if (!data || data.length === 0) {
-        setError('Gift card not found or has expired. Please check the code and try again.');
+        setError(
+          "Gift card not found or has expired. Please check the code and try again.",
+        );
       } else {
         setResult(data[0] as GiftCardResult);
       }
     } catch (err) {
-      console.error('Error checking gift card:', err);
-      setError('Failed to check balance. Please try again.');
+      console.error("Error checking gift card:", err);
+      setError("Failed to check balance. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -72,7 +83,9 @@ export default function GiftCardBalance() {
             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 text-primary">
               <CreditCard className="w-8 h-8" />
             </div>
-            <CardTitle className="font-heading text-2xl">Check Gift Card Balance</CardTitle>
+            <CardTitle className="font-heading text-2xl">
+              Check Gift Card Balance
+            </CardTitle>
             <CardDescription>
               Enter the code from your gift card email.
             </CardDescription>
@@ -99,11 +112,16 @@ export default function GiftCardBalance() {
               {result && (
                 <div className="flex flex-col items-center gap-3 text-primary bg-primary/10 p-5 rounded-xl border border-primary/20 animate-in fade-in zoom-in duration-300">
                   <CheckCircle className="w-8 h-8" />
-                  <span className="text-sm font-medium uppercase tracking-wider">Current Balance</span>
-                  <span className="font-heading text-4xl font-bold">${result.balance.toFixed(2)}</span>
+                  <span className="text-sm font-medium uppercase tracking-wider">
+                    Current Balance
+                  </span>
+                  <span className="font-heading text-4xl font-bold">
+                    ${result.balance.toFixed(2)}
+                  </span>
                   {result.expires_at && (
                     <span className="text-xs text-muted-foreground">
-                      Expires: {new Date(result.expires_at).toLocaleDateString()}
+                      Expires:{" "}
+                      {new Date(result.expires_at).toLocaleDateString()}
                     </span>
                   )}
                 </div>
@@ -114,7 +132,14 @@ export default function GiftCardBalance() {
                 className="w-full h-12 text-lg"
                 disabled={loading || code.length < 17}
               >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Check Balance'}
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span className="sr-only">Checking balance…</span>
+                  </>
+                ) : (
+                  "Check Balance"
+                )}
               </Button>
             </form>
           </CardContent>

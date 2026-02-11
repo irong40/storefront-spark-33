@@ -1,22 +1,46 @@
-import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Layout } from '@/components/layout/Layout';
-import { useCart } from '@/contexts/CartContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Separator } from '@/components/ui/separator';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { Loader2, ShoppingBag, MapPin, Truck, CreditCard, Gift, X, Check, Clock, Info } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { SquarePaymentForm, PaymentResult } from '@/components/checkout/SquarePaymentForm';
-import { CHECKOUT_CONFIG, getAvailablePickupDates, getAvailableTimeSlots } from '@/config/checkout';
-import { useGiftCard } from '@/hooks/use-gift-card';
+import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { Layout } from "@/components/layout/Layout";
+import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Loader2,
+  ShoppingBag,
+  MapPin,
+  Truck,
+  CreditCard,
+  Gift,
+  X,
+  Check,
+  Clock,
+  Info,
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import {
+  SquarePaymentForm,
+  PaymentResult,
+} from "@/components/checkout/SquarePaymentForm";
+import {
+  CHECKOUT_CONFIG,
+  getAvailablePickupDates,
+  getAvailableTimeSlots,
+} from "@/config/checkout";
+import { useGiftCard } from "@/hooks/use-gift-card";
 
 interface AppliedGiftCard {
   code: string;
@@ -29,45 +53,58 @@ export default function Checkout() {
   const { toast } = useToast();
   const { items, subtotal, clearCart } = useCart();
   const { user, profile } = useAuth();
-  const { checkBalance, redeemGiftCard, isLoading: giftCardLoading } = useGiftCard();
-  
+  const {
+    checkBalance,
+    redeemGiftCard,
+    isLoading: giftCardLoading,
+  } = useGiftCard();
+
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [fulfillmentType, setFulfillmentType] = useState('pickup');
+  const [fulfillmentType, setFulfillmentType] = useState("pickup");
   const [paymentComplete, setPaymentComplete] = useState(false);
-  const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
-  
+  const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(
+    null,
+  );
+
   // Gift card state
-  const [giftCardCode, setGiftCardCode] = useState('');
-  const [appliedGiftCards, setAppliedGiftCards] = useState<AppliedGiftCard[]>([]);
+  const [giftCardCode, setGiftCardCode] = useState("");
+  const [appliedGiftCards, setAppliedGiftCards] = useState<AppliedGiftCard[]>(
+    [],
+  );
   const [giftCardError, setGiftCardError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
-    email: profile?.email || user?.email || '',
-    phone: profile?.phone || '',
-    customerName: profile?.full_name || '',
-    notes: '',
+    email: profile?.email || user?.email || "",
+    phone: profile?.phone || "",
+    customerName: profile?.full_name || "",
+    notes: "",
     // Shipping address
-    addressLine1: '',
-    addressLine2: '',
-    city: '',
-    state: '',
-    zip: '',
+    addressLine1: "",
+    addressLine2: "",
+    city: "",
+    state: "",
+    zip: "",
     // Pickup scheduling
-    pickupDate: '',
-    pickupTime: '',
+    pickupDate: "",
+    pickupTime: "",
   });
 
   // Get available pickup dates and time slots
   const availablePickupDates = useMemo(() => getAvailablePickupDates(), []);
   const availableTimeSlots = useMemo(
-    () => (formData.pickupDate ? getAvailableTimeSlots(formData.pickupDate) : []),
-    [formData.pickupDate]
+    () =>
+      formData.pickupDate ? getAvailableTimeSlots(formData.pickupDate) : [],
+    [formData.pickupDate],
   );
 
   // Calculate totals with gift card discount
-  const giftCardDiscount = appliedGiftCards.reduce((sum, gc) => sum + gc.amountApplied, 0);
+  const giftCardDiscount = appliedGiftCards.reduce(
+    (sum, gc) => sum + gc.amountApplied,
+    0,
+  );
   const tax = subtotal * CHECKOUT_CONFIG.TAX_RATE;
-  const shipping = fulfillmentType === 'delivery' ? CHECKOUT_CONFIG.DELIVERY_FEE : 0;
+  const shipping =
+    fulfillmentType === "delivery" ? CHECKOUT_CONFIG.DELIVERY_FEE : 0;
   const totalBeforeGiftCard = subtotal + tax + shipping;
   const total = Math.max(0, totalBeforeGiftCard - giftCardDiscount);
   const totalInCents = Math.round(total * 100);
@@ -75,71 +112,82 @@ export default function Checkout() {
   // Apply gift card handler
   const handleApplyGiftCard = async () => {
     if (!giftCardCode.trim()) return;
-    
+
     setGiftCardError(null);
-    
+
     // Check if already applied
-    if (appliedGiftCards.some(gc => gc.code.toUpperCase() === giftCardCode.toUpperCase())) {
-      setGiftCardError('This gift card has already been applied');
+    if (
+      appliedGiftCards.some(
+        (gc) => gc.code.toUpperCase() === giftCardCode.toUpperCase(),
+      )
+    ) {
+      setGiftCardError("This gift card has already been applied");
       return;
     }
-    
+
     const result = await checkBalance(giftCardCode.trim());
-    
+
     if (!result) {
-      setGiftCardError('Gift card not found or expired');
+      setGiftCardError("Gift card not found or expired");
       return;
     }
-    
-    if (result.status !== 'active') {
-      setGiftCardError('This gift card is no longer active');
+
+    if (result.status !== "active") {
+      setGiftCardError("This gift card is no longer active");
       return;
     }
-    
+
     if (result.balance <= 0) {
-      setGiftCardError('This gift card has no remaining balance');
+      setGiftCardError("This gift card has no remaining balance");
       return;
     }
-    
+
     // Calculate how much to apply (remaining total after other gift cards)
-    const remainingTotal = totalBeforeGiftCard - appliedGiftCards.reduce((sum, gc) => sum + gc.amountApplied, 0);
+    const remainingTotal =
+      totalBeforeGiftCard -
+      appliedGiftCards.reduce((sum, gc) => sum + gc.amountApplied, 0);
     const amountToApply = Math.min(result.balance, remainingTotal);
-    
+
     if (amountToApply <= 0) {
-      setGiftCardError('Order is already fully covered by other gift cards');
+      setGiftCardError("Order is already fully covered by other gift cards");
       return;
     }
-    
-    setAppliedGiftCards(prev => [...prev, {
-      code: result.code,
-      amountApplied: amountToApply,
-      balance: result.balance,
-    }]);
-    
-    setGiftCardCode('');
+
+    setAppliedGiftCards((prev) => [
+      ...prev,
+      {
+        code: result.code,
+        amountApplied: amountToApply,
+        balance: result.balance,
+      },
+    ]);
+
+    setGiftCardCode("");
     toast({
-      title: 'Gift Card Applied',
+      title: "Gift Card Applied",
       description: `$${amountToApply.toFixed(2)} will be deducted from your order.`,
     });
   };
 
   const removeGiftCard = (code: string) => {
-    setAppliedGiftCards(prev => prev.filter(gc => gc.code !== code));
+    setAppliedGiftCards((prev) => prev.filter((gc) => gc.code !== code));
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData(prev => ({
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
     }));
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => {
+    setFormData((prev) => {
       const newData = { ...prev, [name]: value };
       // Reset time when date changes
-      if (name === 'pickupDate') {
-        newData.pickupTime = '';
+      if (name === "pickupDate") {
+        newData.pickupTime = "";
       }
       return newData;
     });
@@ -147,11 +195,16 @@ export default function Checkout() {
 
   const isFormValid = () => {
     if (!formData.email) return false;
-    if (fulfillmentType === 'pickup') {
+    if (fulfillmentType === "pickup") {
       if (!formData.pickupDate || !formData.pickupTime) return false;
     }
-    if (fulfillmentType === 'delivery') {
-      if (!formData.addressLine1 || !formData.city || !formData.state || !formData.zip) {
+    if (fulfillmentType === "delivery") {
+      if (
+        !formData.addressLine1 ||
+        !formData.city ||
+        !formData.state ||
+        !formData.zip
+      ) {
         return false;
       }
     }
@@ -168,9 +221,9 @@ export default function Checkout() {
 
   const handlePaymentError = (message: string) => {
     toast({
-      title: 'Payment Failed',
+      title: "Payment Failed",
       description: message,
-      variant: 'destructive',
+      variant: "destructive",
     });
   };
 
@@ -178,7 +231,7 @@ export default function Checkout() {
   const handleZeroPaymentOrder = async () => {
     await createOrder({
       paymentId: `GC-${Date.now()}`, // Gift card payment reference
-      status: 'COMPLETED',
+      status: "COMPLETED",
       cardDetails: undefined,
     });
   };
@@ -186,9 +239,9 @@ export default function Checkout() {
   const createOrder = async (payment: PaymentResult) => {
     if (items.length === 0) {
       toast({
-        title: 'Cart is empty',
-        description: 'Please add items to your cart before checking out.',
-        variant: 'destructive',
+        title: "Cart is empty",
+        description: "Please add items to your cart before checking out.",
+        variant: "destructive",
       });
       return;
     }
@@ -197,10 +250,10 @@ export default function Checkout() {
 
     try {
       // Generate order number (also handled by database trigger as fallback)
-      const orderNumber = `ORD-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+      const orderNumber = `ORD-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
       const { data: order, error: orderError } = await supabase
-        .from('orders')
+        .from("orders")
         .insert({
           order_number: orderNumber,
           user_id: user?.id || null,
@@ -214,16 +267,21 @@ export default function Checkout() {
           total: total,
           notes: formData.notes || null,
           payment_id: payment.paymentId,
-          payment_status: 'completed',
-          pickup_date: fulfillmentType === 'pickup' ? formData.pickupDate : null,
-          pickup_time: fulfillmentType === 'pickup' ? formData.pickupTime : null,
-          shipping_address: fulfillmentType === 'delivery' ? {
-            line1: formData.addressLine1,
-            line2: formData.addressLine2,
-            city: formData.city,
-            state: formData.state,
-            zip: formData.zip,
-          } : null,
+          payment_status: "completed",
+          pickup_date:
+            fulfillmentType === "pickup" ? formData.pickupDate : null,
+          pickup_time:
+            fulfillmentType === "pickup" ? formData.pickupTime : null,
+          shipping_address:
+            fulfillmentType === "delivery"
+              ? {
+                  line1: formData.addressLine1,
+                  line2: formData.addressLine2,
+                  city: formData.city,
+                  state: formData.state,
+                  zip: formData.zip,
+                }
+              : null,
         })
         .select()
         .single();
@@ -231,7 +289,7 @@ export default function Checkout() {
       if (orderError) throw orderError;
 
       // Create order items
-      const orderItems = items.map(item => ({
+      const orderItems = items.map((item) => ({
         order_id: order.id,
         product_id: item.product_id,
         product_name: item.product.name,
@@ -241,7 +299,7 @@ export default function Checkout() {
       }));
 
       const { error: itemsError } = await supabase
-        .from('order_items')
+        .from("order_items")
         .insert(orderItems);
 
       if (itemsError) throw itemsError;
@@ -252,32 +310,34 @@ export default function Checkout() {
       }
 
       // Send order confirmation email (non-blocking)
-      supabase.functions.invoke('send-order-confirmation', {
-        body: {
-          email: formData.email,
-          customerName: formData.customerName || undefined,
-          orderNumber: order.order_number,
-          items: orderItems.map(item => ({
-            product_name: item.product_name,
-            quantity: item.quantity,
-            product_price: item.product_price,
-            total: item.total,
-          })),
-          subtotal,
-          tax,
-          shipping,
-          giftCardDiscount,
-          total,
-          fulfillmentType,
-          pickupDate: formData.pickupDate || undefined,
-          pickupTime: formData.pickupTime || undefined,
-          paymentStatus: 'completed',
-        },
-      }).then(({ error }) => {
-        if (error) {
-          console.error('Failed to send order confirmation email:', error);
-        }
-      });
+      supabase.functions
+        .invoke("send-order-confirmation", {
+          body: {
+            email: formData.email,
+            customerName: formData.customerName || undefined,
+            orderNumber: order.order_number,
+            items: orderItems.map((item) => ({
+              product_name: item.product_name,
+              quantity: item.quantity,
+              product_price: item.product_price,
+              total: item.total,
+            })),
+            subtotal,
+            tax,
+            shipping,
+            giftCardDiscount,
+            total,
+            fulfillmentType,
+            pickupDate: formData.pickupDate || undefined,
+            pickupTime: formData.pickupTime || undefined,
+            paymentStatus: "completed",
+          },
+        })
+        .then(({ error }) => {
+          if (error) {
+            console.error("Failed to send order confirmation email:", error);
+          }
+        });
 
       // Clear cart
       await clearCart();
@@ -285,11 +345,13 @@ export default function Checkout() {
       // Navigate to confirmation
       navigate(`/order-confirmation/${order.id}`);
     } catch (error) {
-      console.error('Order creation error:', error);
+      console.error("Order creation error:", error);
       toast({
-        title: 'Error',
-        description: 'Payment was successful but order creation failed. Please contact support with your payment ID: ' + payment.paymentId,
-        variant: 'destructive',
+        title: "Error",
+        description:
+          "Payment was successful but order creation failed. Please contact support with your payment ID: " +
+          payment.paymentId,
+        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
@@ -325,7 +387,9 @@ export default function Checkout() {
           <div className="space-y-8">
             {/* Contact Info */}
             <div>
-              <h2 className="text-xl font-semibold mb-4">Contact Information</h2>
+              <h2 className="text-xl font-semibold mb-4">
+                Contact Information
+              </h2>
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email *</Label>
@@ -376,33 +440,39 @@ export default function Checkout() {
               >
                 <Label
                   htmlFor="pickup"
-                  className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-colors ${fulfillmentType === 'pickup'
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border hover:border-primary/50'
-                    } ${(isSubmitting || paymentComplete) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-colors ${
+                    fulfillmentType === "pickup"
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
+                  } ${isSubmitting || paymentComplete ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   <RadioGroupItem value="pickup" id="pickup" />
                   <div className="flex items-center gap-3">
                     <MapPin className="h-5 w-5 text-primary" />
                     <div>
                       <div className="font-medium">Pickup</div>
-                      <div className="text-xs text-muted-foreground">Free • Tue-Fri 10-6, Sat 10-5</div>
+                      <div className="text-xs text-muted-foreground">
+                        Free • Tue-Fri 10-6, Sat 10-5
+                      </div>
                     </div>
                   </div>
                 </Label>
                 <Label
                   htmlFor="delivery"
-                  className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-colors ${fulfillmentType === 'delivery'
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border hover:border-primary/50'
-                    } ${(isSubmitting || paymentComplete) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-colors ${
+                    fulfillmentType === "delivery"
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
+                  } ${isSubmitting || paymentComplete ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   <RadioGroupItem value="delivery" id="delivery" />
                   <div className="flex items-center gap-3">
                     <Truck className="h-5 w-5 text-primary" />
                     <div>
                       <div className="font-medium">Delivery</div>
-                      <div className="text-xs text-muted-foreground">Free • Mon-Fri</div>
+                      <div className="text-xs text-muted-foreground">
+                        Free • Mon-Fri
+                      </div>
                     </div>
                   </div>
                 </Label>
@@ -410,7 +480,7 @@ export default function Checkout() {
             </div>
 
             {/* Pickup Scheduling */}
-            {fulfillmentType === 'pickup' && (
+            {fulfillmentType === "pickup" && (
               <div>
                 <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
                   <Clock className="h-5 w-5" />
@@ -421,7 +491,9 @@ export default function Checkout() {
                     <Label htmlFor="pickupDate">Pickup Date *</Label>
                     <Select
                       value={formData.pickupDate}
-                      onValueChange={(value) => handleSelectChange('pickupDate', value)}
+                      onValueChange={(value) =>
+                        handleSelectChange("pickupDate", value)
+                      }
                       disabled={isSubmitting || paymentComplete}
                     >
                       <SelectTrigger id="pickupDate">
@@ -440,11 +512,21 @@ export default function Checkout() {
                     <Label htmlFor="pickupTime">Pickup Time *</Label>
                     <Select
                       value={formData.pickupTime}
-                      onValueChange={(value) => handleSelectChange('pickupTime', value)}
-                      disabled={isSubmitting || paymentComplete || !formData.pickupDate}
+                      onValueChange={(value) =>
+                        handleSelectChange("pickupTime", value)
+                      }
+                      disabled={
+                        isSubmitting || paymentComplete || !formData.pickupDate
+                      }
                     >
                       <SelectTrigger id="pickupTime">
-                        <SelectValue placeholder={formData.pickupDate ? "Select a time" : "Select a date first"} />
+                        <SelectValue
+                          placeholder={
+                            formData.pickupDate
+                              ? "Select a time"
+                              : "Select a date first"
+                          }
+                        />
                       </SelectTrigger>
                       <SelectContent>
                         {availableTimeSlots.map((slot) => (
@@ -460,17 +542,20 @@ export default function Checkout() {
             )}
 
             {/* Delivery Address */}
-            {fulfillmentType === 'delivery' && (
+            {fulfillmentType === "delivery" && (
               <div>
                 <h2 className="text-xl font-semibold mb-4">Delivery Address</h2>
-                
+
                 {/* Delivery Info Banner */}
                 <div className="flex items-start gap-3 p-4 bg-primary/5 border border-primary/20 rounded-xl mb-4">
                   <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                   <div className="text-sm">
-                    <p className="font-medium text-foreground">Free delivery Monday through Friday</p>
+                    <p className="font-medium text-foreground">
+                      Free delivery Monday through Friday
+                    </p>
                     <p className="text-muted-foreground mt-1">
-                      Delivery times vary based on your location. We'll notify you when your order is on the way.
+                      Delivery times vary based on your location. We'll notify
+                      you when your order is on the way.
                     </p>
                   </div>
                 </div>
@@ -560,22 +645,34 @@ export default function Checkout() {
               {!isFormValid() ? (
                 <div className="p-4 bg-muted rounded-xl text-center">
                   <p className="text-muted-foreground text-sm">
-                    {fulfillmentType === 'pickup' && (!formData.pickupDate || !formData.pickupTime) 
-                      ? 'Please select a pickup date and time to proceed with payment.'
-                      : 'Please fill in the required fields above to proceed with payment.'}
+                    {fulfillmentType === "pickup" &&
+                    (!formData.pickupDate || !formData.pickupTime)
+                      ? "Please select a pickup date and time to proceed with payment."
+                      : "Please fill in the required fields above to proceed with payment."}
                   </p>
                 </div>
               ) : paymentComplete ? (
                 <div className="p-4 bg-primary/10 border border-primary/20 rounded-xl">
                   <div className="flex items-center gap-2 text-primary font-medium">
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    <svg
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
-                    {total === 0 ? 'Order Placed' : 'Payment Successful'}
+                    {total === 0 ? "Order Placed" : "Payment Successful"}
                   </div>
                   {paymentResult?.cardDetails && (
                     <p className="text-sm text-muted-foreground mt-1">
-                      {paymentResult.cardDetails.brand} ending in {paymentResult.cardDetails.last4}
+                      {paymentResult.cardDetails.brand} ending in{" "}
+                      {paymentResult.cardDetails.last4}
                     </p>
                   )}
                   {total === 0 && (
@@ -606,14 +703,14 @@ export default function Checkout() {
                         Placing Order...
                       </>
                     ) : (
-                      'Place Order'
+                      "Place Order"
                     )}
                   </Button>
                 </div>
               ) : (
                 <SquarePaymentForm
                   amountInCents={totalInCents}
-                  sessionId={localStorage.getItem('cart_session_id') || ''}
+                  sessionId={localStorage.getItem("cart_session_id") || ""}
                   onSuccess={handlePaymentSuccess}
                   onError={handlePaymentError}
                   disabled={isSubmitting}
@@ -642,7 +739,9 @@ export default function Checkout() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{item.product.name}</p>
+                      <p className="font-medium truncate">
+                        {item.product.name}
+                      </p>
                       <p className="text-sm text-muted-foreground">
                         Qty: {item.quantity}
                       </p>
@@ -670,27 +769,39 @@ export default function Checkout() {
                       setGiftCardCode(e.target.value.toUpperCase());
                       setGiftCardError(null);
                     }}
-                    disabled={isSubmitting || paymentComplete || giftCardLoading}
+                    disabled={
+                      isSubmitting || paymentComplete || giftCardLoading
+                    }
                     className="flex-1"
                   />
                   <Button
                     type="button"
                     variant="outline"
                     onClick={handleApplyGiftCard}
-                    disabled={!giftCardCode.trim() || isSubmitting || paymentComplete || giftCardLoading}
+                    disabled={
+                      !giftCardCode.trim() ||
+                      isSubmitting ||
+                      paymentComplete ||
+                      giftCardLoading
+                    }
                     className="shrink-0"
                   >
                     {giftCardLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span className="sr-only">Applying gift card…</span>
+                      </>
                     ) : (
-                      'Apply'
+                      "Apply"
                     )}
                   </Button>
                 </div>
                 {giftCardError && (
-                  <p className="text-sm text-destructive mt-1">{giftCardError}</p>
+                  <p className="text-sm text-destructive mt-1">
+                    {giftCardError}
+                  </p>
                 )}
-                
+
                 {/* Applied Gift Cards */}
                 {appliedGiftCards.length > 0 && (
                   <div className="mt-3 space-y-2">
@@ -755,8 +866,14 @@ export default function Checkout() {
               </div>
 
               {isSubmitting && (
-                <div className="flex items-center justify-center gap-2 text-primary py-4">
-                  <Loader2 className="h-5 w-5 animate-spin" />
+                <div
+                  className="flex items-center justify-center gap-2 text-primary py-4"
+                  role="status"
+                >
+                  <Loader2
+                    className="h-5 w-5 animate-spin"
+                    aria-hidden="true"
+                  />
                   <span>Creating your order...</span>
                 </div>
               )}

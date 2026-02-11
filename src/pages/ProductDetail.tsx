@@ -1,46 +1,56 @@
-import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { Layout } from '@/components/layout/Layout';
-import { useProduct, Product, useAddons } from '@/hooks/use-products';
-import { useEffectiveProductSizes } from '@/hooks/use-product-variants';
-import { AddToCartButton } from '@/components/cart/AddToCartButton';
-import { Button } from '@/components/ui/button';
-import { FlavorSelector } from '@/components/products/FlavorSelector';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { ChevronLeft, Minus, Plus, Check, Leaf } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { useParams, Link } from "react-router-dom";
+import { Layout } from "@/components/layout/Layout";
+import { useProduct, Product, useAddons } from "@/hooks/use-products";
+import { useEffectiveProductSizes } from "@/hooks/use-product-variants";
+import { AddToCartButton } from "@/components/cart/AddToCartButton";
+import { Button } from "@/components/ui/button";
+import { FlavorSelector } from "@/components/products/FlavorSelector";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { ChevronLeft, Minus, Plus, Check, Leaf } from "lucide-react";
 
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
-  const { data: product, isLoading, error } = useProduct(slug || '');
+  const { data: product, isLoading, error } = useProduct(slug || "");
   const { data: addons } = useAddons();
-  
+
   // Use effective sizes (product overrides or global sizes)
-  const { sizes: globalSizes, isLoading: sizesLoading } = useEffectiveProductSizes(product?.id || '');
+  const { sizes: globalSizes, isLoading: sizesLoading } =
+    useEffectiveProductSizes(product?.id || "");
 
   // Flavor Selection Configuration
   const getFlavorSelectionLimit = (slug: string) => {
     switch (slug) {
-      case '4-pack-sample-box': return 4;
-      case 'sample-box': return 4;
-      case '3-pack-subscription': return 3;
-      case 'gallon-subscription': return 1;
-      case 'full-gallon-subscription': return 1;
-      case 'half-gallon-subscription': return 1;
-      default: return 0;
+      case "4-pack-sample-box":
+        return 4;
+      case "sample-box":
+        return 4;
+      case "3-pack-subscription":
+        return 3;
+      case "gallon-subscription":
+        return 1;
+      case "full-gallon-subscription":
+        return 1;
+      case "half-gallon-subscription":
+        return 1;
+      default:
+        return 0;
     }
   };
 
   // Check if product is a detox package (1-day, 3-day) - no sizes, no add-ons
-  const isDetoxPackage = product?.slug?.includes('-day-detox') || 
-    product?.slug === '1-day-detox' || 
-    product?.slug === '3-day-detox';
-
+  const isDetoxPackage =
+    product?.slug?.includes("-day-detox") ||
+    product?.slug === "1-day-detox" ||
+    product?.slug === "3-day-detox";
 
   const [quantity, setQuantity] = useState(1);
-  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(
+    null,
+  );
   const [selectedSizeId, setSelectedSizeId] = useState<string | null>(null);
   const [selectedFlavors, setSelectedFlavors] = useState<Product[]>([]);
   const [selectedAddonIds, setSelectedAddonIds] = useState<string[]>([]); // Addon state
@@ -50,40 +60,59 @@ export default function ProductDetail() {
 
   // Gift Card Form State
   const [giftCardForm, setGiftCardForm] = useState({
-    recipientEmail: '',
-    recipientName: '',
-    message: '',
-    deliveryDate: ''
+    recipientEmail: "",
+    recipientName: "",
+    message: "",
+    deliveryDate: "",
   });
 
   // Default selections
   useEffect(() => {
-    if (product?.variants && product.variants.length > 0 && !selectedVariantId) {
+    if (
+      product?.variants &&
+      product.variants.length > 0 &&
+      !selectedVariantId
+    ) {
       setSelectedVariantId(product.variants[0].id);
     }
     // Default to 16 oz if available and not using variants
-    if (!product?.variants?.length && globalSizes.length > 0 && !selectedSizeId && !requiresFlavors) {
-      const defaultSize = globalSizes.find(s => s.name === '16 oz') || globalSizes[0];
+    if (
+      !product?.variants?.length &&
+      globalSizes.length > 0 &&
+      !selectedSizeId &&
+      !requiresFlavors
+    ) {
+      const defaultSize =
+        globalSizes.find((s) => s.name === "16 oz") || globalSizes[0];
       if (defaultSize) setSelectedSizeId(defaultSize.id);
     }
-  }, [product, globalSizes, selectedVariantId, selectedSizeId, requiresFlavors]);
+  }, [
+    product,
+    globalSizes,
+    selectedVariantId,
+    selectedSizeId,
+    requiresFlavors,
+  ]);
 
   // Derived state
-  const selectedVariant = product?.variants?.find(v => v.id === selectedVariantId);
-  const selectedSize = globalSizes.find(s => s.id === selectedSizeId);
+  const selectedVariant = product?.variants?.find(
+    (v) => v.id === selectedVariantId,
+  );
+  const selectedSize = globalSizes.find((s) => s.id === selectedSizeId);
 
   const toggleAddon = (addonId: string) => {
-    setSelectedAddonIds(prev =>
+    setSelectedAddonIds((prev) =>
       prev.includes(addonId)
-        ? prev.filter(id => id !== addonId)
-        : [...prev, addonId]
+        ? prev.filter((id) => id !== addonId)
+        : [...prev, addonId],
     );
   };
 
   // Check if product is a wellness shot (fixed $3 price, no sizes, no addons)
   // Wellness shots have slugs starting with "wellness-shot-" (not subscription)
-  const isWellnessShot = product?.slug?.startsWith('wellness-shot-') && 
-    product?.slug !== 'wellness-shot-subscription';
+  const isWellnessShot =
+    product?.slug?.startsWith("wellness-shot-") &&
+    product?.slug !== "wellness-shot-subscription";
 
   // Price Calculation
   let currentPrice = 0;
@@ -92,7 +121,11 @@ export default function ProductDetail() {
     currentPrice = 3;
   } else if (selectedVariant) {
     currentPrice = Number(selectedVariant.price);
-  } else if (!product?.variants?.length && product?.slug !== 'egift-card' && selectedSize) {
+  } else if (
+    !product?.variants?.length &&
+    product?.slug !== "egift-card" &&
+    selectedSize
+  ) {
     currentPrice = selectedSize.price;
   } else {
     currentPrice = Number(product?.price || 0);
@@ -100,14 +133,15 @@ export default function ProductDetail() {
 
   // Add Add-ons cost
   const addonsCost = selectedAddonIds.reduce((sum, id) => {
-    const addon = addons?.find(a => a.id === id);
+    const addon = addons?.find((a) => a.id === id);
     return sum + Number(addon?.price || 0);
   }, 0);
   currentPrice += addonsCost;
 
   // Validation for Add to Cart
   const isAddToCartDisabled = () => {
-    if (product?.slug === 'egift-card' && !giftCardForm.recipientEmail) return true;
+    if (product?.slug === "egift-card" && !giftCardForm.recipientEmail)
+      return true;
     if (requiresFlavors && selectedFlavors.length !== flavorLimit) return true;
     return false;
   };
@@ -119,32 +153,38 @@ export default function ProductDetail() {
       50: "/images/products/egift-card-50.png",
       100: "/images/products/egift-card-100.png",
       150: "/images/products/egift-card-150.png",
-      200: "/images/products/egift-card-200.png"
+      200: "/images/products/egift-card-200.png",
     };
     return images[amount] || product?.image_url;
   };
 
-  const displayImage = (product?.slug === 'egift-card' && selectedVariant)
-    ? getGiftCardImage(currentPrice) // Note: currentPrice includes addons but gift cards don't have addons
-    : (product?.image_url || null);
+  const displayImage =
+    product?.slug === "egift-card" && selectedVariant
+      ? getGiftCardImage(currentPrice) // Note: currentPrice includes addons but gift cards don't have addons
+      : product?.image_url || null;
 
   // Determine if we should show addons (Standard Juices only, NOT wellness shots, NOT detox packages)
   // Logic: Not requiring flavors (bundles), not gift card, not wellness shots, not detox, has category, category is one of the juice types
-  const showAddons = !requiresFlavors && product?.slug !== 'egift-card' &&
+  const showAddons =
+    !requiresFlavors &&
+    product?.slug !== "egift-card" &&
     !isWellnessShot &&
     !isDetoxPackage &&
     product?.category?.slug &&
-    ['sweet-treats', 'energy-immunity-booster', 'detox-fat-burners'].includes(product.category.slug);
+    ["sweet-treats", "energy-immunity-booster", "detox-fat-burners"].includes(
+      product.category.slug,
+    );
 
   // Determine if we should show size selector
   // NOT for wellness shots (fixed $3), NOT for detox packages (fixed packages)
   // Allow for 4-pack-sample-box even though it requires flavors
-  const showSizeSelector = !product?.variants?.length && 
-    product?.slug !== 'egift-card' && 
-    globalSizes.length > 0 && 
+  const showSizeSelector =
+    !product?.variants?.length &&
+    product?.slug !== "egift-card" &&
+    globalSizes.length > 0 &&
     !isWellnessShot &&
     !isDetoxPackage &&
-    (!requiresFlavors || product?.slug === '4-pack-sample-box');
+    (!requiresFlavors || product?.slug === "4-pack-sample-box");
 
   if (isLoading) {
     return (
@@ -169,7 +209,9 @@ export default function ProductDetail() {
     return (
       <Layout>
         <div className="container px-4 py-12 text-center">
-          <h1 className="text-2xl font-heading font-bold text-brand-brown mb-4">Product Not Found</h1>
+          <h1 className="text-2xl font-heading font-bold text-brand-brown mb-4">
+            Product Not Found
+          </h1>
           <p className="text-muted-foreground mb-6">
             The product you're looking for doesn't exist or has been removed.
           </p>
@@ -181,12 +223,17 @@ export default function ProductDetail() {
     );
   }
 
-  const hasDiscount = product.compare_at_price && product.compare_at_price > currentPrice;
+  const hasDiscount =
+    product.compare_at_price && product.compare_at_price > currentPrice;
 
   return (
     <Layout>
       <div className="container px-4 py-8">
-        <Button variant="ghost" asChild className="mb-6 text-brand-olive hover:text-brand-berry hover:bg-brand-olive/10">
+        <Button
+          variant="ghost"
+          asChild
+          className="mb-6 text-brand-olive hover:text-brand-berry hover:bg-brand-olive/10"
+        >
           <Link to="/products">
             <ChevronLeft className="h-4 w-4 mr-2" />
             Back to Products
@@ -208,7 +255,7 @@ export default function ProductDetail() {
                 />
               ) : (
                 <div className="text-8xl bg-gradient-to-br from-brand-olive/10 via-brand-kraft to-brand-mustard/10 w-full h-full flex items-center justify-center">
-                  {product.slug === 'egift-card' ? '🎁' : '🍹'}
+                  {product.slug === "egift-card" ? "🎁" : "🍹"}
                 </div>
               )}
             </div>
@@ -261,22 +308,31 @@ export default function ProductDetail() {
             {product.variants && product.variants.length > 0 && (
               <div className="mb-8">
                 <span className="font-medium text-brand-brown block mb-3">
-                  {product.slug === 'egift-card' ? 'Select Amount:' : 'Select Option:'}
+                  {product.slug === "egift-card"
+                    ? "Select Amount:"
+                    : "Select Option:"}
                 </span>
                 <div className="flex flex-wrap gap-3">
                   {product.variants.map((variant) => (
                     <button
                       key={variant.id}
                       onClick={() => setSelectedVariantId(variant.id)}
+                      aria-pressed={selectedVariantId === variant.id}
                       className={`
                         px-4 py-2 rounded-xl border-2 transition-all font-medium text-sm
-                        ${selectedVariantId === variant.id
-                          ? 'border-brand-berry bg-brand-berry/5 text-brand-berry'
-                          : 'border-brand-warm-gray/20 text-brand-brown hover:border-brand-olive hover:text-brand-olive bg-white'}
+                        ${
+                          selectedVariantId === variant.id
+                            ? "border-brand-berry bg-brand-berry/5 text-brand-berry"
+                            : "border-brand-warm-gray/20 text-brand-brown hover:border-brand-olive hover:text-brand-olive bg-white"
+                        }
                       `}
                     >
                       {variant.size_name}
-                      {variant.is_subscription && <span className="block text-xs font-normal opacity-80">{variant.subscription_interval}</span>}
+                      {variant.is_subscription && (
+                        <span className="block text-xs font-normal opacity-80">
+                          {variant.subscription_interval}
+                        </span>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -294,11 +350,14 @@ export default function ProductDetail() {
                     <button
                       key={size.id}
                       onClick={() => setSelectedSizeId(size.id)}
+                      aria-pressed={selectedSizeId === size.id}
                       className={`
                         px-4 py-2 rounded-xl border-2 transition-all font-medium text-sm
-                        ${selectedSizeId === size.id
-                          ? 'border-brand-berry bg-brand-berry/5 text-brand-berry'
-                          : 'border-brand-warm-gray/20 text-brand-brown hover:border-brand-olive hover:text-brand-olive bg-white'}
+                        ${
+                          selectedSizeId === size.id
+                            ? "border-brand-berry bg-brand-berry/5 text-brand-berry"
+                            : "border-brand-warm-gray/20 text-brand-brown hover:border-brand-olive hover:text-brand-olive bg-white"
+                        }
                       `}
                     >
                       {size.name}
@@ -311,9 +370,11 @@ export default function ProductDetail() {
             {/* Add-ons Selector */}
             {showAddons && addons && addons.length > 0 && (
               <div className="mb-8 p-5 bg-brand-olive/5 rounded-2xl border border-brand-olive/10">
-                <h3 className="font-heading font-semibold text-lg text-brand-brown mb-3">Add Extra Goodness</h3>
+                <h3 className="font-heading font-semibold text-lg text-brand-brown mb-3">
+                  Add Extra Goodness
+                </h3>
                 <div className="grid grid-cols-2 gap-3">
-                  {addons.map(addon => (
+                  {addons.map((addon) => (
                     <div key={addon.id} className="flex items-center space-x-2">
                       <Checkbox
                         id={addon.id}
@@ -321,7 +382,10 @@ export default function ProductDetail() {
                         onCheckedChange={() => toggleAddon(addon.id)}
                         className="border-brand-olive text-brand-olive data-[state=checked]:bg-brand-olive data-[state=checked]:text-white"
                       />
-                      <Label htmlFor={addon.id} className="text-sm font-medium cursor-pointer text-brand-brown">
+                      <Label
+                        htmlFor={addon.id}
+                        className="text-sm font-medium cursor-pointer text-brand-brown"
+                      >
                         {addon.display_name} (+${addon.price.toFixed(2)})
                       </Label>
                     </div>
@@ -334,7 +398,10 @@ export default function ProductDetail() {
             {requiresFlavors && (
               <div className="mb-8">
                 <h3 className="font-heading font-semibold text-lg text-brand-brown mb-3">
-                  Choose Flavors <span className="text-sm font-normal text-muted-foreground">(Select {flavorLimit})</span>
+                  Choose Flavors{" "}
+                  <span className="text-sm font-normal text-muted-foreground">
+                    (Select {flavorLimit})
+                  </span>
                 </h3>
                 <FlavorSelector
                   selectedFlavors={selectedFlavors}
@@ -345,38 +412,73 @@ export default function ProductDetail() {
             )}
 
             {/* Gift Card Form */}
-            {product.slug === 'egift-card' && (
+            {product.slug === "egift-card" && (
               <div className="mb-8 p-6 bg-brand-kraft/20 rounded-2xl border border-brand-olive/10 space-y-4">
-                <h3 className="font-heading font-semibold text-brand-brown">Recipient Details</h3>
+                <h3 className="font-heading font-semibold text-brand-brown">
+                  Recipient Details
+                </h3>
 
                 <div className="grid gap-4">
                   <div>
-                    <label className="text-sm font-medium text-brand-warm-gray mb-1 block">To (Email) <span className="text-red-500">*</span></label>
+                    <label
+                      htmlFor="gc-recipient-email"
+                      className="text-sm font-medium text-brand-warm-gray mb-1 block"
+                    >
+                      To (Email) <span className="text-red-500">*</span>
+                    </label>
                     <input
+                      id="gc-recipient-email"
                       type="email"
                       className="w-full rounded-lg border-brand-warm-gray/20 px-3 py-2 bg-white"
                       placeholder="recipient@example.com"
                       value={giftCardForm.recipientEmail}
-                      onChange={(e) => setGiftCardForm({ ...giftCardForm, recipientEmail: e.target.value })}
+                      onChange={(e) =>
+                        setGiftCardForm({
+                          ...giftCardForm,
+                          recipientEmail: e.target.value,
+                        })
+                      }
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-brand-warm-gray mb-1 block">To (Name)</label>
+                    <label
+                      htmlFor="gc-recipient-name"
+                      className="text-sm font-medium text-brand-warm-gray mb-1 block"
+                    >
+                      To (Name)
+                    </label>
                     <input
+                      id="gc-recipient-name"
                       type="text"
                       className="w-full rounded-lg border-brand-warm-gray/20 px-3 py-2 bg-white"
                       placeholder="Recipient Name"
                       value={giftCardForm.recipientName}
-                      onChange={(e) => setGiftCardForm({ ...giftCardForm, recipientName: e.target.value })}
+                      onChange={(e) =>
+                        setGiftCardForm({
+                          ...giftCardForm,
+                          recipientName: e.target.value,
+                        })
+                      }
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-brand-warm-gray mb-1 block">Message</label>
+                    <label
+                      htmlFor="gc-message"
+                      className="text-sm font-medium text-brand-warm-gray mb-1 block"
+                    >
+                      Message
+                    </label>
                     <textarea
+                      id="gc-message"
                       className="w-full rounded-lg border-brand-warm-gray/20 px-3 py-2 bg-white h-24 resize-none"
                       placeholder="Add a personal message..."
                       value={giftCardForm.message}
-                      onChange={(e) => setGiftCardForm({ ...giftCardForm, message: e.target.value })}
+                      onChange={(e) =>
+                        setGiftCardForm({
+                          ...giftCardForm,
+                          message: e.target.value,
+                        })
+                      }
                     />
                   </div>
                 </div>
@@ -396,7 +498,9 @@ export default function ProductDetail() {
                 >
                   <Minus className="h-4 w-4" />
                 </Button>
-                <span className="w-12 text-center font-heading font-medium text-brand-brown">{quantity}</span>
+                <span className="w-12 text-center font-heading font-medium text-brand-brown">
+                  {quantity}
+                </span>
                 <Button
                   variant="outline"
                   size="icon"
@@ -411,10 +515,14 @@ export default function ProductDetail() {
             <AddToCartButton
               productId={product.id}
               quantity={quantity}
-              sizeId={!selectedVariantId ? selectedSizeId || undefined : undefined}
+              sizeId={
+                !selectedVariantId ? selectedSizeId || undefined : undefined
+              }
               sizeOverrideId={selectedVariantId || undefined}
-              giftCardData={product.slug === 'egift-card' ? giftCardForm : undefined}
-              selectedFlavorIds={selectedFlavors.map(p => p.id)}
+              giftCardData={
+                product.slug === "egift-card" ? giftCardForm : undefined
+              }
+              selectedFlavorIds={selectedFlavors.map((p) => p.id)}
               addonIds={selectedAddonIds}
               disabled={isAddToCartDisabled()}
               className="w-full md:w-auto mb-8 bg-brand-berry hover:bg-brand-berry/90 shadow-lg"
@@ -424,7 +532,9 @@ export default function ProductDetail() {
             {/* Features */}
             {product.features && product.features.length > 0 && (
               <div className="mb-8">
-                <h3 className="font-heading font-semibold text-lg text-brand-brown mb-3">Benefits</h3>
+                <h3 className="font-heading font-semibold text-lg text-brand-brown mb-3">
+                  Benefits
+                </h3>
                 <ul className="space-y-2">
                   {product.features.map((feature, index) => (
                     <li key={index} className="flex items-start gap-2">
@@ -445,7 +555,9 @@ export default function ProductDetail() {
                   <div className="w-8 h-8 rounded-full bg-brand-olive/10 text-brand-olive flex items-center justify-center">
                     <Leaf className="h-4 w-4" />
                   </div>
-                  <h3 className="font-heading font-semibold text-brand-brown">Ingredients</h3>
+                  <h3 className="font-heading font-semibold text-brand-brown">
+                    Ingredients
+                  </h3>
                 </div>
                 <p className="text-muted-foreground text-sm leading-relaxed">
                   {product.ingredients}
