@@ -843,6 +843,45 @@ export type Database = {
         };
         Relationships: [];
       };
+      square_merchant_tokens: {
+        Row: {
+          id: string;
+          merchant_id: string;
+          access_token: string;
+          refresh_token: string;
+          token_type: string | null;
+          expires_at: string;
+          location_id: string | null;
+          is_active: boolean | null;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          merchant_id: string;
+          access_token: string;
+          refresh_token: string;
+          token_type?: string | null;
+          expires_at: string;
+          location_id?: string | null;
+          is_active?: boolean | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          merchant_id?: string;
+          access_token?: string;
+          refresh_token?: string;
+          token_type?: string | null;
+          expires_at?: string;
+          location_id?: string | null;
+          is_active?: boolean | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
       products: {
         Row: {
           active: boolean | null;

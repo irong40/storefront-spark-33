@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getSquareToken } from "../_shared/get-square-token.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -151,11 +152,11 @@ serve(async (req) => {
       throw new Error("Invalid order amount");
     }
 
-    // Get Square credentials from environment
-    const squareToken = Deno.env.get("SQUARE_ACCESS_TOKEN");
+    // Get Square credentials from DB (with env var fallback)
+    const { token: squareToken } = await getSquareToken(supabase);
 
     if (!squareToken) {
-      console.error("SQUARE_ACCESS_TOKEN not configured");
+      console.error("No Square access token available (DB or env)");
       throw new Error("Server configuration error: Payment service not configured");
     }
 

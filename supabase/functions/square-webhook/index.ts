@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getSquareToken } from "../_shared/get-square-token.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -26,15 +27,16 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const squareAccessToken = Deno.env.get('SQUARE_ACCESS_TOKEN')!;
-    const squareLocationId = Deno.env.get('SQUARE_LOCATION_ID')!;
 
     // Parse the webhook payload
     const payload: SquareWebhookEvent = await req.json();
-    
+
     console.log('Received Square webhook:', payload.type, payload.event_id);
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Get Square credentials from DB (with env var fallback)
+    const { locationId: squareLocationId } = await getSquareToken(supabase);
 
     // Handle different event types
     switch (payload.type) {
