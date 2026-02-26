@@ -1,5 +1,17 @@
 import { useState } from "react";
+import { z } from "zod";
 import { Layout } from "@/components/layout/Layout";
+import { logger } from "@/lib/logger";
+
+// GC-XXXX-XXXX-XXXX  (2 + 4 + 4 + 4 = 14 alphanum chars, 3 dashes = 17 total)
+const giftCardCodeSchema = z.object({
+  code: z
+    .string()
+    .regex(
+      /^GC-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/,
+      "Code must be in the format GC-XXXX-XXXX-XXXX",
+    ),
+});
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -44,7 +56,12 @@ export default function GiftCardBalance() {
 
   const handleCheck = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!code) return;
+
+    const validation = giftCardCodeSchema.safeParse({ code });
+    if (!validation.success) {
+      setError(validation.error.errors[0].message);
+      return;
+    }
 
     setLoading(true);
     setError("");
@@ -68,7 +85,7 @@ export default function GiftCardBalance() {
         setResult(data[0] as GiftCardResult);
       }
     } catch (err) {
-      console.error("Error checking gift card:", err);
+      logger.error("Error checking gift card:", err);
       setError("Failed to check balance. Please try again.");
     } finally {
       setLoading(false);

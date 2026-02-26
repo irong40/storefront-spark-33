@@ -68,7 +68,7 @@ export function useProducts(categorySlug?: string) {
         );
       }
 
-      // Add empty variants array (table doesn't exist yet)
+      // Add empty variants array (variants loaded separately in useProduct())
       const productsWithVariants = filteredData.map((product) => ({
         ...product,
         variants: [] as ProductVariant[],

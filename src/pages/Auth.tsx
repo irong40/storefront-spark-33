@@ -9,15 +9,21 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Leaf } from "lucide-react";
+import { useDocumentTitle } from "@/hooks/use-document-title";
+
+type AuthMode = "login" | "signup" | "forgot-password";
 
 export default function Auth() {
+  useDocumentTitle("Sign In");
   const navigate = useNavigate();
-  const { user, signIn, signUp, isLoading: authLoading } = useAuth();
+  const { user, signIn, signUp, resetPassword, isLoading: authLoading } = useAuth();
   const { data: isAdmin, isLoading: isAdminLoading } = useIsAdmin();
 
+  const [mode, setMode] = useState<AuthMode>("login");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [forgotEmail, setForgotEmail] = useState("");
 
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [signupData, setSignupData] = useState({
@@ -96,6 +102,22 @@ export default function Auth() {
     }
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    setIsLoading(true);
+
+    const { error } = await resetPassword(forgotEmail);
+
+    if (error) {
+      setError(error.message);
+    } else {
+      setSuccess("Check your email for a password reset link.");
+    }
+    setIsLoading(false);
+  };
+
   if (authLoading) {
     return (
       <Layout>
@@ -125,6 +147,53 @@ export default function Auth() {
 
           {/* Auth Forms */}
           <div className="bg-card rounded-2xl border border-border p-6">
+            {mode === "forgot-password" ? (
+              <form onSubmit={handleForgotPassword} className="space-y-4">
+                <h2 className="text-lg font-semibold text-center mb-2">Reset Password</h2>
+                <p className="text-sm text-muted-foreground text-center mb-4">
+                  Enter your email and we'll send you a reset link.
+                </p>
+
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+                {success && (
+                  <Alert>
+                    <AlertDescription>{success}</AlertDescription>
+                  </Alert>
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="forgot-email">Email</Label>
+                  <Input
+                    id="forgot-email"
+                    type="email"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    required
+                    disabled={isLoading}
+                    placeholder="you@example.com"
+                  />
+                </div>
+
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Send Reset Link
+                </Button>
+
+                <button
+                  type="button"
+                  onClick={() => { setMode("login"); setError(""); setSuccess(""); }}
+                  className="w-full text-sm text-primary hover:underline"
+                >
+                  Back to Sign In
+                </button>
+              </form>
+            ) : (
             <Tabs defaultValue="login">
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="login">Sign In</TabsTrigger>
@@ -161,12 +230,13 @@ export default function Auth() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label htmlFor="login-password">Password</Label>
-                      <Link
-                        to="/forgot-password"
+                      <button
+                        type="button"
+                        onClick={() => { setMode("forgot-password"); setError(""); setSuccess(""); }}
                         className="text-sm text-primary hover:underline"
                       >
                         Forgot password?
-                      </Link>
+                      </button>
                     </div>
                     <Input
                       id="login-password"
@@ -292,6 +362,7 @@ export default function Auth() {
                 </form>
               </TabsContent>
             </Tabs>
+            )}
           </div>
 
           {/* Guest Checkout */}

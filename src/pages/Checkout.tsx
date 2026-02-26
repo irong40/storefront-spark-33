@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { z } from "zod";
 import { Layout } from "@/components/layout/Layout";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,6 +19,87 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/lib/logger";
+import { generateOrderNumber } from "@/lib/utils";
+import { useDocumentTitle } from "@/hooks/use-document-title";
+
+// ---------------------------------------------------------------------------
+// Checkout validation schema — conditional on fulfillment_type
+// ---------------------------------------------------------------------------
+const checkoutSchema = z
+  .object({
+    email: z.string().min(1, "Email is required").email("Invalid email address"),
+    customerName: z.string().optional(),
+    phone: z.string().optional(),
+    notes: z.string().optional(),
+    fulfillment_type: z.enum(["pickup", "delivery"]),
+    // delivery fields
+    addressLine1: z.string().optional(),
+    addressLine2: z.string().optional(),
+    city: z.string().optional(),
+    state: z.string().optional(),
+    zip: z.string().optional(),
+    // pickup fields
+    pickupDate: z.string().optional(),
+    pickupTime: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.fulfillment_type === "delivery") {
+      if (!data.addressLine1?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["addressLine1"],
+          message: "Street address is required for delivery",
+        });
+      }
+      if (!data.city?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["city"],
+          message: "City is required for delivery",
+        });
+      }
+      if (!data.state?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["state"],
+          message: "State is required for delivery",
+        });
+      }
+      if (!data.zip?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["zip"],
+          message: "ZIP code is required for delivery",
+        });
+      } else if (!/^\d{5}(-\d{4})?$/.test(data.zip.trim())) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["zip"],
+          message: "ZIP code must be 5 digits (or ZIP+4)",
+        });
+      }
+    }
+
+    if (data.fulfillment_type === "pickup") {
+      if (!data.pickupDate?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["pickupDate"],
+          message: "Pickup date is required",
+        });
+      }
+      if (!data.pickupTime?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["pickupTime"],
+          message: "Pickup time is required",
+        });
+      }
+    }
+  });
+
+type CheckoutFormErrors = Partial<Record<string, string>>;
 import {
   Loader2,
   ShoppingBag,
@@ -49,9 +131,10 @@ interface AppliedGiftCard {
 }
 
 export default function Checkout() {
+  useDocumentTitle("Checkout");
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { items, subtotal, clearCart } = useCart();
+  const { items, subtotal, clearCart, isLoading: cartLoading } = useCart();
   const { user, profile } = useAuth();
   const {
     checkBalance,
@@ -60,11 +143,12 @@ export default function Checkout() {
   } = useGiftCard();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [fulfillmentType, setFulfillmentType] = useState("pickup");
+  const [fulfillmentType, setFulfillmentType] = useState<"pickup" | "delivery">("pickup");
   const [paymentComplete, setPaymentComplete] = useState(false);
   const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(
     null,
   );
+  const [formErrors, setFormErrors] = useState<CheckoutFormErrors>({});
 
   // Gift card state
   const [giftCardCode, setGiftCardCode] = useState("");
@@ -193,8 +277,32 @@ export default function Checkout() {
     });
   };
 
+  const validateForm = (): boolean => {
+    const result = checkoutSchema.safeParse({
+      ...formData,
+      fulfillment_type: fulfillmentType,
+    });
+
+    if (!result.success) {
+      const fieldErrors: CheckoutFormErrors = {};
+      result.error.errors.forEach((err) => {
+        const field = err.path[0] as string;
+        if (field && !fieldErrors[field]) {
+          fieldErrors[field] = err.message;
+        }
+      });
+      setFormErrors(fieldErrors);
+      return false;
+    }
+
+    setFormErrors({});
+    return true;
+  };
+
   const isFormValid = () => {
-    if (!formData.email) return false;
+    // Lightweight synchronous check used to gate the payment UI —
+    // full error messages are surfaced via validateForm() on submission.
+    if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) return false;
     if (fulfillmentType === "pickup") {
       if (!formData.pickupDate || !formData.pickupTime) return false;
     }
@@ -212,6 +320,7 @@ export default function Checkout() {
   };
 
   const handlePaymentSuccess = async (result: PaymentResult) => {
+    if (!validateForm()) return;
     setPaymentResult(result);
     setPaymentComplete(true);
 
@@ -229,11 +338,19 @@ export default function Checkout() {
 
   // Handle zero-dollar orders (fully covered by gift cards)
   const handleZeroPaymentOrder = async () => {
+    if (!validateForm()) return;
     await createOrder({
       paymentId: `GC-${Date.now()}`, // Gift card payment reference
       status: "COMPLETED",
       cardDetails: undefined,
     });
+  };
+
+  // Compute the effective unit price for a cart item, matching CartContext subtotal logic
+  const getItemEffectiveUnitPrice = (item: (typeof items)[number]): number => {
+    const basePrice = item.size_override?.price ?? item.size?.price ?? item.product.price;
+    const addonTotal = item.addons?.reduce((sum, a) => sum + a.price, 0) ?? 0;
+    return basePrice + addonTotal;
   };
 
   const createOrder = async (payment: PaymentResult) => {
@@ -250,7 +367,7 @@ export default function Checkout() {
 
     try {
       // Generate order number (also handled by database trigger as fallback)
-      const orderNumber = `ORD-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+      const orderNumber = generateOrderNumber();
 
       const { data: order, error: orderError } = await supabase
         .from("orders")
@@ -288,25 +405,41 @@ export default function Checkout() {
 
       if (orderError) throw orderError;
 
-      // Create order items
-      const orderItems = items.map((item) => ({
-        order_id: order.id,
-        product_id: item.product_id,
-        product_name: item.product.name,
-        product_price: item.product.price,
-        quantity: item.quantity,
-        total: item.product.price * item.quantity,
-      }));
+      // Create order items with effective prices (respects size overrides + addons)
+      const orderItems = items.map((item) => {
+        const effectivePrice = getItemEffectiveUnitPrice(item);
+        return {
+          order_id: order.id,
+          product_id: item.product_id,
+          product_name: item.product.name,
+          product_price: effectivePrice,
+          quantity: item.quantity,
+          total: effectivePrice * item.quantity,
+        };
+      });
 
-      const { error: itemsError } = await supabase
-        .from("order_items")
-        .insert(orderItems);
-
+      // Insert order items with single retry on failure (Fix 19)
+      let itemsError: Error | null = null;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const { error } = await supabase
+          .from("order_items")
+          .insert(orderItems);
+        if (!error) {
+          itemsError = null;
+          break;
+        }
+        itemsError = error;
+        if (attempt === 0) await new Promise((r) => setTimeout(r, 800));
+      }
       if (itemsError) throw itemsError;
 
-      // Redeem applied gift cards
+      // Redeem applied gift cards (non-fatal — order already created)
       for (const gc of appliedGiftCards) {
-        await redeemGiftCard(gc.code, gc.amountApplied, order.id);
+        try {
+          await redeemGiftCard(gc.code, gc.amountApplied, order.id);
+        } catch (gcErr) {
+          logger.error("Gift card redemption failed (non-fatal):", gcErr);
+        }
       }
 
       // Send order confirmation email (non-blocking)
@@ -335,7 +468,7 @@ export default function Checkout() {
         })
         .then(({ error }) => {
           if (error) {
-            console.error("Failed to send order confirmation email:", error);
+            logger.error("Failed to send order confirmation email:", error);
           }
         });
 
@@ -345,7 +478,7 @@ export default function Checkout() {
       // Navigate to confirmation
       navigate(`/order-confirmation/${order.id}`);
     } catch (error) {
-      console.error("Order creation error:", error);
+      logger.error("Order creation error:", error);
       toast({
         title: "Error",
         description:
@@ -398,10 +531,17 @@ export default function Checkout() {
                     name="email"
                     type="email"
                     value={formData.email}
-                    onChange={handleChange}
+                    onChange={(e) => {
+                      handleChange(e);
+                      if (formErrors.email) setFormErrors((prev) => ({ ...prev, email: undefined }));
+                    }}
                     required
                     disabled={isSubmitting || paymentComplete}
+                    aria-invalid={!!formErrors.email}
                   />
+                  {formErrors.email && (
+                    <p className="text-sm text-destructive">{formErrors.email}</p>
+                  )}
                 </div>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -434,7 +574,7 @@ export default function Checkout() {
               <h2 className="text-xl font-semibold mb-4">Fulfillment</h2>
               <RadioGroup
                 value={fulfillmentType}
-                onValueChange={setFulfillmentType}
+                onValueChange={(v) => setFulfillmentType(v as "pickup" | "delivery")}
                 className="grid sm:grid-cols-2 gap-4"
                 disabled={isSubmitting || paymentComplete}
               >
@@ -491,12 +631,13 @@ export default function Checkout() {
                     <Label htmlFor="pickupDate">Pickup Date *</Label>
                     <Select
                       value={formData.pickupDate}
-                      onValueChange={(value) =>
-                        handleSelectChange("pickupDate", value)
-                      }
+                      onValueChange={(value) => {
+                        handleSelectChange("pickupDate", value);
+                        if (formErrors.pickupDate) setFormErrors((prev) => ({ ...prev, pickupDate: undefined }));
+                      }}
                       disabled={isSubmitting || paymentComplete}
                     >
-                      <SelectTrigger id="pickupDate">
+                      <SelectTrigger id="pickupDate" aria-invalid={!!formErrors.pickupDate}>
                         <SelectValue placeholder="Select a date" />
                       </SelectTrigger>
                       <SelectContent>
@@ -507,19 +648,23 @@ export default function Checkout() {
                         ))}
                       </SelectContent>
                     </Select>
+                    {formErrors.pickupDate && (
+                      <p className="text-sm text-destructive">{formErrors.pickupDate}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="pickupTime">Pickup Time *</Label>
                     <Select
                       value={formData.pickupTime}
-                      onValueChange={(value) =>
-                        handleSelectChange("pickupTime", value)
-                      }
+                      onValueChange={(value) => {
+                        handleSelectChange("pickupTime", value);
+                        if (formErrors.pickupTime) setFormErrors((prev) => ({ ...prev, pickupTime: undefined }));
+                      }}
                       disabled={
                         isSubmitting || paymentComplete || !formData.pickupDate
                       }
                     >
-                      <SelectTrigger id="pickupTime">
+                      <SelectTrigger id="pickupTime" aria-invalid={!!formErrors.pickupTime}>
                         <SelectValue
                           placeholder={
                             formData.pickupDate
@@ -536,6 +681,9 @@ export default function Checkout() {
                         ))}
                       </SelectContent>
                     </Select>
+                    {formErrors.pickupTime && (
+                      <p className="text-sm text-destructive">{formErrors.pickupTime}</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -567,11 +715,18 @@ export default function Checkout() {
                       id="addressLine1"
                       name="addressLine1"
                       value={formData.addressLine1}
-                      onChange={handleChange}
+                      onChange={(e) => {
+                        handleChange(e);
+                        if (formErrors.addressLine1) setFormErrors((prev) => ({ ...prev, addressLine1: undefined }));
+                      }}
                       required
                       disabled={isSubmitting || paymentComplete}
                       placeholder="Street address"
+                      aria-invalid={!!formErrors.addressLine1}
                     />
+                    {formErrors.addressLine1 && (
+                      <p className="text-sm text-destructive">{formErrors.addressLine1}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="addressLine2">Apt, Suite, etc.</Label>
@@ -590,10 +745,17 @@ export default function Checkout() {
                         id="city"
                         name="city"
                         value={formData.city}
-                        onChange={handleChange}
+                        onChange={(e) => {
+                          handleChange(e);
+                          if (formErrors.city) setFormErrors((prev) => ({ ...prev, city: undefined }));
+                        }}
                         required
                         disabled={isSubmitting || paymentComplete}
+                        aria-invalid={!!formErrors.city}
                       />
+                      {formErrors.city && (
+                        <p className="text-sm text-destructive">{formErrors.city}</p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="state">State *</Label>
@@ -601,10 +763,17 @@ export default function Checkout() {
                         id="state"
                         name="state"
                         value={formData.state}
-                        onChange={handleChange}
+                        onChange={(e) => {
+                          handleChange(e);
+                          if (formErrors.state) setFormErrors((prev) => ({ ...prev, state: undefined }));
+                        }}
                         required
                         disabled={isSubmitting || paymentComplete}
+                        aria-invalid={!!formErrors.state}
                       />
+                      {formErrors.state && (
+                        <p className="text-sm text-destructive">{formErrors.state}</p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="zip">ZIP *</Label>
@@ -612,10 +781,17 @@ export default function Checkout() {
                         id="zip"
                         name="zip"
                         value={formData.zip}
-                        onChange={handleChange}
+                        onChange={(e) => {
+                          handleChange(e);
+                          if (formErrors.zip) setFormErrors((prev) => ({ ...prev, zip: undefined }));
+                        }}
                         required
                         disabled={isSubmitting || paymentComplete}
+                        aria-invalid={!!formErrors.zip}
                       />
+                      {formErrors.zip && (
+                        <p className="text-sm text-destructive">{formErrors.zip}</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -694,7 +870,7 @@ export default function Checkout() {
                   </div>
                   <Button
                     onClick={handleZeroPaymentOrder}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || cartLoading}
                     className="w-full bg-brand-berry hover:bg-brand-berry/90"
                   >
                     {isSubmitting ? (
@@ -713,7 +889,7 @@ export default function Checkout() {
                   sessionId={localStorage.getItem("cart_session_id") || ""}
                   onSuccess={handlePaymentSuccess}
                   onError={handlePaymentError}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || cartLoading}
                 />
               )}
             </div>
@@ -747,7 +923,7 @@ export default function Checkout() {
                       </p>
                     </div>
                     <p className="font-medium">
-                      ${(item.product.price * item.quantity).toFixed(2)}
+                      ${(getItemEffectiveUnitPrice(item) * item.quantity).toFixed(2)}
                     </p>
                   </div>
                 ))}
@@ -805,6 +981,7 @@ export default function Checkout() {
                 {/* Applied Gift Cards */}
                 {appliedGiftCards.length > 0 && (
                   <div className="mt-3 space-y-2">
+                    <p className="text-xs text-muted-foreground">Balance confirmed at submission</p>
                     {appliedGiftCards.map((gc) => (
                       <div
                         key={gc.code}
@@ -843,7 +1020,7 @@ export default function Checkout() {
                   <span>${subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Tax (8%)</span>
+                  <span className="text-muted-foreground">Tax ({(CHECKOUT_CONFIG.TAX_RATE * 100).toFixed(0)}%)</span>
                   <span>${tax.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">

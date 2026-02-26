@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout/Layout";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { MapPin, Clock } from "lucide-react";
@@ -53,6 +54,7 @@ const values = [
 ];
 
 export default function About() {
+  useDocumentTitle("About");
   const { data: business } = useBusinessSettings();
   return (
     <Layout>

@@ -11,11 +11,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { ChevronLeft, Minus, Plus, Check, Leaf } from "lucide-react";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
   const { data: product, isLoading, error } = useProduct(slug || "");
   const { data: addons } = useAddons();
+  useDocumentTitle(product?.name);
 
   // Use effective sizes (product overrides or global sizes)
   const { sizes: globalSizes, isLoading: sizesLoading } =

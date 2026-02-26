@@ -24,16 +24,37 @@ const businessSettingsSchema = z.object({
   description: z.string().max(1000).nullable(),
   email: z
     .string()
-    .email("Invalid email")
+    .email("Invalid email address")
     .max(255)
     .nullable()
     .or(z.literal("")),
-  phone: z.string().max(20).nullable(),
+  phone: z
+    .string()
+    .max(20)
+    .nullable()
+    .refine(
+      (v) => !v || /^[\d\s().+\-]{7,20}$/.test(v),
+      { message: "Invalid phone number format" },
+    ),
   address_line1: z.string().max(200).nullable(),
   address_line2: z.string().max(200).nullable(),
   city: z.string().max(100).nullable(),
-  state: z.string().max(50).nullable(),
-  zip: z.string().max(20).nullable(),
+  state: z
+    .string()
+    .max(50)
+    .nullable()
+    .refine(
+      (v) => !v || /^[A-Za-z\s]{2,50}$/.test(v),
+      { message: "Invalid state" },
+    ),
+  zip: z
+    .string()
+    .max(20)
+    .nullable()
+    .refine(
+      (v) => !v || /^\d{5}(-\d{4})?$/.test(v),
+      { message: "ZIP code must be 5 digits (or ZIP+4 format)" },
+    ),
 });
 
 const DAYS = [
@@ -196,7 +217,7 @@ export function BusinessSettingsForm() {
           social_links: socialLinks,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", business?.id);
+        .eq("id", business?.id ?? "");
 
       if (error) throw error;
 
@@ -309,6 +330,9 @@ export function BusinessSettingsForm() {
                 onChange={handleChange}
                 placeholder="(555) 123-4567"
               />
+              {errors.phone && (
+                <p className="text-sm text-destructive">{errors.phone}</p>
+              )}
             </div>
           </div>
         </CardContent>
@@ -362,6 +386,9 @@ export function BusinessSettingsForm() {
                 value={formData.state}
                 onChange={handleChange}
               />
+              {errors.state && (
+                <p className="text-sm text-destructive">{errors.state}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="zip">ZIP Code</Label>
@@ -371,6 +398,9 @@ export function BusinessSettingsForm() {
                 value={formData.zip}
                 onChange={handleChange}
               />
+              {errors.zip && (
+                <p className="text-sm text-destructive">{errors.zip}</p>
+              )}
             </div>
           </div>
         </CardContent>

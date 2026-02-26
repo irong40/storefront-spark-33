@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { logger } from "@/lib/logger";
 
 export function useIsAdmin() {
   const { user } = useAuth();
@@ -16,7 +17,7 @@ export function useIsAdmin() {
       });
 
       if (error) {
-        console.error("Error checking admin role:", error);
+        logger.error("Error checking admin role:", error);
         return false;
       }
 

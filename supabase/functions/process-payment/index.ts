@@ -131,7 +131,7 @@ serve(async (req) => {
       subtotal += itemPrice * item.quantity;
     }
 
-    // Apply tax rate (8% as defined in checkout config)
+    // Tax rate — keep in sync with frontend CHECKOUT_CONFIG.TAX_RATE (src/config/checkout.ts)
     const TAX_RATE = 0.08;
     const tax = subtotal * TAX_RATE;
     const total = subtotal + tax;

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 
 export interface LoyaltyMember {
   id: string;
@@ -68,7 +69,7 @@ export function useLoyaltyMember() {
         .maybeSingle();
 
       if (error) {
-        console.error("Error fetching loyalty member:", error);
+        logger.error("Error fetching loyalty member:", error);
         return null;
       }
 
@@ -95,7 +96,7 @@ export function useLoyaltyTransactions(limit = 10) {
         .limit(limit);
 
       if (error) {
-        console.error("Error fetching loyalty transactions:", error);
+        logger.error("Error fetching loyalty transactions:", error);
         return [];
       }
 
@@ -116,7 +117,7 @@ export function useLoyaltyRewards() {
         .order("sort_order", { ascending: true });
 
       if (error) {
-        console.error("Error fetching loyalty rewards:", error);
+        logger.error("Error fetching loyalty rewards:", error);
         return [];
       }
 
@@ -146,7 +147,7 @@ export function useLoyaltyRedemptions() {
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("Error fetching loyalty redemptions:", error);
+        logger.error("Error fetching loyalty redemptions:", error);
         return [];
       }
 
@@ -196,7 +197,7 @@ export function useRedeemReward() {
         .single();
 
       if (redemptionError) {
-        console.error("Redemption error:", redemptionError);
+        logger.error("Redemption error:", redemptionError);
         throw new Error("Failed to redeem reward");
       }
 
@@ -208,7 +209,7 @@ export function useRedeemReward() {
         .eq("id", member.id);
 
       if (updateError) {
-        console.error("Update error:", updateError);
+        logger.error("Update error:", updateError);
         // Try to rollback the redemption
         await supabase
           .from("loyalty_redemptions")
@@ -272,7 +273,7 @@ export function useJoinLoyalty() {
         .single();
 
       if (error) {
-        console.error("Join loyalty error:", error);
+        logger.error("Join loyalty error:", error);
         throw new Error("Failed to join loyalty program");
       }
 

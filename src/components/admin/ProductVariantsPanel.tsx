@@ -1,6 +1,41 @@
 import { useState } from "react";
+import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+
+// ---------------------------------------------------------------------------
+// Validation schemas for the three variant forms
+// ---------------------------------------------------------------------------
+const sizeFormSchema = z.object({
+  name: z.string().min(1, "Size name is required"),
+  size_oz: z
+    .number()
+    .positive("Size must be a positive number")
+    .nullable()
+    .refine((v) => v === null || v > 0, {
+      message: "Size (oz) must be a positive number",
+    }),
+  price: z.number().positive("Price must be a positive number"),
+});
+
+const addonFormSchema = z.object({
+  name: z.string().min(1, "Internal name is required"),
+  display_name: z.string().min(1, "Display name is required"),
+  price: z.number().nonnegative("Price must be 0 or greater"),
+});
+
+const overrideFormSchema = z.object({
+  product_id: z.string().min(1, "Product is required"),
+  size_name: z.string().min(1, "Size name is required"),
+  size_oz: z
+    .number()
+    .positive("Size must be a positive number")
+    .nullable()
+    .refine((v) => v === null || v > 0, {
+      message: "Size (oz) must be a positive number",
+    }),
+  price: z.number().positive("Price must be a positive number"),
+});
 import {
   useProductSizes,
   useProductAddons,
@@ -109,6 +144,7 @@ export function ProductVariantsPanel() {
     active: true,
   });
   const [savingSize, setSavingSize] = useState(false);
+  const [sizeErrors, setSizeErrors] = useState<Record<string, string>>({});
 
   // Addon state
   const [addonDialogOpen, setAddonDialogOpen] = useState(false);
@@ -121,6 +157,7 @@ export function ProductVariantsPanel() {
     active: true,
   });
   const [savingAddon, setSavingAddon] = useState(false);
+  const [addonErrors, setAddonErrors] = useState<Record<string, string>>({});
 
   // Override state
   const [overrideDialogOpen, setOverrideDialogOpen] = useState(false);
@@ -139,6 +176,7 @@ export function ProductVariantsPanel() {
     active: true,
   });
   const [savingOverride, setSavingOverride] = useState(false);
+  const [overrideErrors, setOverrideErrors] = useState<Record<string, string>>({});
 
   // Load overrides
   const loadOverrides = async () => {
@@ -156,6 +194,7 @@ export function ProductVariantsPanel() {
 
   // Size handlers
   const openSizeDialog = (size?: ProductSize) => {
+    setSizeErrors({});
     if (size) {
       setEditingSize(size);
       setSizeForm({
@@ -179,6 +218,23 @@ export function ProductVariantsPanel() {
   };
 
   const saveSize = async () => {
+    const validation = sizeFormSchema.safeParse({
+      name: sizeForm.name,
+      size_oz: sizeForm.size_oz,
+      price: sizeForm.price,
+    });
+
+    if (!validation.success) {
+      const fieldErrors: Record<string, string> = {};
+      validation.error.errors.forEach((err) => {
+        const field = err.path[0] as string;
+        if (field && !fieldErrors[field]) fieldErrors[field] = err.message;
+      });
+      setSizeErrors(fieldErrors);
+      return;
+    }
+
+    setSizeErrors({});
     setSavingSize(true);
     try {
       if (editingSize) {
@@ -222,6 +278,7 @@ export function ProductVariantsPanel() {
 
   // Addon handlers
   const openAddonDialog = (addon?: ProductAddon) => {
+    setAddonErrors({});
     if (addon) {
       setEditingAddon(addon);
       setAddonForm({
@@ -245,6 +302,23 @@ export function ProductVariantsPanel() {
   };
 
   const saveAddon = async () => {
+    const validation = addonFormSchema.safeParse({
+      name: addonForm.name,
+      display_name: addonForm.display_name,
+      price: addonForm.price,
+    });
+
+    if (!validation.success) {
+      const fieldErrors: Record<string, string> = {};
+      validation.error.errors.forEach((err) => {
+        const field = err.path[0] as string;
+        if (field && !fieldErrors[field]) fieldErrors[field] = err.message;
+      });
+      setAddonErrors(fieldErrors);
+      return;
+    }
+
+    setAddonErrors({});
     setSavingAddon(true);
     try {
       if (editingAddon) {
@@ -290,6 +364,7 @@ export function ProductVariantsPanel() {
 
   // Override handlers
   const openOverrideDialog = (override?: ProductSizeOverride) => {
+    setOverrideErrors({});
     if (override) {
       setEditingOverride(override);
       setOverrideForm({
@@ -319,6 +394,24 @@ export function ProductVariantsPanel() {
   };
 
   const saveOverride = async () => {
+    const validation = overrideFormSchema.safeParse({
+      product_id: overrideForm.product_id,
+      size_name: overrideForm.size_name,
+      size_oz: overrideForm.size_oz,
+      price: overrideForm.price,
+    });
+
+    if (!validation.success) {
+      const fieldErrors: Record<string, string> = {};
+      validation.error.errors.forEach((err) => {
+        const field = err.path[0] as string;
+        if (field && !fieldErrors[field]) fieldErrors[field] = err.message;
+      });
+      setOverrideErrors(fieldErrors);
+      return;
+    }
+
+    setOverrideErrors({});
     setSavingOverride(true);
     try {
       if (editingOverride) {
@@ -633,11 +726,16 @@ export function ProductVariantsPanel() {
               <Input
                 id="size-name"
                 value={sizeForm.name}
-                onChange={(e) =>
-                  setSizeForm({ ...sizeForm, name: e.target.value })
-                }
+                onChange={(e) => {
+                  setSizeForm({ ...sizeForm, name: e.target.value });
+                  if (sizeErrors.name) setSizeErrors((prev) => ({ ...prev, name: "" }));
+                }}
                 placeholder="e.g., Small, Medium, Large"
+                aria-invalid={!!sizeErrors.name}
               />
+              {sizeErrors.name && (
+                <p className="text-sm text-destructive mt-1">{sizeErrors.name}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="size-oz">Size (oz)</Label>
@@ -645,14 +743,19 @@ export function ProductVariantsPanel() {
                 id="size-oz"
                 type="number"
                 value={sizeForm.size_oz || ""}
-                onChange={(e) =>
+                onChange={(e) => {
                   setSizeForm({
                     ...sizeForm,
                     size_oz: e.target.value ? Number(e.target.value) : null,
-                  })
-                }
+                  });
+                  if (sizeErrors.size_oz) setSizeErrors((prev) => ({ ...prev, size_oz: "" }));
+                }}
                 placeholder="e.g., 16"
+                aria-invalid={!!sizeErrors.size_oz}
               />
+              {sizeErrors.size_oz && (
+                <p className="text-sm text-destructive mt-1">{sizeErrors.size_oz}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="size-price">Price</Label>
@@ -661,10 +764,15 @@ export function ProductVariantsPanel() {
                 type="number"
                 step="0.01"
                 value={sizeForm.price}
-                onChange={(e) =>
-                  setSizeForm({ ...sizeForm, price: Number(e.target.value) })
-                }
+                onChange={(e) => {
+                  setSizeForm({ ...sizeForm, price: Number(e.target.value) });
+                  if (sizeErrors.price) setSizeErrors((prev) => ({ ...prev, price: "" }));
+                }}
+                aria-invalid={!!sizeErrors.price}
               />
+              {sizeErrors.price && (
+                <p className="text-sm text-destructive mt-1">{sizeErrors.price}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="size-order">Sort Order</Label>
@@ -712,22 +820,32 @@ export function ProductVariantsPanel() {
               <Input
                 id="addon-name"
                 value={addonForm.name}
-                onChange={(e) =>
-                  setAddonForm({ ...addonForm, name: e.target.value })
-                }
+                onChange={(e) => {
+                  setAddonForm({ ...addonForm, name: e.target.value });
+                  if (addonErrors.name) setAddonErrors((prev) => ({ ...prev, name: "" }));
+                }}
                 placeholder="e.g., extra_ginger"
+                aria-invalid={!!addonErrors.name}
               />
+              {addonErrors.name && (
+                <p className="text-sm text-destructive mt-1">{addonErrors.name}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="addon-display">Display Name</Label>
               <Input
                 id="addon-display"
                 value={addonForm.display_name}
-                onChange={(e) =>
-                  setAddonForm({ ...addonForm, display_name: e.target.value })
-                }
+                onChange={(e) => {
+                  setAddonForm({ ...addonForm, display_name: e.target.value });
+                  if (addonErrors.display_name) setAddonErrors((prev) => ({ ...prev, display_name: "" }));
+                }}
                 placeholder="e.g., Extra Ginger"
+                aria-invalid={!!addonErrors.display_name}
               />
+              {addonErrors.display_name && (
+                <p className="text-sm text-destructive mt-1">{addonErrors.display_name}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="addon-price">Price</Label>
@@ -736,10 +854,15 @@ export function ProductVariantsPanel() {
                 type="number"
                 step="0.01"
                 value={addonForm.price}
-                onChange={(e) =>
-                  setAddonForm({ ...addonForm, price: Number(e.target.value) })
-                }
+                onChange={(e) => {
+                  setAddonForm({ ...addonForm, price: Number(e.target.value) });
+                  if (addonErrors.price) setAddonErrors((prev) => ({ ...prev, price: "" }));
+                }}
+                aria-invalid={!!addonErrors.price}
               />
+              {addonErrors.price && (
+                <p className="text-sm text-destructive mt-1">{addonErrors.price}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="addon-order">Sort Order</Label>
@@ -790,9 +913,10 @@ export function ProductVariantsPanel() {
               <Label htmlFor="override-product">Product</Label>
               <Select
                 value={overrideForm.product_id}
-                onValueChange={(value) =>
-                  setOverrideForm({ ...overrideForm, product_id: value })
-                }
+                onValueChange={(value) => {
+                  setOverrideForm({ ...overrideForm, product_id: value });
+                  if (overrideErrors.product_id) setOverrideErrors((prev) => ({ ...prev, product_id: "" }));
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a product" />
@@ -805,20 +929,25 @@ export function ProductVariantsPanel() {
                   ))}
                 </SelectContent>
               </Select>
+              {overrideErrors.product_id && (
+                <p className="text-sm text-destructive mt-1">{overrideErrors.product_id}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="override-size-name">Size Name</Label>
               <Input
                 id="override-size-name"
                 value={overrideForm.size_name}
-                onChange={(e) =>
-                  setOverrideForm({
-                    ...overrideForm,
-                    size_name: e.target.value,
-                  })
-                }
+                onChange={(e) => {
+                  setOverrideForm({ ...overrideForm, size_name: e.target.value });
+                  if (overrideErrors.size_name) setOverrideErrors((prev) => ({ ...prev, size_name: "" }));
+                }}
                 placeholder="e.g., Weekly Pack, Monthly Subscription"
+                aria-invalid={!!overrideErrors.size_name}
               />
+              {overrideErrors.size_name && (
+                <p className="text-sm text-destructive mt-1">{overrideErrors.size_name}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="override-oz">Size (oz)</Label>
@@ -826,13 +955,18 @@ export function ProductVariantsPanel() {
                 id="override-oz"
                 type="number"
                 value={overrideForm.size_oz || ""}
-                onChange={(e) =>
+                onChange={(e) => {
                   setOverrideForm({
                     ...overrideForm,
                     size_oz: e.target.value ? Number(e.target.value) : null,
-                  })
-                }
+                  });
+                  if (overrideErrors.size_oz) setOverrideErrors((prev) => ({ ...prev, size_oz: "" }));
+                }}
+                aria-invalid={!!overrideErrors.size_oz}
               />
+              {overrideErrors.size_oz && (
+                <p className="text-sm text-destructive mt-1">{overrideErrors.size_oz}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="override-price">Price</Label>
@@ -841,13 +975,15 @@ export function ProductVariantsPanel() {
                 type="number"
                 step="0.01"
                 value={overrideForm.price}
-                onChange={(e) =>
-                  setOverrideForm({
-                    ...overrideForm,
-                    price: Number(e.target.value),
-                  })
-                }
+                onChange={(e) => {
+                  setOverrideForm({ ...overrideForm, price: Number(e.target.value) });
+                  if (overrideErrors.price) setOverrideErrors((prev) => ({ ...prev, price: "" }));
+                }}
+                aria-invalid={!!overrideErrors.price}
               />
+              {overrideErrors.price && (
+                <p className="text-sm text-destructive mt-1">{overrideErrors.price}</p>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <Switch

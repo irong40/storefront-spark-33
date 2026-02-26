@@ -8,7 +8,7 @@ interface CartItemProps {
 }
 
 export function CartItem({ item }: CartItemProps) {
-  const { updateQuantity, removeItem } = useCart();
+  const { updateQuantity, removeItem, isMutating } = useCart();
   const {
     product,
     quantity,
@@ -113,6 +113,7 @@ export function CartItem({ item }: CartItemProps) {
             size="icon"
             className="h-8 w-8"
             onClick={() => updateQuantity(item.id, quantity - 1)}
+            disabled={isMutating}
           >
             <Minus className="h-4 w-4" />
           </Button>
@@ -122,6 +123,7 @@ export function CartItem({ item }: CartItemProps) {
             size="icon"
             className="h-8 w-8"
             onClick={() => updateQuantity(item.id, quantity + 1)}
+            disabled={isMutating}
           >
             <Plus className="h-4 w-4" />
           </Button>
@@ -130,6 +132,7 @@ export function CartItem({ item }: CartItemProps) {
             size="icon"
             className="h-8 w-8 text-destructive hover:text-destructive"
             onClick={() => removeItem(item.id)}
+            disabled={isMutating}
           >
             <Trash2 className="h-4 w-4" />
           </Button>

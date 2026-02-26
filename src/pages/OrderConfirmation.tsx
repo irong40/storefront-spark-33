@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle, Package, Mail, ArrowRight } from "lucide-react";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 
 interface OrderItem {
   id: string;
@@ -20,20 +21,21 @@ interface Order {
   order_number: string;
   email: string;
   customer_name: string | null;
-  status: string;
-  subtotal: number;
-  tax: number;
-  shipping: number;
-  total: number;
-  fulfillment_type: string;
+  status: string | null;
+  subtotal: number | null;
+  tax: number | null;
+  shipping: number | null;
+  total: number | null;
+  fulfillment_type: string | null;
   pickup_date: string | null;
   pickup_time: string | null;
-  created_at: string;
+  created_at: string | null;
   payment_id: string | null;
   payment_status: string | null;
 }
 
 export default function OrderConfirmation() {
+  useDocumentTitle("Order Confirmation");
   const { id } = useParams<{ id: string }>();
   const [order, setOrder] = useState<Order | null>(null);
   const [items, setItems] = useState<OrderItem[]>([]);

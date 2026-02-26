@@ -2,12 +2,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { logger } from "@/lib/logger";
 
 export interface UserWithRole {
   id: string;
   email: string;
   full_name: string | null;
-  created_at: string;
+  created_at: string | null;
   roles: string[];
 }
 
@@ -22,7 +23,7 @@ export function useUsers() {
         .order("created_at", { ascending: false });
 
       if (profilesError) {
-        console.error("Error fetching profiles:", profilesError);
+        logger.error("Error fetching profiles:", profilesError);
         return [];
       }
 
@@ -32,7 +33,7 @@ export function useUsers() {
         .select("user_id, role");
 
       if (rolesError) {
-        console.error("Error fetching roles:", rolesError);
+        logger.error("Error fetching roles:", rolesError);
         return [];
       }
 
@@ -72,7 +73,7 @@ export function useCreateUser() {
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     },
     onError: (error: Error) => {
-      console.error("Error creating user:", error);
+      logger.error("Error creating user:", error);
       toast({
         title: "Failed to create user",
         description: error.message,
@@ -105,7 +106,7 @@ export function useAssignRole() {
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     },
     onError: (error: Error) => {
-      console.error("Error assigning role:", error);
+      logger.error("Error assigning role:", error);
       toast({
         title: "Failed to assign role",
         description: error.message,
@@ -146,7 +147,7 @@ export function useRemoveRole() {
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     },
     onError: (error: Error) => {
-      console.error("Error removing role:", error);
+      logger.error("Error removing role:", error);
       toast({
         title: "Failed to remove role",
         description: error.message,
@@ -176,7 +177,7 @@ export function useResetUserPassword() {
       toast({ title: "Password reset email sent", description: data.message });
     },
     onError: (error: Error) => {
-      console.error("Error resetting password:", error);
+      logger.error("Error resetting password:", error);
       toast({
         title: "Failed to send password reset",
         description: error.message,

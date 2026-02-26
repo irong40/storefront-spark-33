@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { logger } from "@/lib/logger";
 
 interface SyncResult {
   categories: { created: number; updated: number; removed: number };
@@ -19,6 +21,7 @@ export function useSquareSync() {
   const [lastCatalogSync, setLastCatalogSync] = useState<Date | null>(null);
   const [lastInventorySync, setLastInventorySync] = useState<Date | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const syncCatalog = async (): Promise<SyncResult | null> => {
     setIsSyncingCatalog(true);
@@ -39,6 +42,8 @@ export function useSquareSync() {
 
       const result = response.data.result as SyncResult;
       setLastCatalogSync(new Date());
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
 
       toast({
         title: "Catalog Synced",
@@ -46,7 +51,7 @@ export function useSquareSync() {
       });
 
       if (result.errors.length > 0) {
-        console.warn("Sync errors:", result.errors);
+        logger.warn("Sync errors:", result.errors);
         toast({
           title: "Sync Warnings",
           description: `${result.errors.length} items had issues. Check console for details.`,
@@ -56,7 +61,7 @@ export function useSquareSync() {
 
       return result;
     } catch (error) {
-      console.error("Catalog sync error:", error);
+      logger.error("Catalog sync error:", error);
       toast({
         title: "Sync Failed",
         description:
@@ -98,12 +103,12 @@ export function useSquareSync() {
       });
 
       if (result.errors && result.errors.length > 0) {
-        console.warn("Inventory sync errors:", result.errors);
+        logger.warn("Inventory sync errors:", result.errors);
       }
 
       return result;
     } catch (error) {
-      console.error("Inventory sync error:", error);
+      logger.error("Inventory sync error:", error);
       toast({
         title: "Sync Failed",
         description:

@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,7 +19,73 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Upload, Wand2 } from "lucide-react";
 import type { Product } from "@/hooks/use-products";
+import { logger } from "@/lib/logger";
 
+// ---------------------------------------------------------------------------
+// Validation schema
+// ---------------------------------------------------------------------------
+const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+const productFormSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Product name is required")
+    .max(255, "Name must be 255 characters or less"),
+  slug: z
+    .string()
+    .min(1, "Slug is required")
+    .max(255, "Slug must be 255 characters or less")
+    .regex(
+      slugRegex,
+      "Slug must be lowercase letters, numbers, and hyphens only (no leading/trailing hyphens)",
+    ),
+  short_description: z
+    .string()
+    .max(500, "Short description must be 500 characters or less")
+    .optional()
+    .or(z.literal("")),
+  description: z.string().optional().or(z.literal("")),
+  category_id: z.string().optional().or(z.literal("")),
+  price: z
+    .string()
+    .min(1, "Price is required")
+    .refine((v) => !isNaN(parseFloat(v)) && parseFloat(v) > 0, {
+      message: "Price must be a positive number",
+    }),
+  compare_at_price: z
+    .string()
+    .optional()
+    .refine(
+      (v) => !v || (!isNaN(parseFloat(v)) && parseFloat(v) > 0),
+      { message: "Compare-at price must be a positive number" },
+    ),
+  ingredients: z.string().optional().or(z.literal("")),
+  features: z.string().optional().or(z.literal("")),
+  image_url: z
+    .string()
+    .optional()
+    .refine(
+      (v) => {
+        if (!v) return true;
+        try {
+          new URL(v);
+          return true;
+        } catch {
+          return false;
+        }
+      },
+      { message: "Image URL must be a valid URL" },
+    ),
+  is_featured: z.boolean(),
+  is_available: z.boolean(),
+  active: z.boolean(),
+});
+
+type ProductFormValues = z.infer<typeof productFormSchema>;
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 interface ProductFormProps {
   product?: Product | null;
   onSuccess: () => void;
@@ -34,21 +103,38 @@ export function ProductForm({
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
-  const [formData, setFormData] = useState({
-    name: product?.name || "",
-    slug: product?.slug || "",
-    short_description: product?.short_description || "",
-    description: product?.description || "",
-    category_id: product?.category_id || "",
-    price: product?.price?.toString() || "",
-    compare_at_price: product?.compare_at_price?.toString() || "",
-    ingredients: product?.ingredients || "",
-    features: product?.features?.join(", ") || "",
-    is_featured: product?.is_featured || false,
-    is_available: product?.is_available ?? true,
-    active: product?.active ?? true,
-    image_url: product?.image_url || "",
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<ProductFormValues>({
+    resolver: zodResolver(productFormSchema),
+    defaultValues: {
+      name: product?.name || "",
+      slug: product?.slug || "",
+      short_description: product?.short_description || "",
+      description: product?.description || "",
+      category_id: product?.category_id || "",
+      price: product?.price?.toString() || "",
+      compare_at_price: product?.compare_at_price?.toString() || "",
+      ingredients: product?.ingredients || "",
+      features: product?.features?.join(", ") || "",
+      is_featured: product?.is_featured || false,
+      is_available: product?.is_available ?? true,
+      active: product?.active ?? true,
+      image_url: product?.image_url || "",
+    },
   });
+
+  const watchedName = watch("name");
+  const watchedSlug = watch("slug");
+  const watchedImageUrl = watch("image_url");
+  const watchedIsFeatured = watch("is_featured");
+  const watchedIsAvailable = watch("is_available");
+  const watchedActive = watch("active");
 
   const generateSlug = (name: string) => {
     return name
@@ -58,20 +144,42 @@ export function ProductForm({
   };
 
   const handleNameChange = (name: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      name,
-      slug: !product ? generateSlug(name) : prev.slug,
-    }));
+    setValue("name", name, { shouldValidate: true });
+    if (!product) {
+      setValue("slug", generateSlug(name), { shouldValidate: true });
+    }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const MAX_FILE_SIZE = 5 * 1024 * 1024;
+    const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a JPEG, PNG, WebP, or GIF image.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      toast({
+        title: "File too large",
+        description: "Image must be under 5MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsUploadingImage(true);
     try {
-      const fileName = `${formData.slug || "product"}-${Date.now()}.${file.name.split(".").pop()}`;
+      const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+      const safeSlug = (watchedSlug || "product").replace(/[^a-z0-9-]/g, "");
+      const fileName = `${safeSlug}-${Date.now()}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from("product-images")
@@ -83,10 +191,10 @@ export function ProductForm({
         .from("product-images")
         .getPublicUrl(fileName);
 
-      setFormData((prev) => ({ ...prev, image_url: urlData.publicUrl }));
+      setValue("image_url", urlData.publicUrl, { shouldValidate: true });
       toast({ title: "Image uploaded successfully" });
     } catch (error) {
-      console.error("Upload error:", error);
+      logger.error("Upload error:", error);
       toast({ title: "Failed to upload image", variant: "destructive" });
     } finally {
       setIsUploadingImage(false);
@@ -94,7 +202,7 @@ export function ProductForm({
   };
 
   const handleGenerateImage = async () => {
-    if (!formData.name || !formData.slug) {
+    if (!watchedName || !watchedSlug) {
       toast({
         title: "Please enter product name first",
         variant: "destructive",
@@ -104,14 +212,15 @@ export function ProductForm({
 
     setIsGeneratingImage(true);
     try {
+      const shortDesc = watch("short_description");
+      const desc = watch("description");
       const { data, error } = await supabase.functions.invoke(
         "generate-product-image",
         {
           body: {
-            productName: formData.name,
-            productDescription:
-              formData.short_description || formData.description,
-            productSlug: formData.slug,
+            productName: watchedName,
+            productDescription: shortDesc || desc,
+            productSlug: watchedSlug,
           },
         },
       );
@@ -119,40 +228,39 @@ export function ProductForm({
       if (error) throw error;
 
       if (data?.imageUrl) {
-        setFormData((prev) => ({ ...prev, image_url: data.imageUrl }));
+        setValue("image_url", data.imageUrl, { shouldValidate: true });
         toast({ title: "Image generated successfully!" });
       }
     } catch (error) {
-      console.error("Generate error:", error);
+      logger.error("Generate error:", error);
       toast({ title: "Failed to generate image", variant: "destructive" });
     } finally {
       setIsGeneratingImage(false);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (values: ProductFormValues) => {
     setIsSubmitting(true);
 
     try {
       const productData = {
-        name: formData.name,
-        slug: formData.slug,
-        short_description: formData.short_description || null,
-        description: formData.description || null,
-        category_id: formData.category_id || null,
-        price: parseFloat(formData.price),
-        compare_at_price: formData.compare_at_price
-          ? parseFloat(formData.compare_at_price)
+        name: values.name,
+        slug: values.slug,
+        short_description: values.short_description || null,
+        description: values.description || null,
+        category_id: values.category_id || null,
+        price: parseFloat(values.price),
+        compare_at_price: values.compare_at_price
+          ? parseFloat(values.compare_at_price)
           : null,
-        ingredients: formData.ingredients || null,
-        features: formData.features
-          ? formData.features.split(",").map((f) => f.trim())
+        ingredients: values.ingredients || null,
+        features: values.features
+          ? values.features.split(",").map((f) => f.trim())
           : null,
-        is_featured: formData.is_featured,
-        is_available: formData.is_available,
-        active: formData.active,
-        image_url: formData.image_url || null,
+        is_featured: values.is_featured,
+        is_available: values.is_available,
+        active: values.active,
+        image_url: values.image_url || null,
       };
 
       if (product) {
@@ -170,7 +278,7 @@ export function ProductForm({
 
       onSuccess();
     } catch (error) {
-      console.error("Submit error:", error);
+      logger.error("Submit error:", error);
       toast({ title: "Failed to save product", variant: "destructive" });
     } finally {
       setIsSubmitting(false);
@@ -178,28 +286,31 @@ export function ProductForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="name">Product Name *</Label>
           <Input
             id="name"
-            value={formData.name}
+            value={watchedName}
             onChange={(e) => handleNameChange(e.target.value)}
-            required
+            aria-invalid={!!errors.name}
           />
+          {errors.name && (
+            <p className="text-sm text-destructive">{errors.name.message}</p>
+          )}
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="slug">Slug *</Label>
           <Input
             id="slug"
-            value={formData.slug}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, slug: e.target.value }))
-            }
-            required
+            {...register("slug")}
+            aria-invalid={!!errors.slug}
           />
+          {errors.slug && (
+            <p className="text-sm text-destructive">{errors.slug.message}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -208,12 +319,12 @@ export function ProductForm({
             id="price"
             type="number"
             step="0.01"
-            value={formData.price}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, price: e.target.value }))
-            }
-            required
+            {...register("price")}
+            aria-invalid={!!errors.price}
           />
+          {errors.price && (
+            <p className="text-sm text-destructive">{errors.price.message}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -222,59 +333,57 @@ export function ProductForm({
             id="compare_at_price"
             type="number"
             step="0.01"
-            value={formData.compare_at_price}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                compare_at_price: e.target.value,
-              }))
-            }
+            {...register("compare_at_price")}
+            aria-invalid={!!errors.compare_at_price}
           />
+          {errors.compare_at_price && (
+            <p className="text-sm text-destructive">
+              {errors.compare_at_price.message}
+            </p>
+          )}
         </div>
 
         <div className="space-y-2 md:col-span-2">
           <Label htmlFor="category">Category</Label>
-          <Select
-            value={formData.category_id}
-            onValueChange={(value) =>
-              setFormData((prev) => ({ ...prev, category_id: value }))
-            }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select a category" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories?.map((cat) => (
-                <SelectItem key={cat.id} value={cat.id}>
-                  {cat.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Controller
+            name="category_id"
+            control={control}
+            render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories?.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
         </div>
 
         <div className="space-y-2 md:col-span-2">
           <Label htmlFor="short_description">Short Description</Label>
           <Input
             id="short_description"
-            value={formData.short_description}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                short_description: e.target.value,
-              }))
-            }
+            {...register("short_description")}
+            aria-invalid={!!errors.short_description}
           />
+          {errors.short_description && (
+            <p className="text-sm text-destructive">
+              {errors.short_description.message}
+            </p>
+          )}
         </div>
 
         <div className="space-y-2 md:col-span-2">
           <Label htmlFor="description">Full Description</Label>
           <Textarea
             id="description"
-            value={formData.description}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, description: e.target.value }))
-            }
+            {...register("description")}
             rows={3}
           />
         </div>
@@ -283,10 +392,7 @@ export function ProductForm({
           <Label htmlFor="ingredients">Ingredients</Label>
           <Textarea
             id="ingredients"
-            value={formData.ingredients}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, ingredients: e.target.value }))
-            }
+            {...register("ingredients")}
             rows={2}
           />
         </div>
@@ -295,10 +401,7 @@ export function ProductForm({
           <Label htmlFor="features">Features (comma separated)</Label>
           <Input
             id="features"
-            value={formData.features}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, features: e.target.value }))
-            }
+            {...register("features")}
             placeholder="Cold-pressed, No added sugar, All natural"
           />
         </div>
@@ -306,14 +409,20 @@ export function ProductForm({
         <div className="space-y-4 md:col-span-2">
           <Label>Product Image</Label>
 
-          {formData.image_url && (
+          {watchedImageUrl && (
             <div className="w-32 h-32 rounded-lg overflow-hidden bg-muted">
               <img
-                src={formData.image_url}
+                src={watchedImageUrl}
                 alt="Product preview"
                 className="w-full h-full object-cover"
               />
             </div>
+          )}
+
+          {errors.image_url && (
+            <p className="text-sm text-destructive">
+              {errors.image_url.message}
+            </p>
           )}
 
           <div className="flex gap-2">
@@ -345,7 +454,7 @@ export function ProductForm({
               type="button"
               variant="outline"
               onClick={handleGenerateImage}
-              disabled={isGeneratingImage || !formData.name}
+              disabled={isGeneratingImage || !watchedName}
             >
               {isGeneratingImage ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -361,9 +470,9 @@ export function ProductForm({
           <div className="flex items-center gap-2">
             <Switch
               id="is_featured"
-              checked={formData.is_featured}
+              checked={watchedIsFeatured}
               onCheckedChange={(checked) =>
-                setFormData((prev) => ({ ...prev, is_featured: checked }))
+                setValue("is_featured", checked)
               }
             />
             <Label htmlFor="is_featured">Featured</Label>
@@ -372,9 +481,9 @@ export function ProductForm({
           <div className="flex items-center gap-2">
             <Switch
               id="is_available"
-              checked={formData.is_available}
+              checked={watchedIsAvailable}
               onCheckedChange={(checked) =>
-                setFormData((prev) => ({ ...prev, is_available: checked }))
+                setValue("is_available", checked)
               }
             />
             <Label htmlFor="is_available">Available</Label>
@@ -383,10 +492,8 @@ export function ProductForm({
           <div className="flex items-center gap-2">
             <Switch
               id="active"
-              checked={formData.active}
-              onCheckedChange={(checked) =>
-                setFormData((prev) => ({ ...prev, active: checked }))
-              }
+              checked={watchedActive}
+              onCheckedChange={(checked) => setValue("active", checked)}
             />
             <Label htmlFor="active">Active</Label>
           </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
@@ -11,9 +11,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useCustomerOrders } from "@/hooks/use-customer-orders";
 import { User, Package, LogOut, Loader2, RefreshCw } from "lucide-react";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 
 export default function Account() {
+  useDocumentTitle("My Account");
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const {
     user,
@@ -155,7 +158,7 @@ export default function Account() {
           </div>
 
           {/* Tabs */}
-          <Tabs defaultValue="profile">
+          <Tabs defaultValue={location.pathname.includes("/orders") ? "orders" : "profile"}>
             <TabsList className="mb-8">
               <TabsTrigger value="profile" className="gap-2">
                 <User className="h-4 w-4" />

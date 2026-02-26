@@ -11,16 +11,50 @@
     <meta property="og:title" content="imPRESSive Juice Bar | Artisanal Cold-Pressed Elixirs" />
     <meta property="og:description" content="Artisanal cold-pressed elixirs crafted for the discerning palate. Organic. Elevated. Extraordinary." />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta property="og:url" content="https://www.impressivejb.com" />
+    <meta property="og:image" content="/og-image.jpg" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@impressivejuice" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta name="twitter:image" content="/og-image.jpg" />
 
     <!-- Google Fonts Preconnect -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Libre+Franklin:wght@300;400;500;600&family=Cormorant:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+
+    <!-- Structured Data (Fix 17) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FoodEstablishment",
+      "name": "imPRESSive Juice Bar",
+      "description": "Artisanal cold-pressed elixirs crafted for the discerning palate. Organic. Elevated. Extraordinary.",
+      "url": "https://www.impressivejb.com",
+      "servesCuisine": "Juice Bar",
+      "priceRange": "$$",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Hampton Roads",
+        "addressRegion": "VA",
+        "addressCountry": "US"
+      },
+      "openingHoursSpecification": [
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": ["Tuesday", "Wednesday", "Thursday", "Friday"],
+          "opens": "10:00",
+          "closes": "18:00"
+        },
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": "Saturday",
+          "opens": "10:00",
+          "closes": "17:00"
+        }
+      ]
+    }
+    </script>
   </head>
 
   <body>

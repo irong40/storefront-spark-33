@@ -8,10 +8,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useBusinessSettings } from "@/hooks/use-business";
 import { supabase } from "@/integrations/supabase/client";
 import { Mail, Phone, MapPin, Clock, Loader2, Send } from "lucide-react";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 import { formatHoursLines } from "@/lib/format-hours";
 import { GoogleMapEmbed } from "@/components/ui/google-map-embed";
 
 export default function Contact() {
+  useDocumentTitle("Contact");
   const { toast } = useToast();
   const { data: business } = useBusinessSettings();
   const [isSubmitting, setIsSubmitting] = useState(false);

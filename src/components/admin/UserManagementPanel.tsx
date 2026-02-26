@@ -282,7 +282,7 @@ export function UserManagementPanel() {
               </TableCell>
               <TableCell>
                 <span className="text-sm text-muted-foreground">
-                  {format(new Date(user.created_at), "MMM d, yyyy")}
+                  {user.created_at ? format(new Date(user.created_at), "MMM d, yyyy") : "N/A"}
                 </span>
               </TableCell>
               <TableCell className="text-right">

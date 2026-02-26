@@ -1,5 +1,16 @@
 import { useState } from "react";
+import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/lib/logger";
+
+// Accepts both raw (GCXXXXXXXXXXXX) and formatted (GC-XXXX-XXXX-XXXX) codes
+const giftCardCodeSchema = z
+  .string()
+  .min(1, "Gift card code is required")
+  .transform((v) => v.replace(/-/g, "").toUpperCase())
+  .refine((v) => /^GC[A-Z0-9]{12}$/.test(v), {
+    message: "Invalid gift card code format",
+  });
 
 interface GiftCardBalance {
   id: string;
@@ -22,6 +33,12 @@ export function useGiftCard() {
   const checkBalance = async (
     code: string,
   ): Promise<GiftCardBalance | null> => {
+    const validation = giftCardCodeSchema.safeParse(code);
+    if (!validation.success) {
+      setError(validation.error.errors[0].message);
+      return null;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -42,7 +59,7 @@ export function useGiftCard() {
 
       return data[0] as GiftCardBalance;
     } catch (err) {
-      console.error("Error checking gift card:", err);
+      logger.error("Error checking gift card:", err);
       setError("Failed to check gift card");
       return null;
     } finally {
@@ -62,7 +79,7 @@ export function useGiftCard() {
       const { data, error: rpcError } = await supabase.rpc("redeem_gift_card", {
         gift_card_code: code,
         redeem_amount: amount,
-        for_order_id: orderId || null,
+        for_order_id: orderId ?? undefined,
       });
 
       if (rpcError) throw rpcError;
@@ -78,7 +95,7 @@ export function useGiftCard() {
       }
       return result;
     } catch (err) {
-      console.error("Error redeeming gift card:", err);
+      logger.error("Error redeeming gift card:", err);
       setError("Failed to redeem gift card");
       return null;
     } finally {

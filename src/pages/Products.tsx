@@ -4,8 +4,10 @@ import { Layout } from "@/components/layout/Layout";
 import { ProductGrid } from "@/components/products/ProductGrid";
 import { CategoryFilter } from "@/components/products/CategoryFilter";
 import { useProducts } from "@/hooks/use-products";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 
 export default function Products() {
+  useDocumentTitle("Products");
   const [searchParams, setSearchParams] = useSearchParams();
   const categoryParam = searchParams.get("category");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(

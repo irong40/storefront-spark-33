@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
+import { CHECKOUT_CONFIG } from "@/config/checkout";
+import { generateOrderNumber } from "@/lib/utils";
 
 export type Order = Tables<"orders">;
 export type OrderItem = Tables<"order_items">;
@@ -15,9 +17,9 @@ export type ArchiveType =
   | "archived_quarterly"
   | "archived_yearly";
 
-export function useOrders(showArchived: boolean = false) {
+export function useOrders(showArchived: boolean = false, limit: number = 100) {
   return useQuery({
-    queryKey: ["admin-orders", showArchived],
+    queryKey: ["admin-orders", showArchived, limit],
     queryFn: async () => {
       let query = supabase
         .from("orders")
@@ -27,15 +29,14 @@ export function useOrders(showArchived: boolean = false) {
           order_items (*)
         `,
         )
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(limit);
 
       if (showArchived) {
-        // Show only archived orders
         query = query.or(
           "status.eq.archived_weekly,status.eq.archived_monthly,status.eq.archived_quarterly,status.eq.archived_yearly",
         );
       } else {
-        // Show non-archived orders
         query = query.not(
           "status",
           "in",
@@ -136,13 +137,13 @@ export function useCreateOrder() {
         quantity: number;
       }[];
     }) => {
-      const orderNumber = `ORD-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+      const orderNumber = generateOrderNumber();
 
       const subtotal = orderData.items.reduce(
         (sum, item) => sum + item.product_price * item.quantity,
         0,
       );
-      const tax = subtotal * 0.08; // 8% tax
+      const tax = subtotal * CHECKOUT_CONFIG.TAX_RATE;
       const total = subtotal + tax;
 
       const { data: order, error: orderError } = await supabase

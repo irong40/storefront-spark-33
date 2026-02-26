@@ -7,6 +7,7 @@ import {
 } from "react-square-web-payments-sdk";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, CreditCard as CreditCardIcon, Lock } from "lucide-react";
+import { logger } from "@/lib/logger";
 import { Separator } from "@/components/ui/separator";
 import { SQUARE_CONFIG } from "@/config/square";
 
@@ -62,12 +63,12 @@ export function SquarePaymentForm({
       );
 
       if (error) {
-        console.error("Edge function error:", error);
+        logger.error("Edge function error:", error);
         throw new Error(error.message || "Payment processing failed");
       }
 
       if (data?.error) {
-        console.error("Payment error:", data.error);
+        logger.error("Payment error:", data.error);
         throw new Error(data.error);
       }
 
@@ -87,7 +88,7 @@ export function SquarePaymentForm({
         err instanceof Error
           ? err.message
           : "Payment failed. Please try again.";
-      console.error("Payment processing error:", errorMessage);
+      logger.error("Payment processing error:", errorMessage);
       onError(errorMessage);
     } finally {
       setIsProcessing(false);
@@ -106,7 +107,7 @@ export function SquarePaymentForm({
         locationId={locationId}
         cardTokenizeResponseReceived={async (token) => {
           if (token.status !== "OK" || !token.token) {
-            console.error("Card tokenization failed:", token);
+            logger.error("Card tokenization failed:", token);
             const errorResult = token as {
               errors?: Array<{ message?: string }>;
             };

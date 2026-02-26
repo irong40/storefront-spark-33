@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/lib/logger";
 
 export interface ProductSize {
   id: string;
@@ -42,7 +43,7 @@ export function useProductSizes() {
         .order("sort_order", { ascending: true });
 
       if (error) {
-        console.error("Error fetching product sizes:", error);
+        logger.error("Error fetching product sizes:", error);
         return [];
       }
 
@@ -62,7 +63,7 @@ export function useProductAddons() {
         .order("sort_order", { ascending: true });
 
       if (error) {
-        console.error("Error fetching product addons:", error);
+        logger.error("Error fetching product addons:", error);
         return [];
       }
 
@@ -85,7 +86,7 @@ export function useProductSizeOverrides(productId: string) {
         .order("sort_order", { ascending: true });
 
       if (error) {
-        console.error("Error fetching product size overrides:", error);
+        logger.error("Error fetching product size overrides:", error);
         return [];
       }
 
