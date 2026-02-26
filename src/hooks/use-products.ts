@@ -41,21 +41,58 @@ export interface Product {
   variants?: ProductVariant[];
 }
 
-export function useProducts(categorySlug?: string) {
+export interface UseProductsOptions {
+  page?: number;
+  pageSize?: number;
+}
+
+export interface UseProductsResult {
+  products: Product[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export function useProducts(
+  categorySlug?: string,
+  options: UseProductsOptions = {},
+) {
+  const page = options.page ?? 1;
+  const pageSize = options.pageSize ?? 50;
+  const from = (page - 1) * pageSize;
+  const to = page * pageSize - 1;
+  const isPaginated = options.page !== undefined || options.pageSize !== undefined;
+
   return useQuery({
-    queryKey: ["products", categorySlug],
+    queryKey: ["products", categorySlug, page, pageSize],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let baseQuery = supabase
         .from("products")
         .select(
           `
           *,
           category:categories(id, name, slug)
         `,
+          { count: "exact" },
         )
         .eq("active", true)
         .eq("is_available", true)
         .order("sort_order", { ascending: true });
+
+      // Apply server-side category filter when not doing client-side filtering
+      // and when a specific (non-"all") slug is provided.
+      if (categorySlug && categorySlug !== "all") {
+        // Client-side filter applied after fetch (existing behaviour preserved)
+      }
+
+      // Apply range only when explicit pagination options are passed so that
+      // existing consumers that rely on fetching all products are unaffected.
+      if (isPaginated) {
+        baseQuery = baseQuery.range(from, to);
+      }
+
+      const { data, error, count } = await baseQuery;
 
       if (error) throw error;
 
@@ -72,9 +109,18 @@ export function useProducts(categorySlug?: string) {
       const productsWithVariants = filteredData.map((product) => ({
         ...product,
         variants: [] as ProductVariant[],
-      }));
+      })) as Product[];
 
-      return productsWithVariants as Product[];
+      const totalCount = count ?? productsWithVariants.length;
+      const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+
+      return {
+        products: productsWithVariants,
+        totalCount,
+        page,
+        pageSize,
+        totalPages,
+      } satisfies UseProductsResult;
     },
   });
 }

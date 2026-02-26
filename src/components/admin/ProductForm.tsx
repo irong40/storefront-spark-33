@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Upload, Wand2 } from "lucide-react";
 import type { Product } from "@/hooks/use-products";
 import { logger } from "@/lib/logger";
+import { ProductImage } from "@/components/ui/ProductImage";
 
 // ---------------------------------------------------------------------------
 // Validation schema
@@ -155,12 +156,12 @@ export function ProductForm({
     if (!file) return;
 
     const MAX_FILE_SIZE = 5 * 1024 * 1024;
-    const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
     if (!ALLOWED_TYPES.includes(file.type)) {
       toast({
         title: "Invalid file type",
-        description: "Please upload a JPEG, PNG, WebP, or GIF image.",
+        description: "Please upload a JPG, PNG, or WebP image.",
         variant: "destructive",
       });
       return;
@@ -411,7 +412,7 @@ export function ProductForm({
 
           {watchedImageUrl && (
             <div className="w-32 h-32 rounded-lg overflow-hidden bg-muted">
-              <img
+              <ProductImage
                 src={watchedImageUrl}
                 alt="Product preview"
                 className="w-full h-full object-cover"
@@ -429,7 +430,7 @@ export function ProductForm({
             <label className="cursor-pointer">
               <Input
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp"
                 onChange={handleImageUpload}
                 className="hidden"
               />

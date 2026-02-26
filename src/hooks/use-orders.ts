@@ -17,9 +17,30 @@ export type ArchiveType =
   | "archived_quarterly"
   | "archived_yearly";
 
-export function useOrders(showArchived: boolean = false, limit: number = 100) {
+export interface UseOrdersResult {
+  orders: OrderWithItems[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export function useOrders(
+  showArchived: boolean = false,
+  limit: number = 100,
+  page: number = 1,
+  pageSize: number = 50,
+) {
+  // When a legacy `limit` value other than 100 is passed and no explicit page
+  // params are provided the hook honours the old limit-based behaviour for
+  // backward compatibility.  When page/pageSize are used the `limit` param is
+  // ignored in favour of the range calculation.
+  const effectivePageSize = limit !== 100 ? limit : pageSize;
+  const from = (page - 1) * effectivePageSize;
+  const to = page * effectivePageSize - 1;
+
   return useQuery({
-    queryKey: ["admin-orders", showArchived, limit],
+    queryKey: ["admin-orders", showArchived, page, effectivePageSize],
     queryFn: async () => {
       let query = supabase
         .from("orders")
@@ -28,9 +49,10 @@ export function useOrders(showArchived: boolean = false, limit: number = 100) {
           *,
           order_items (*)
         `,
+          { count: "exact" },
         )
         .order("created_at", { ascending: false })
-        .limit(limit);
+        .range(from, to);
 
       if (showArchived) {
         query = query.or(
@@ -44,10 +66,20 @@ export function useOrders(showArchived: boolean = false, limit: number = 100) {
         );
       }
 
-      const { data, error } = await query;
+      const { data, error, count } = await query;
 
       if (error) throw error;
-      return data as OrderWithItems[];
+
+      const totalCount = count ?? 0;
+      const totalPages = Math.max(1, Math.ceil(totalCount / effectivePageSize));
+
+      return {
+        orders: (data ?? []) as OrderWithItems[],
+        totalCount,
+        page,
+        pageSize: effectivePageSize,
+        totalPages,
+      } satisfies UseOrdersResult;
     },
   });
 }

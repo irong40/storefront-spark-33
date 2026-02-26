@@ -1,16 +1,15 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AddToCartButton } from "@/components/cart/AddToCartButton";
 import type { Product } from "@/hooks/use-products";
+import { ProductImage } from "@/components/ui/ProductImage";
 
 interface ProductCardProps {
   product: Product;
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const [imgError, setImgError] = useState(false);
   const hasDiscount =
     product.compare_at_price && product.compare_at_price > product.price;
 
@@ -18,12 +17,11 @@ export function ProductCard({ product }: ProductCardProps) {
     <Card className="group overflow-hidden border-2 border-brand-terracotta/10 hover:border-brand-berry/30 hover:shadow-lg transition-all duration-300 bg-card">
       <Link to={`/products/${product.slug}`}>
         <div className="aspect-square overflow-hidden bg-brand-kraft relative">
-          {product.image_url && !imgError ? (
-            <img
+          {product.image_url ? (
+            <ProductImage
               src={product.image_url}
               alt={product.name}
               className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
-              onError={() => setImgError(true)}
             />
           ) : (
             <div className="h-full w-full flex items-center justify-center text-6xl bg-gradient-to-br from-brand-olive/10 via-brand-kraft to-brand-mustard/10">

@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Plus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/contexts/CartContext";
+import { ProductImage } from "@/components/ui/ProductImage";
 const productImages: Record<string, string> = {
   // Sweet Treats
   "kiwi-kwencher": "/images/products/06-kiwi-kwencher.jpg",
@@ -104,7 +105,7 @@ export function FeaturedProducts() {
                   <Link to={`/products/${product.slug}`} className="block mb-4">
                     <div className="relative w-full aspect-[4/5] mx-auto bg-gradient-to-br from-brand-cream-dark to-brand-terracotta/20 rounded-2xl overflow-hidden flex items-center justify-center">
                       {imageSrc ? (
-                        <img
+                        <ProductImage
                           src={imageSrc}
                           alt={product.name}
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"

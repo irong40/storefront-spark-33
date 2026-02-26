@@ -18,7 +18,8 @@ export function FlavorSelector({
   onFlavorsChange,
   excludeCategorySlug,
 }: FlavorSelectorProps) {
-  const { data: products, isLoading } = useProducts();
+  const { data: productsData, isLoading } = useProducts();
+  const products = productsData?.products;
 
   // Filter to only show regular juices (exclude subscriptions, detox packages, and wellness shots)
   const availableFlavors =

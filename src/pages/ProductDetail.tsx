@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { ChevronLeft, Minus, Plus, Check, Leaf } from "lucide-react";
+import { ProductImage } from "@/components/ui/ProductImage";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 
 export default function ProductDetail() {
@@ -247,13 +248,10 @@ export default function ProductDetail() {
           <div className="relative">
             <div className="aspect-square rounded-3xl bg-brand-kraft border-2 border-brand-terracotta/20 shadow-lg flex items-center justify-center overflow-hidden">
               {displayImage ? (
-                <img
+                <ProductImage
                   src={displayImage}
                   alt={product.name}
                   className="w-full h-full object-cover transition-all duration-300"
-                  onError={(e) => {
-                    e.currentTarget.src = product.image_url || "";
-                  }}
                 />
               ) : (
                 <div className="text-8xl bg-gradient-to-br from-brand-olive/10 via-brand-kraft to-brand-mustard/10 w-full h-full flex items-center justify-center">

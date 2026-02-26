@@ -195,21 +195,30 @@ export default function Checkout() {
 
   // Apply gift card handler
   const handleApplyGiftCard = async () => {
-    if (!giftCardCode.trim()) return;
+    const trimmed = giftCardCode.trim();
+    if (!trimmed) return;
 
     setGiftCardError(null);
+
+    // Validate format before making any API call.
+    // Accept both formatted (GC-XXXX-XXXX-XXXX) and raw (GCXXXXXXXXXXXX) input.
+    const normalised = trimmed.replace(/-/g, "").toUpperCase();
+    if (!/^GC[A-Z0-9]{12}$/.test(normalised)) {
+      setGiftCardError("Gift card code must be in GC-XXXX-XXXX-XXXX format");
+      return;
+    }
 
     // Check if already applied
     if (
       appliedGiftCards.some(
-        (gc) => gc.code.toUpperCase() === giftCardCode.toUpperCase(),
+        (gc) => gc.code.toUpperCase() === trimmed.toUpperCase(),
       )
     ) {
       setGiftCardError("This gift card has already been applied");
       return;
     }
 
-    const result = await checkBalance(giftCardCode.trim());
+    const result = await checkBalance(trimmed);
 
     if (!result) {
       setGiftCardError("Gift card not found or expired");
@@ -361,6 +370,33 @@ export default function Checkout() {
         variant: "destructive",
       });
       return;
+    }
+
+    // Stock availability check — verify products are still active before charging
+    const productIds = [...new Set(items.map((item) => item.product_id))];
+    const { data: availableProducts, error: stockError } = await supabase
+      .from("products")
+      .select("id, name, active, is_available")
+      .in("id", productIds);
+
+    if (stockError) {
+      logger.error("Stock check error:", stockError);
+      // Non-blocking: proceed if we can't verify (avoids false rejections)
+    } else if (availableProducts) {
+      const unavailable = items.filter((item) => {
+        const product = availableProducts.find((p) => p.id === item.product_id);
+        return !product || product.active === false || product.is_available === false;
+      });
+
+      if (unavailable.length > 0) {
+        const names = unavailable.map((item) => item.product.name).join(", ");
+        toast({
+          title: "Item no longer available",
+          description: `The following item(s) are no longer available: ${names}. Please update your cart.`,
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -870,7 +906,7 @@ export default function Checkout() {
                   </div>
                   <Button
                     onClick={handleZeroPaymentOrder}
-                    disabled={isSubmitting || cartLoading}
+                    disabled={isSubmitting || cartLoading || giftCardLoading}
                     className="w-full bg-brand-berry hover:bg-brand-berry/90"
                   >
                     {isSubmitting ? (
@@ -889,7 +925,7 @@ export default function Checkout() {
                   sessionId={localStorage.getItem("cart_session_id") || ""}
                   onSuccess={handlePaymentSuccess}
                   onError={handlePaymentError}
-                  disabled={isSubmitting || cartLoading}
+                  disabled={isSubmitting || cartLoading || giftCardLoading}
                 />
               )}
             </div>
@@ -939,16 +975,26 @@ export default function Checkout() {
                 </h3>
                 <div className="flex gap-2">
                   <Input
-                    placeholder="Enter gift card code"
+                    placeholder="GC-XXXX-XXXX-XXXX"
                     value={giftCardCode}
                     onChange={(e) => {
-                      setGiftCardCode(e.target.value.toUpperCase());
+                      // Auto-format as GC-XXXX-XXXX-XXXX while typing
+                      const clean = e.target.value
+                        .replace(/[^A-Za-z0-9]/g, "")
+                        .toUpperCase();
+                      const parts: string[] = [];
+                      if (clean.length > 0) parts.push(clean.slice(0, 2));
+                      if (clean.length > 2) parts.push(clean.slice(2, 6));
+                      if (clean.length > 6) parts.push(clean.slice(6, 10));
+                      if (clean.length > 10) parts.push(clean.slice(10, 14));
+                      setGiftCardCode(parts.join("-"));
                       setGiftCardError(null);
                     }}
                     disabled={
                       isSubmitting || paymentComplete || giftCardLoading
                     }
-                    className="flex-1"
+                    maxLength={17}
+                    className="flex-1 font-mono uppercase tracking-wider"
                   />
                   <Button
                     type="button"

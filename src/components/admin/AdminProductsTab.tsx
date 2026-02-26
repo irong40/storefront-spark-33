@@ -46,7 +46,8 @@ import {
 } from "lucide-react";
 
 export function AdminProductsTab() {
-  const { data: products, isLoading: productsLoading } = useProducts();
+  const { data: productsData, isLoading: productsLoading } = useProducts();
+  const products = productsData?.products;
   const { data: categories } = useCategories();
   const { toast } = useToast();
   const queryClient = useQueryClient();

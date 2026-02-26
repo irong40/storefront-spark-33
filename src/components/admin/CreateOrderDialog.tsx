@@ -39,7 +39,8 @@ export function CreateOrderDialog({
   open,
   onOpenChange,
 }: CreateOrderDialogProps) {
-  const { data: products } = useProducts();
+  const { data: productsData } = useProducts();
+  const products = productsData?.products;
   const createOrder = useCreateOrder();
   const { toast } = useToast();
 

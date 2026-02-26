@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,22 +10,28 @@ import { CartDrawer } from "@/components/cart/CartDrawer";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
-// Pages
+// Critical path — eager imports
 import Home from "./pages/Home";
 import Products from "./pages/Products";
-import ProductDetail from "./pages/ProductDetail";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import Checkout from "./pages/Checkout";
-import OrderConfirmation from "./pages/OrderConfirmation";
 import Auth from "./pages/Auth";
-import Account from "./pages/Account";
-import Admin from "./pages/Admin";
-import GiftCardBalance from "./pages/GiftCardBalance";
-import ResetPassword from "./pages/ResetPassword";
-import { LoyaltyDashboard } from "./components/loyalty/LoyaltyDashboard";
 import { Layout } from "./components/layout/Layout";
 import NotFound from "./pages/NotFound";
+
+// Non-critical pages — lazy loaded
+const Admin = lazy(() => import("./pages/Admin"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const OrderConfirmation = lazy(() => import("./pages/OrderConfirmation"));
+const Account = lazy(() => import("./pages/Account"));
+const GiftCardBalance = lazy(() => import("./pages/GiftCardBalance"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const LoyaltyDashboard = lazy(() =>
+  import("./components/loyalty/LoyaltyDashboard").then((m) => ({
+    default: m.LoyaltyDashboard,
+  }))
+);
+const Contact = lazy(() => import("./pages/Contact"));
+const About = lazy(() => import("./pages/About"));
+const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,27 +53,35 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <ScrollToTop />
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/products" element={<Products />} />
-              <Route path="/products/:slug" element={<ProductDetail />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route
-                path="/order-confirmation/:id"
-                element={<OrderConfirmation />}
-              />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/account" element={<Account />} />
-              <Route path="/account/orders" element={<Account />} />
-              <Route path="/gift-cards/balance" element={<GiftCardBalance />} />
-              <Route path="/rewards" element={<Layout><LoyaltyDashboard /></Layout>} />
-              <Route path="/admin" element={<Admin />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <Suspense
+              fallback={
+                <div className="flex items-center justify-center min-h-screen">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              }
+            >
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/products" element={<Products />} />
+                <Route path="/products/:slug" element={<ProductDetail />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route
+                  path="/order-confirmation/:id"
+                  element={<OrderConfirmation />}
+                />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/account" element={<Account />} />
+                <Route path="/account/orders" element={<Account />} />
+                <Route path="/gift-cards/balance" element={<GiftCardBalance />} />
+                <Route path="/rewards" element={<Layout><LoyaltyDashboard /></Layout>} />
+                <Route path="/admin" element={<Admin />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
             <CartDrawer />
           </BrowserRouter>
         </TooltipProvider>

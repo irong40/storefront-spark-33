@@ -14,9 +14,8 @@ export default function Products() {
     categoryParam,
   );
 
-  const { data: products, isLoading } = useProducts(
-    selectedCategory || undefined,
-  );
+  const { data, isLoading } = useProducts(selectedCategory || undefined);
+  const products = data?.products;
 
   useEffect(() => {
     setSelectedCategory(categoryParam);

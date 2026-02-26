@@ -8,14 +8,18 @@ import { supabase } from "@/integrations/supabase/client";
 // ---------------------------------------------------------------------------
 const sizeFormSchema = z.object({
   name: z.string().min(1, "Size name is required"),
+  // size_oz is optional — null means "no size listed", but when provided must be > 0
   size_oz: z
     .number()
-    .positive("Size must be a positive number")
+    .positive("Size (oz) must be a positive number")
     .nullable()
-    .refine((v) => v === null || v > 0, {
+    .optional()
+    .refine((v) => v == null || (typeof v === "number" && v > 0), {
       message: "Size (oz) must be a positive number",
     }),
-  price: z.number().positive("Price must be a positive number"),
+  price: z
+    .number({ invalid_type_error: "Price must be a number" })
+    .nonnegative("Price must be 0 or greater"),
 });
 
 const addonFormSchema = z.object({
@@ -27,14 +31,18 @@ const addonFormSchema = z.object({
 const overrideFormSchema = z.object({
   product_id: z.string().min(1, "Product is required"),
   size_name: z.string().min(1, "Size name is required"),
+  // size_oz is optional — null means "no size listed", but when provided must be > 0
   size_oz: z
     .number()
-    .positive("Size must be a positive number")
+    .positive("Size (oz) must be a positive number")
     .nullable()
-    .refine((v) => v === null || v > 0, {
+    .optional()
+    .refine((v) => v == null || (typeof v === "number" && v > 0), {
       message: "Size (oz) must be a positive number",
     }),
-  price: z.number().positive("Price must be a positive number"),
+  price: z
+    .number({ invalid_type_error: "Price must be a number" })
+    .positive("Price must be greater than 0"),
 });
 import {
   useProductSizes,
@@ -131,7 +139,8 @@ export function ProductVariantsPanel() {
   const queryClient = useQueryClient();
   const { data: sizes, isLoading: sizesLoading } = useProductSizes();
   const { data: addons, isLoading: addonsLoading } = useProductAddons();
-  const { data: products } = useProducts();
+  const { data: productsData } = useProducts();
+  const products = productsData?.products;
 
   // Size state
   const [sizeDialogOpen, setSizeDialogOpen] = useState(false);

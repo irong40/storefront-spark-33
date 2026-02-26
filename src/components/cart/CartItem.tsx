@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useCart, CartItem as CartItemType } from "@/contexts/CartContext";
 import { Minus, Plus, Trash2, Gift } from "lucide-react";
 import { Link } from "react-router-dom";
+import { ProductImage } from "@/components/ui/ProductImage";
 
 interface CartItemProps {
   item: CartItemType;
@@ -39,16 +40,14 @@ export function CartItem({ item }: CartItemProps) {
     <div className="flex gap-4">
       <Link to={`/products/${product.slug}`} className="shrink-0">
         <div className="h-20 w-20 rounded-lg bg-secondary flex items-center justify-center overflow-hidden">
-          {product.image_url ? (
-            <img
+          {isGiftCard && !product.image_url ? (
+            <Gift className="h-8 w-8 text-muted-foreground" />
+          ) : (
+            <ProductImage
               src={product.image_url}
               alt={product.name}
               className="h-full w-full object-cover"
             />
-          ) : isGiftCard ? (
-            <Gift className="h-8 w-8 text-muted-foreground" />
-          ) : (
-            <span className="text-2xl">🧃</span>
           )}
         </div>
       </Link>

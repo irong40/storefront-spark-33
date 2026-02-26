@@ -33,7 +33,7 @@ const businessSettingsSchema = z.object({
     .max(20)
     .nullable()
     .refine(
-      (v) => !v || /^[\d\s().+\-]{7,20}$/.test(v),
+      (v) => !v || /^[\d\s().+-]{7,20}$/.test(v),
       { message: "Invalid phone number format" },
     ),
   address_line1: z.string().max(200).nullable(),

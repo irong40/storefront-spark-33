@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import {
   useOrders,
@@ -18,9 +18,10 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -52,8 +53,13 @@ import {
   Plus,
   ArchiveRestore,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Search,
 } from "lucide-react";
 import { CreateOrderDialog } from "./CreateOrderDialog";
+
+const PAGE_SIZE = 50;
 
 const ORDER_STATUSES = [
   {
@@ -122,7 +128,32 @@ function getStatusBadge(status: string) {
 
 export function OrdersTable() {
   const [showArchived, setShowArchived] = useState(false);
-  const { data: orders, isLoading, refetch } = useOrders(showArchived);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState("");
+
+  const { data, isLoading, refetch } = useOrders(
+    showArchived,
+    100,
+    currentPage,
+    PAGE_SIZE,
+  );
+
+  const totalPages = data?.totalPages ?? 1;
+  const totalCount = data?.totalCount ?? 0;
+
+  // Client-side search filter — filters within the current page's results.
+  const orders = useMemo(() => {
+    const allOrders = data?.orders ?? [];
+    const term = search.trim().toLowerCase();
+    if (!term) return allOrders;
+    return allOrders.filter(
+      (o) =>
+        o.order_number?.toLowerCase().includes(term) ||
+        o.customer_name?.toLowerCase().includes(term) ||
+        o.email?.toLowerCase().includes(term),
+    );
+  }, [data?.orders, search]);
+
   const updateStatus = useUpdateOrderStatus();
   const archiveOrders = useArchiveOrders();
   const unarchiveOrders = useUnarchiveOrders();
@@ -215,6 +246,8 @@ export function OrdersTable() {
             onValueChange={(v) => {
               setShowArchived(v === "archived");
               setSelectedOrderIds([]);
+              setCurrentPage(1);
+              setSearch("");
             }}
           >
             <TabsList>
@@ -265,10 +298,31 @@ export function OrdersTable() {
           </div>
         </div>
 
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <Input
+            placeholder="Search by order #, customer name, or email..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="pl-9"
+            aria-label="Search orders"
+          />
+        </div>
+
         {!orders?.length ? (
           <div className="text-center py-12 text-muted-foreground">
             <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>{showArchived ? "No archived orders" : "No orders yet"}</p>
+            <p>
+              {search.trim()
+                ? "No orders match your search"
+                : showArchived
+                  ? "No archived orders"
+                  : "No orders yet"}
+            </p>
           </div>
         ) : (
           <Table>
@@ -367,6 +421,42 @@ export function OrdersTable() {
               ))}
             </TableBody>
           </Table>
+        )}
+
+        {/* Pagination controls */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between pt-2">
+            <p className="text-sm text-muted-foreground">
+              Page {currentPage} of {totalPages}
+              {!search.trim() && (
+                <span className="ml-1">({totalCount} total)</span>
+              )}
+            </p>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                aria-label="Go to previous page"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                <span className="ml-1">Previous</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
+                disabled={currentPage === totalPages}
+                aria-label="Go to next page"
+              >
+                <span className="mr-1">Next</span>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         )}
       </div>
 

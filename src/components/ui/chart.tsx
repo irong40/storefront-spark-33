@@ -65,6 +65,17 @@ const ChartContainer = React.forwardRef<
 });
 ChartContainer.displayName = "Chart";
 
+// Sanitize dynamic CSS values to only allow safe characters.
+// Accepts CSS colors (hex, rgb, hsl, named), numbers, and common units.
+function sanitizeCssValue(value: string): string {
+  return value.replace(/[^a-zA-Z0-9#(),.\s%-]/g, "");
+}
+
+// Sanitize a CSS custom-property key so it contains only word characters.
+function sanitizeCssKey(key: string): string {
+  return key.replace(/[^a-zA-Z0-9_-]/g, "");
+}
+
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(
     ([_, config]) => config.theme || config.color,
@@ -86,7 +97,9 @@ ${colorConfig
     const color =
       itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
       itemConfig.color;
-    return color ? `  --color-${key}: ${color};` : null;
+    return color
+      ? `  --color-${sanitizeCssKey(key)}: ${sanitizeCssValue(color)};`
+      : null;
   })
   .join("\n")}
 }

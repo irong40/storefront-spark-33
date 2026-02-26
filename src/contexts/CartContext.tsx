@@ -8,6 +8,7 @@ import {
   ReactNode,
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import type { Product } from "@/hooks/use-products";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
@@ -71,25 +72,66 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-const SESSION_ID_KEY = "cart_session_id";
-const SESSION_TS_KEY = "cart_session_id_ts";
+const SESSION_KEY = "cart_session";
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
-function getSessionId(): string {
-  const stored = localStorage.getItem(SESSION_ID_KEY);
-  const ts = localStorage.getItem(SESSION_TS_KEY);
-  const now = Date.now();
+// RFC 4122 UUID v4 pattern
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-  // Validate existing session: must exist and be less than 24 hours old
-  if (stored && ts && now - Number(ts) < SESSION_TTL_MS) {
-    return stored;
+function isValidUUID(value: string): boolean {
+  return UUID_REGEX.test(value);
+}
+
+interface StoredSession {
+  id: string;
+  created: number;
+}
+
+function getSessionId(): string {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (raw) {
+      const parsed: unknown = JSON.parse(raw);
+      if (
+        parsed !== null &&
+        typeof parsed === "object" &&
+        "id" in parsed &&
+        "created" in parsed &&
+        typeof (parsed as StoredSession).id === "string" &&
+        typeof (parsed as StoredSession).created === "number" &&
+        isValidUUID((parsed as StoredSession).id) &&
+        Date.now() - (parsed as StoredSession).created < SESSION_TTL_MS
+      ) {
+        return (parsed as StoredSession).id;
+      }
+    }
+  } catch {
+    // Corrupted JSON — fall through to create a new session
   }
 
   // Generate a fresh session
-  const sessionId = crypto.randomUUID();
-  localStorage.setItem(SESSION_ID_KEY, sessionId);
-  localStorage.setItem(SESSION_TS_KEY, String(now));
-  return sessionId;
+  const session: StoredSession = { id: crypto.randomUUID(), created: Date.now() };
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  return session.id;
+}
+
+// Type that matches the shape of the product join in the cart_items select.
+// Supabase returns a single object (not an array) for to-one foreign-key joins.
+type CartItemProductRow = {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  image_url: string | null;
+  is_available: boolean | null;
+};
+
+// Type guard: narrows the Supabase Json type to GiftCardData.
+function isGiftCardData(value: Json | null | undefined): value is GiftCardData {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const v = value as Record<string, unknown>;
+  return typeof v.recipientEmail === "string";
 }
 
 // Debounce helper — trailing edge, returns a cancel function
@@ -128,6 +170,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // AbortController ref: cancel any in-flight fetchCartItems when a new
   // fetch is initiated so stale responses never overwrite newer state.
   const fetchAbortRef = useRef<AbortController | null>(null);
+
+  // Per-item deduplication: tracks keys for operations currently in-flight.
+  // Prevents double-click from queueing duplicate add/update/remove calls.
+  // Key format: "add:<productId>", "update:<itemId>", "remove:<itemId>"
+  const pendingOps = useRef(new Set<string>());
 
   const sessionId = getSessionId();
 
@@ -256,7 +303,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     );
 
     // Enrich each cart item with its resolved relations
-    const enrichedItems: CartItem[] = validItems.map((item) => ({
+    const enrichedItems: CartItem[] = validItems.map((item) => {
+      // The product join is a to-one FK relation; Supabase returns a plain object.
+      const productRow = item.product as CartItemProductRow;
+      const giftCardData = isGiftCardData(item.gift_card_data)
+        ? item.gift_card_data
+        : null;
+
+      return {
       id: item.id,
       product_id: item.product_id ?? "",
       quantity: item.quantity,
@@ -264,8 +318,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       size_override_id: item.size_override_id,
       addon_ids: (item.addon_ids as string[]) || [],
       selected_flavor_ids: (item.selected_flavor_ids as string[]) || [],
-      gift_card_data: item.gift_card_data as unknown as GiftCardData | null,
-      product: item.product as CartItem["product"],
+      gift_card_data: giftCardData,
+      product: {
+        id: productRow.id,
+        name: productRow.name,
+        slug: productRow.slug,
+        price: productRow.price,
+        image_url: productRow.image_url,
+        is_available: productRow.is_available ?? false,
+      },
       size: item.size_id ? sizesMap.get(item.size_id) || null : null,
       size_override: item.size_override_id
         ? overridesMap.get(item.size_override_id) || null
@@ -276,7 +337,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       flavors: ((item.selected_flavor_ids as string[]) || [])
         .map((id) => flavorsMap.get(id))
         .filter(Boolean) as CartItem["flavors"],
-    }));
+      };
+    });
 
     setItems(enrichedItems);
   }, []);
@@ -368,29 +430,37 @@ export function CartProvider({ children }: { children: ReactNode }) {
   ) {
     if (!cartId) return;
 
-    return enqueue(
-      async () => {
-        const insertData: Record<string, unknown> = {
-          cart_id: cartId,
-          product_id: productId,
-          quantity,
-          size_id: sizeId || null,
-          size_override_id: sizeOverrideId || null,
-          addon_ids: addonIds,
-          selected_flavor_ids: selectedFlavorIds,
-          gift_card_data: giftCardData || null,
-        };
+    const opKey = `add:${productId}`;
+    if (pendingOps.current.has(opKey)) return;
+    pendingOps.current.add(opKey);
 
-        const { error } = await supabase.from("cart_items").insert(insertData);
-        if (error) throw error;
+    try {
+      return await enqueue(
+        async () => {
+          const insertData: Record<string, unknown> = {
+            cart_id: cartId,
+            product_id: productId,
+            quantity,
+            size_id: sizeId || null,
+            size_override_id: sizeOverrideId || null,
+            addon_ids: addonIds,
+            selected_flavor_ids: selectedFlavorIds,
+            gift_card_data: giftCardData || null,
+          };
 
-        toast.success("Added to cart");
-        setIsOpen(true);
-      },
-      cartId,
-      // addItem uses an immediate fetch so the cart drawer opens with fresh data
-      { immediate: true },
-    );
+          const { error } = await supabase.from("cart_items").insert(insertData);
+          if (error) throw error;
+
+          toast.success("Added to cart");
+          setIsOpen(true);
+        },
+        cartId,
+        // addItem uses an immediate fetch so the cart drawer opens with fresh data
+        { immediate: true },
+      );
+    } finally {
+      pendingOps.current.delete(opKey);
+    }
   }
 
   async function updateQuantity(itemId: string, quantity: number) {
@@ -400,31 +470,47 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return removeItem(itemId);
     }
 
-    return enqueue(async () => {
-      const { error } = await supabase
-        .from("cart_items")
-        .update({ quantity })
-        .eq("id", itemId);
-      if (error) throw error;
-    }, cartId);
+    const opKey = `update:${itemId}`;
+    if (pendingOps.current.has(opKey)) return;
+    pendingOps.current.add(opKey);
+
+    try {
+      return await enqueue(async () => {
+        const { error } = await supabase
+          .from("cart_items")
+          .update({ quantity })
+          .eq("id", itemId);
+        if (error) throw error;
+      }, cartId);
+    } finally {
+      pendingOps.current.delete(opKey);
+    }
   }
 
   async function removeItem(itemId: string) {
     if (!cartId) return;
 
-    return enqueue(
-      async () => {
-        const { error } = await supabase
-          .from("cart_items")
-          .delete()
-          .eq("id", itemId);
-        if (error) throw error;
+    const opKey = `remove:${itemId}`;
+    if (pendingOps.current.has(opKey)) return;
+    pendingOps.current.add(opKey);
 
-        toast.success("Item removed from cart");
-      },
-      cartId,
-      { immediate: true },
-    );
+    try {
+      return await enqueue(
+        async () => {
+          const { error } = await supabase
+            .from("cart_items")
+            .delete()
+            .eq("id", itemId);
+          if (error) throw error;
+
+          toast.success("Item removed from cart");
+        },
+        cartId,
+        { immediate: true },
+      );
+    } finally {
+      pendingOps.current.delete(opKey);
+    }
   }
 
   async function clearCart() {
@@ -533,6 +619,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useCart() {
   const context = useContext(CartContext);
   if (!context) {

@@ -2,6 +2,7 @@ import { useTopProducts } from "@/hooks/use-analytics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trophy, Medal, Award, Package } from "lucide-react";
+import { ProductImage } from "@/components/ui/ProductImage";
 import { cn } from "@/lib/utils";
 
 const rankIcons = [
@@ -57,17 +58,11 @@ export function TopProductsPanel() {
                     )}
                   </div>
 
-                  {product.image_url ? (
-                    <img
-                      src={product.image_url}
-                      alt={product.name}
-                      className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                      <Package className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                  )}
+                  <ProductImage
+                    src={product.image_url}
+                    alt={product.name}
+                    className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+                  />
 
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">

@@ -15,9 +15,11 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Star, GripVertical, ArrowUp, ArrowDown } from "lucide-react";
+import { ProductImage } from "@/components/ui/ProductImage";
 
 export function FeaturedProductsPanel() {
-  const { data: products, isLoading } = useProducts();
+  const { data: productsData, isLoading } = useProducts();
+  const products = productsData?.products;
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [updating, setUpdating] = useState<string | null>(null);
@@ -125,8 +127,8 @@ export function FeaturedProductsPanel() {
                 >
                   <GripVertical className="h-4 w-4 text-muted-foreground" />
 
-                  <img
-                    src={product.image_url || "/placeholder.svg"}
+                  <ProductImage
+                    src={product.image_url}
                     alt={product.name}
                     className="w-12 h-12 object-cover rounded"
                   />
@@ -187,8 +189,8 @@ export function FeaturedProductsPanel() {
                 key={product.id}
                 className="flex items-center gap-3 p-3 hover:bg-muted/50 rounded-lg border"
               >
-                <img
-                  src={product.image_url || "/placeholder.svg"}
+                <ProductImage
+                  src={product.image_url}
                   alt={product.name}
                   className="w-10 h-10 object-cover rounded"
                 />
