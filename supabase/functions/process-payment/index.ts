@@ -15,6 +15,24 @@ interface CartItem {
   addons: { price: number }[] | null;
 }
 
+// Simple in-memory rate limiter per session (resets on cold start)
+const recentPayments = new Map<string, number[]>();
+const RATE_LIMIT_WINDOW_MS = 60_000; // 60 seconds
+const RATE_LIMIT_MAX = 3; // max 3 payment attempts per session per minute
+
+function isRateLimited(sessionId: string): boolean {
+  const now = Date.now();
+  const timestamps = recentPayments.get(sessionId) || [];
+  const recent = timestamps.filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
+  recentPayments.set(sessionId, recent);
+  if (recent.length >= RATE_LIMIT_MAX) {
+    return true;
+  }
+  recent.push(now);
+  recentPayments.set(sessionId, recent);
+  return false;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -24,10 +42,10 @@ serve(async (req) => {
   try {
     const { sourceId, sessionId, currency = "USD" } = await req.json();
 
-    console.log("Processing payment with server-side validation:", { 
-      sourceId: sourceId?.substring(0, 20) + "...", 
+    console.log("Processing payment with server-side validation:", {
+      sourceId: sourceId?.substring(0, 20) + "...",
       sessionId,
-      currency 
+      currency
     });
 
     if (!sourceId || !sessionId) {
@@ -35,18 +53,52 @@ serve(async (req) => {
       throw new Error("Missing sourceId or sessionId");
     }
 
-    // Initialize Supabase client with service role for server-side access
+    // --- Authentication ---
+    // verify_jwt is false in config to support guest checkout.
+    // If an Authorization header is present, validate the JWT.
+    // For guest checkout, the sessionId + cart validation below serves as proof of a valid session.
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
 
     if (!supabaseUrl || !supabaseServiceKey) {
       console.error("Supabase configuration missing");
       throw new Error("Server configuration error");
     }
 
+    let authenticatedUserId: string | null = null;
+
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader) {
+      // Validate JWT for authenticated users
+      const token = authHeader.replace("Bearer ", "");
+      // Use a client with the anon key to validate the user's JWT (not service role)
+      const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey || supabaseServiceKey);
+      const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token);
+      if (authError || !user) {
+        console.error("JWT validation failed:", authError?.message);
+        return new Response(
+          JSON.stringify({ error: "Unauthorized" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      authenticatedUserId = user.id;
+      console.log("Authenticated user:", authenticatedUserId);
+    }
+
+    // --- Rate Limiting ---
+    if (isRateLimited(sessionId)) {
+      console.error("Rate limited session:", sessionId);
+      return new Response(
+        JSON.stringify({ error: "Too many payment attempts. Please wait before trying again." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Initialize Supabase client with service role for server-side access
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Find the cart by session ID
+    // Find the cart by session ID — this validates the guest session
     const { data: cart, error: cartError } = await supabase
       .from('carts')
       .select('id')
@@ -88,13 +140,13 @@ serve(async (req) => {
     // Fetch addon prices separately (since addon_ids is an array)
     const allAddonIds = cartItems.flatMap(item => (item.addon_ids as string[]) || []);
     let addonsMap = new Map<string, number>();
-    
+
     if (allAddonIds.length > 0) {
       const { data: addons } = await supabase
         .from('product_addons')
         .select('id, price')
         .in('id', allAddonIds);
-      
+
       if (addons) {
         addonsMap = new Map(addons.map(a => [a.id, Number(a.price)]));
       }
@@ -105,12 +157,12 @@ serve(async (req) => {
     for (const item of cartItems) {
       // Prioritize: size_override price > size price > product price
       let itemPrice = 0;
-      
+
       // Handle the joined relations - they come back as objects, not arrays when using .single() joins
       const product = item.product as unknown as { price: number } | null;
       const size = item.size as unknown as { price: number } | null;
       const sizeOverride = item.size_override as unknown as { price: number } | null;
-      
+
       if (sizeOverride && sizeOverride.price != null) {
         itemPrice = Number(sizeOverride.price);
       } else if (size && size.price != null) {
@@ -135,16 +187,16 @@ serve(async (req) => {
     const TAX_RATE = 0.08;
     const tax = subtotal * TAX_RATE;
     const total = subtotal + tax;
-    
+
     // Convert to cents for Square API
     const amountInCents = Math.round(total * 100);
 
-    console.log("Calculated payment amount:", { 
-      subtotal, 
-      tax, 
-      total, 
+    console.log("Calculated payment amount:", {
+      subtotal,
+      tax,
+      total,
       amountInCents,
-      itemCount: cartItems.length 
+      itemCount: cartItems.length
     });
 
     if (amountInCents <= 0) {
@@ -162,7 +214,7 @@ serve(async (req) => {
 
     // Determine if we're in sandbox mode based on the token prefix
     const isSandbox = squareToken.startsWith("EAAAl") || squareToken.startsWith("sandbox");
-    const squareUrl = isSandbox 
+    const squareUrl = isSandbox
       ? "https://connect.squareupsandbox.com/v2/payments"
       : "https://connect.squareup.com/v2/payments";
 
@@ -206,8 +258,8 @@ serve(async (req) => {
     console.log("Payment successful:", squareData.payment?.id);
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         payment: {
           id: squareData.payment?.id,
           status: squareData.payment?.status,
