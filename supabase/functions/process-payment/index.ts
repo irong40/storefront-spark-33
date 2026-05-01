@@ -46,10 +46,18 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    const authHeader = req.headers.get("authorization");
+    let authedUserId: string | null = null;
+    if (authHeader?.startsWith("Bearer ")) {
+      const jwt = authHeader.slice(7);
+      const { data: { user } } = await supabase.auth.getUser(jwt);
+      authedUserId = user?.id ?? null;
+    }
+
     // Find the cart by session ID
     const { data: cart, error: cartError } = await supabase
       .from('carts')
-      .select('id')
+      .select('id, created_at, user_id')
       .eq('session_id', sessionId)
       .maybeSingle();
 
@@ -61,6 +69,22 @@ serve(async (req) => {
     if (!cart) {
       console.error("Cart not found for session:", sessionId);
       throw new Error("Cart not found");
+    }
+
+    const cartAge = Date.now() - new Date(cart.created_at).getTime();
+    const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+    if (cartAge > TWENTY_FOUR_HOURS) {
+      return new Response(JSON.stringify({ error: "Cart session expired" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (authedUserId !== null && cart.user_id !== authedUserId) {
+      return new Response(JSON.stringify({ error: "Cart does not belong to authenticated user" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Fetch cart items with all pricing data
@@ -84,6 +108,13 @@ serve(async (req) => {
       console.error("Cart is empty");
       throw new Error("Cart is empty");
     }
+
+    // Read tax rate from business_settings (single source of truth)
+    const { data: bizSettings } = await supabase
+      .from("business_settings")
+      .select("tax_rate")
+      .single();
+    const TAX_RATE: number = bizSettings?.tax_rate ?? 0.08;
 
     // Fetch addon prices separately (since addon_ids is an array)
     const allAddonIds = cartItems.flatMap(item => (item.addon_ids as string[]) || []);
@@ -131,8 +162,6 @@ serve(async (req) => {
       subtotal += itemPrice * item.quantity;
     }
 
-    // Tax rate — keep in sync with frontend CHECKOUT_CONFIG.TAX_RATE (src/config/checkout.ts)
-    const TAX_RATE = 0.08;
     const tax = subtotal * TAX_RATE;
     const total = subtotal + tax;
     
@@ -152,17 +181,24 @@ serve(async (req) => {
       throw new Error("Invalid order amount");
     }
 
+    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
+    console.log(JSON.stringify({
+      event: "payment_attempt",
+      sessionId,
+      ip: clientIp,
+      cartTotal: amountInCents,
+      ts: new Date().toISOString(),
+    }));
+
     // Get Square credentials from DB (with env var fallback)
-    const { token: squareToken } = await getSquareToken(supabase);
+    const { token: squareToken, isSandbox } = await getSquareToken(supabase);
 
     if (!squareToken) {
       console.error("No Square access token available (DB or env)");
       throw new Error("Server configuration error: Payment service not configured");
     }
 
-    // Determine if we're in sandbox mode based on the token prefix
-    const isSandbox = squareToken.startsWith("EAAAl") || squareToken.startsWith("sandbox");
-    const squareUrl = isSandbox 
+    const squareUrl = isSandbox
       ? "https://connect.squareupsandbox.com/v2/payments"
       : "https://connect.squareup.com/v2/payments";
 

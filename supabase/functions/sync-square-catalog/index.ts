@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getSquareToken } from "../_shared/get-square-token.ts";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': Deno.env.get('ALLOWED_ORIGIN') || 'https://www.impressivejb.com',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
@@ -67,12 +67,24 @@ serve(async (req) => {
       throw new Error('No Square access token available');
     }
 
-    // Verify admin authorization
+    // Authorization required — no anonymous access.
+    // Accepts either:
+    //   (a) service role key  — for internal calls from square-webhook
+    //   (b) admin user JWT    — for calls from the Admin UI
     const authHeader = req.headers.get('Authorization');
-    if (authHeader) {
-      const token = authHeader.replace('Bearer ', '');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Authorization required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const isServiceRole = token === supabaseServiceKey;
+
+    if (!isServiceRole) {
       const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-      
+
       if (authError || !user) {
         console.error('Auth error:', authError);
         return new Response(
@@ -81,7 +93,6 @@ serve(async (req) => {
         );
       }
 
-      // Check admin role
       const { data: roleData } = await supabase
         .from('user_roles')
         .select('role')

@@ -8,7 +8,7 @@ import { Testimonials } from "@/components/home/Testimonials";
 import { Locations } from "@/components/home/Locations";
 
 export default function Home() {
-  useDocumentTitle();
+  useDocumentTitle("imPRESSive Juice Bar | Cold-Pressed Juice Bar in Portsmouth, VA");
   return (
     <Layout>
       <AnnouncementBanner />

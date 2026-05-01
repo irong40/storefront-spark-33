@@ -6,9 +6,10 @@ interface ProductImageProps {
   src: string | null | undefined;
   alt: string;
   className?: string;
+  priority?: boolean;
 }
 
-export function ProductImage({ src, alt, className }: ProductImageProps) {
+export function ProductImage({ src, alt, className, priority }: ProductImageProps) {
   const [hasError, setHasError] = useState(false);
 
   if (!src || hasError) {
@@ -29,7 +30,8 @@ export function ProductImage({ src, alt, className }: ProductImageProps) {
       alt={alt}
       className={className}
       onError={() => setHasError(true)}
-      loading="lazy"
+      loading={priority ? "eager" : "lazy"}
+      fetchPriority={priority ? "high" : undefined}
     />
   );
 }

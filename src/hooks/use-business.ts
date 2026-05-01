@@ -17,6 +17,7 @@ export interface BusinessSettings {
   social_links: Record<string, string> | null;
   logo_url: string | null;
   favicon_url: string | null;
+  tax_rate: number;
   created_at: string;
 }
 

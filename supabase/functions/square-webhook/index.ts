@@ -19,19 +19,71 @@ interface SquareWebhookEvent {
   };
 }
 
+async function verifySquareSignature(
+  signatureKey: string,
+  webhookUrl: string,
+  rawBody: string,
+  signatureHeader: string,
+): Promise<boolean> {
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(signatureKey);
+  const msgData = encoder.encode(webhookUrl + rawBody);
+
+  const key = await crypto.subtle.importKey(
+    "raw",
+    keyData,
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const signature = await crypto.subtle.sign("HMAC", key, msgData);
+  const expected = btoa(String.fromCharCode(...new Uint8Array(signature)));
+  return expected === signatureHeader;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    // Read raw body BEFORE parsing — needed for signature verification.
+    const rawBody = await req.text();
 
-    // Parse the webhook payload
-    const payload: SquareWebhookEvent = await req.json();
+    // Verify Square HMAC-SHA256 signature.
+    // Set SQUARE_WEBHOOK_SIGNATURE_KEY in Supabase secrets (from Square Developer Dashboard).
+    const signatureKey = Deno.env.get('SQUARE_WEBHOOK_SIGNATURE_KEY');
+    const signatureHeader = req.headers.get('x-square-hmacsha256-signature');
+
+    if (signatureKey) {
+      if (!signatureHeader) {
+        console.error('Webhook rejected: missing x-square-hmacsha256-signature header');
+        return new Response(
+          JSON.stringify({ error: 'Missing signature' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        );
+      }
+
+      const webhookUrl = req.url;
+      const valid = await verifySquareSignature(signatureKey, webhookUrl, rawBody, signatureHeader);
+
+      if (!valid) {
+        console.error('Webhook rejected: signature mismatch');
+        return new Response(
+          JSON.stringify({ error: 'Invalid signature' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        );
+      }
+    } else {
+      console.warn('SQUARE_WEBHOOK_SIGNATURE_KEY not set — skipping signature verification');
+    }
+
+    const payload: SquareWebhookEvent = JSON.parse(rawBody);
 
     console.log('Received Square webhook:', payload.type, payload.event_id);
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -41,10 +93,8 @@ serve(async (req) => {
     // Handle different event types
     switch (payload.type) {
       case 'catalog.version.updated': {
-        // Catalog was updated - trigger a full catalog sync
         console.log('Catalog updated, triggering sync...');
-        
-        // Call the sync-square-catalog function
+
         const syncResponse = await fetch(
           `${supabaseUrl}/functions/v1/sync-square-catalog`,
           {
@@ -65,9 +115,8 @@ serve(async (req) => {
       }
 
       case 'inventory.count.updated': {
-        // Single inventory item updated
         console.log('Inventory count updated:', payload.data.id);
-        
+
         const inventoryData = payload.data.object as {
           catalog_object_id?: string;
           location_id?: string;
@@ -76,8 +125,7 @@ serve(async (req) => {
 
         if (inventoryData?.catalog_object_id && inventoryData.location_id === squareLocationId) {
           const quantity = parseInt(inventoryData.quantity || '0', 10);
-          
-          // Update the product directly
+
           const { error } = await supabase
             .from('products')
             .update({
@@ -99,9 +147,8 @@ serve(async (req) => {
       case 'catalog.item.created':
       case 'catalog.item.updated':
       case 'catalog.item.deleted': {
-        // Individual item change - trigger catalog sync for simplicity
         console.log(`Catalog item ${payload.type}, triggering sync...`);
-        
+
         const syncResponse = await fetch(
           `${supabaseUrl}/functions/v1/sync-square-catalog`,
           {

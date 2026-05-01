@@ -11,6 +11,7 @@ export function Hero() {
   // Track which product index each card shows
   const [cardIndices, setCardIndices] = useState([0, 1, 2]);
   const [fadingCard, setFadingCard] = useState<number | null>(null);
+  const [positionMap, setPositionMap] = useState([0, 1, 2]);
 
   const rotateCard = useCallback(
     (cardPosition: number) => {
@@ -21,17 +22,25 @@ export function Hero() {
       setTimeout(() => {
         setCardIndices((prev) => {
           const newIndices = [...prev];
-          // Get next available index that's not currently shown
           let nextIndex = (prev[cardPosition] + 3) % products.length;
-          // Ensure we don't show duplicates
           while (prev.includes(nextIndex) && products.length > 3) {
             nextIndex = (nextIndex + 1) % products.length;
           }
           newIndices[cardPosition] = nextIndex;
           return newIndices;
         });
-        setFadingCard(null);
+        // Pick a random permutation of [0,1,2] different from the current one
+        setPositionMap((prev) => {
+          const all = [
+            [0, 1, 2], [0, 2, 1], [1, 0, 2],
+            [1, 2, 0], [2, 0, 1], [2, 1, 0],
+          ];
+          const others = all.filter((p) => p.some((v, i) => v !== prev[i]));
+          return others[Math.floor(Math.random() * others.length)];
+        });
       }, 300);
+
+      setTimeout(() => setFadingCard(null), 350);
     },
     [products],
   );
@@ -86,6 +95,11 @@ export function Hero() {
                 <span className="absolute bottom-1 left-0 right-0 h-3 bg-brand-mustard/40 -z-10 rounded-full" />
               </span>
             </h1>
+
+            {/* Geo subtitle */}
+            <p className="text-base text-brand-terracotta font-medium mb-4">
+              Fresh Cold-Pressed Juices in Portsmouth, VA
+            </p>
 
             {/* Description */}
             <p className="text-lg text-brand-warm-gray mb-8 max-w-md">
@@ -142,7 +156,7 @@ export function Hero() {
               {/* Background circle */}
               <div className="absolute inset-[10%] rounded-full bg-gradient-to-br from-brand-cream-dark to-brand-terracotta opacity-30" />
 
-              {/* Floating juice cards - Dynamic from database with rotation */}
+              {/* Floating juice cards - rotate product AND position independently */}
               {isLoading ? (
                 <>
                   <Skeleton className="absolute top-[10%] left-[5%] w-36 h-48 rounded-lg" />
@@ -151,80 +165,47 @@ export function Hero() {
                 </>
               ) : (
                 <>
-                  {getProduct(0) && (
-                    <Link
-                      to={`/products/${getProduct(0)!.slug}`}
-                      className={`absolute top-[10%] left-[5%] bg-card rounded-lg p-2.5 shadow-lifted z-10 w-36 hover:shadow-xl transition-all duration-300 ${
-                        fadingCard === 0
-                          ? "opacity-0 scale-95"
-                          : "opacity-100 scale-100"
-                      }`}
-                    >
-                      <div className="aspect-[4/5] rounded overflow-hidden mb-2">
-                        <img
-                          src={getProduct(0)!.image_url || "/placeholder.svg"}
-                          alt={getProduct(0)!.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="font-display text-sm text-charcoal truncate">
-                        {getProduct(0)!.name}
-                      </div>
-                      <div className="text-[10px] tracking-[0.1em] uppercase text-taupe">
-                        Signature Elixir
-                      </div>
-                    </Link>
-                  )}
-
-                  {getProduct(1) && (
-                    <Link
-                      to={`/products/${getProduct(1)!.slug}`}
-                      className={`absolute top-[45%] right-0 bg-card rounded-lg p-2.5 shadow-lifted z-20 w-36 hover:shadow-xl transition-all duration-300 ${
-                        fadingCard === 1
-                          ? "opacity-0 scale-95"
-                          : "opacity-100 scale-100"
-                      }`}
-                    >
-                      <div className="aspect-[4/5] rounded overflow-hidden mb-2">
-                        <img
-                          src={getProduct(1)!.image_url || "/placeholder.svg"}
-                          alt={getProduct(1)!.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="font-display text-sm text-charcoal truncate">
-                        {getProduct(1)!.name}
-                      </div>
-                      <div className="text-[10px] tracking-[0.1em] uppercase text-taupe">
-                        Energizing
-                      </div>
-                    </Link>
-                  )}
-
-                  {getProduct(2) && (
-                    <Link
-                      to={`/products/${getProduct(2)!.slug}`}
-                      className={`absolute bottom-[5%] left-[15%] bg-card rounded-lg p-2.5 shadow-lifted z-30 w-36 hover:shadow-xl transition-all duration-300 ${
-                        fadingCard === 2
-                          ? "opacity-0 scale-95"
-                          : "opacity-100 scale-100"
-                      }`}
-                    >
-                      <div className="aspect-[4/5] rounded overflow-hidden mb-2">
-                        <img
-                          src={getProduct(2)!.image_url || "/placeholder.svg"}
-                          alt={getProduct(2)!.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="font-display text-sm text-charcoal truncate">
-                        {getProduct(2)!.name}
-                      </div>
-                      <div className="text-[10px] tracking-[0.1em] uppercase text-taupe">
-                        Antioxidant
-                      </div>
-                    </Link>
-                  )}
+                  {([0, 1, 2] as const).map((cardNum) => {
+                    const product = getProduct(cardNum);
+                    if (!product) return null;
+                    const posSlot = positionMap[cardNum];
+                    const isFading = fadingCard === cardNum;
+                    const posStyle: React.CSSProperties =
+                      posSlot === 0
+                        ? { top: "10%", left: "5%", zIndex: 10 }
+                        : posSlot === 1
+                          ? { top: "45%", left: "calc(100% - 9rem)", zIndex: 20 }
+                          : { top: "58%", left: "15%", zIndex: 30 };
+                    return (
+                      <Link
+                        key={cardNum}
+                        to={`/products/${product.slug}`}
+                        style={{
+                          position: "absolute",
+                          width: "9rem",
+                          transition: "top 0.6s ease, left 0.6s ease, opacity 0.3s, transform 0.3s",
+                          opacity: isFading ? 0 : 1,
+                          transform: isFading ? "scale(0.95)" : "scale(1)",
+                          ...posStyle,
+                        }}
+                        className="bg-card rounded-lg p-2.5 shadow-lifted hover:shadow-xl"
+                      >
+                        <div className="aspect-[4/5] rounded overflow-hidden mb-2">
+                          <img
+                            src={product.image_url || "/placeholder.svg"}
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="font-display text-sm text-charcoal truncate">
+                          {product.name}
+                        </div>
+                        <div className="text-[10px] tracking-[0.1em] uppercase text-taupe">
+                          {posSlot === 0 ? "Signature Elixir" : posSlot === 1 ? "Energizing" : "Antioxidant"}
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </>
               )}
             </div>

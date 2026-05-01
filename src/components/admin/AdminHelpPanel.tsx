@@ -20,6 +20,9 @@ import {
   Info,
   CheckCircle,
   XCircle,
+  MessageSquare,
+  Heart,
+  Tag,
 } from "lucide-react";
 
 export function AdminHelpPanel() {
@@ -348,6 +351,107 @@ export function AdminHelpPanel() {
               </AccordionContent>
             </AccordionItem>
 
+            {/* Messages */}
+            <AccordionItem value="messages">
+              <AccordionTrigger className="text-left">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  Messages
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="space-y-4 text-sm">
+                <div>
+                  <h4 className="font-semibold mb-2">Contact Submissions</h4>
+                  <p className="text-muted-foreground">
+                    All messages submitted through the Contact page appear here,
+                    newest first. Click any row to expand the full message.
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2">Statuses</h4>
+                  <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                    <li><strong>New:</strong> Just received, not yet read</li>
+                    <li><strong>Read:</strong> Opened and reviewed</li>
+                    <li><strong>Replied:</strong> Customer has been responded to</li>
+                    <li><strong>Archived:</strong> Closed, no further action needed</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2">Admin Notes</h4>
+                  <p className="text-muted-foreground">
+                    Use the notes field to log internal follow-up actions or context.
+                    Notes are private and never visible to customers. Click Save to persist them.
+                  </p>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Loyalty */}
+            <AccordionItem value="loyalty">
+              <AccordionTrigger className="text-left">
+                <div className="flex items-center gap-2">
+                  <Heart className="h-4 w-4" />
+                  Loyalty Program
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="space-y-4 text-sm">
+                <div>
+                  <h4 className="font-semibold mb-2">Tiers</h4>
+                  <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                    <li><strong>Bronze:</strong> Starting tier for all members</li>
+                    <li><strong>Silver:</strong> Mid-tier with increased rewards</li>
+                    <li><strong>Gold:</strong> High-value customers</li>
+                    <li><strong>Platinum:</strong> Top-tier, highest rewards</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2">Manual Point Adjustments</h4>
+                  <p className="text-muted-foreground">
+                    Enter a positive number to add points or a negative number to
+                    deduct points. Always include a reason — it is logged in the
+                    member's transaction history for audit purposes.
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2">Overview Stats</h4>
+                  <p className="text-muted-foreground">
+                    The top cards show total enrolled members, total points
+                    outstanding across all members, and a tier breakdown.
+                    Members are listed in descending point order.
+                  </p>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Categories */}
+            <AccordionItem value="categories">
+              <AccordionTrigger className="text-left">
+                <div className="flex items-center gap-2">
+                  <Tag className="h-4 w-4" />
+                  Categories
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="space-y-4 text-sm">
+                <div>
+                  <h4 className="font-semibold mb-2">Creating & Editing</h4>
+                  <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                    <li>Click "Add Category" to create a new category</li>
+                    <li>The URL slug is auto-generated from the name</li>
+                    <li>Set a sort order number to control display sequence — lower numbers appear first</li>
+                    <li>Toggle Active to show or hide a category from the storefront</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2">Deleting Categories</h4>
+                  <p className="text-muted-foreground">
+                    Deleting a category does not delete its products — they
+                    become uncategorized. Reassign products in the Products tab
+                    before deleting if you want them to remain in a category.
+                  </p>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
             {/* Gift Cards */}
             <AccordionItem value="gift-cards">
               <AccordionTrigger className="text-left">
@@ -441,6 +545,14 @@ export function AdminHelpPanel() {
                   <p className="text-muted-foreground">
                     Set your operating hours for each day of the week. Hours
                     display on the Contact and Locations pages.
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2">Tax Rate</h4>
+                  <p className="text-muted-foreground">
+                    Set the sales tax percentage applied at checkout. Enter as a
+                    decimal — e.g., 8% = 0.08. This is applied to every order
+                    in real time.
                   </p>
                 </div>
                 <div>

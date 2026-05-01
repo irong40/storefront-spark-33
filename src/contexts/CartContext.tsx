@@ -50,6 +50,7 @@ interface CartContextType {
   subtotal: number;
   isLoading: boolean;
   isMutating: boolean;
+  sessionId: string;
   isOpen: boolean;
   openCart: () => void;
   closeCart: () => void;
@@ -111,7 +112,13 @@ function getSessionId(): string {
   }
 
   // Generate a fresh session
-  const session: StoredSession = { id: crypto.randomUUID(), created: Date.now() };
+  const uuid = typeof crypto.randomUUID === "function"
+    ? crypto.randomUUID()
+    : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0;
+        return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
+      });
+  const session: StoredSession = { id: uuid, created: Date.now() };
   localStorage.setItem(SESSION_KEY, JSON.stringify(session));
   return session.id;
 }
@@ -602,6 +609,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         items,
         itemCount,
         subtotal,
+        sessionId,
         isLoading,
         isMutating,
         isOpen,

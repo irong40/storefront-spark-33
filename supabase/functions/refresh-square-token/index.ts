@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": Deno.env.get("ALLOWED_ORIGIN") || "https://www.impressivejb.com",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
@@ -17,7 +17,40 @@ serve(async (req) => {
     const squareAppId = Deno.env.get("SQUARE_APP_ID")!;
     const squareAppSecret = Deno.env.get("SQUARE_APP_SECRET")!;
 
+    // Only service-role callers (cron jobs) or admins may trigger a token refresh
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Authorization required" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const token = authHeader.replace("Bearer ", "");
+    const isServiceRole = token === supabaseServiceKey;
+
+    if (!isServiceRole) {
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      if (authError || !user) {
+        return new Response(
+          JSON.stringify({ error: "Unauthorized" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .single();
+      if (!roleData) {
+        return new Response(
+          JSON.stringify({ error: "Admin access required" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    }
 
     // Get active token
     const { data: tokenRow, error: fetchError } = await supabase
@@ -52,8 +85,7 @@ serve(async (req) => {
 
     console.log("Token expiring soon, refreshing...");
 
-    // Determine sandbox vs production based on current token
-    const isSandbox = tokenRow.access_token.startsWith("EAAAl") || tokenRow.access_token.startsWith("sandbox");
+    const isSandbox: boolean = tokenRow.is_sandbox ?? false;
     const baseUrl = isSandbox
       ? "https://connect.squareupsandbox.com"
       : "https://connect.squareup.com";

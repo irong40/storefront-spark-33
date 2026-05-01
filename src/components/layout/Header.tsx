@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ShoppingCart, User, Settings } from "lucide-react";
-import logo from "@/assets/logo-transparent.png";
+import logo from "@/assets/logo.jpg";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsAdmin } from "@/hooks/use-admin";
@@ -50,7 +50,7 @@ export function Header() {
           <img
             src={logo}
             alt="imPRESSive Juice Bar"
-            className={`w-auto object-contain transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_8px_20px_rgba(0,0,0,0.15)] mix-blend-multiply ${
+            className={`w-auto object-contain rounded-xl transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_8px_20px_rgba(0,0,0,0.15)] ${
               isScrolled
                 ? "h-10 md:h-12 lg:h-14"
                 : "h-[70px] md:h-[90px] lg:h-[100px]"
@@ -77,6 +77,7 @@ export function Header() {
           {/* Cart */}
           <button
             onClick={openCart}
+            aria-label="Open shopping cart"
             className="relative w-11 h-11 rounded-full bg-brand-cream-dark flex items-center justify-center transition-all hover:bg-brand-terracotta hover:text-white"
           >
             <ShoppingCart className="h-5 w-5" />
@@ -133,7 +134,7 @@ export function Header() {
           {/* Mobile Menu */}
           <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
             <SheetTrigger asChild className="md:hidden">
-              <button className="flex flex-col gap-1.5 p-2">
+              <button aria-label="Open navigation menu" className="flex flex-col gap-1.5 p-2">
                 <span
                   className={`block w-6 h-0.5 bg-brand-brown rounded-full transition-all ${isMobileOpen ? "rotate-45 translate-y-2" : ""}`}
                 />

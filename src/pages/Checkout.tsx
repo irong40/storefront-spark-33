@@ -123,6 +123,7 @@ import {
   getAvailableTimeSlots,
 } from "@/config/checkout";
 import { useGiftCard } from "@/hooks/use-gift-card";
+import { useBusinessSettings } from "@/hooks/use-business";
 
 interface AppliedGiftCard {
   code: string;
@@ -134,13 +135,15 @@ export default function Checkout() {
   useDocumentTitle("Checkout");
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { items, subtotal, clearCart, isLoading: cartLoading } = useCart();
+  const { items, subtotal, clearCart, isLoading: cartLoading, sessionId } = useCart();
   const { user, profile } = useAuth();
   const {
     checkBalance,
     redeemGiftCard,
     isLoading: giftCardLoading,
   } = useGiftCard();
+  const { data: businessSettings } = useBusinessSettings();
+  const taxRate = businessSettings?.tax_rate ?? CHECKOUT_CONFIG.TAX_RATE;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fulfillmentType, setFulfillmentType] = useState<"pickup" | "delivery">("pickup");
@@ -186,7 +189,7 @@ export default function Checkout() {
     (sum, gc) => sum + gc.amountApplied,
     0,
   );
-  const tax = subtotal * CHECKOUT_CONFIG.TAX_RATE;
+  const tax = subtotal * taxRate;
   const shipping =
     fulfillmentType === "delivery" ? CHECKOUT_CONFIG.DELIVERY_FEE : 0;
   const totalBeforeGiftCard = subtotal + tax + shipping;
@@ -402,12 +405,15 @@ export default function Checkout() {
     setIsSubmitting(true);
 
     try {
-      // Generate order number (also handled by database trigger as fallback)
+      // Generate order ID and number client-side so we don't need a SELECT
+      // after insert (guest users fail the SELECT RLS policy: null = null is false)
+      const orderId = crypto.randomUUID();
       const orderNumber = generateOrderNumber();
 
-      const { data: order, error: orderError } = await supabase
+      const { error: orderError } = await supabase
         .from("orders")
         .insert({
+          id: orderId,
           order_number: orderNumber,
           user_id: user?.id || null,
           email: formData.email,
@@ -435,9 +441,7 @@ export default function Checkout() {
                   zip: formData.zip,
                 }
               : null,
-        })
-        .select()
-        .single();
+        });
 
       if (orderError) throw orderError;
 
@@ -445,7 +449,7 @@ export default function Checkout() {
       const orderItems = items.map((item) => {
         const effectivePrice = getItemEffectiveUnitPrice(item);
         return {
-          order_id: order.id,
+          order_id: orderId,
           product_id: item.product_id,
           product_name: item.product.name,
           product_price: effectivePrice,
@@ -472,7 +476,7 @@ export default function Checkout() {
       // Redeem applied gift cards (non-fatal — order already created)
       for (const gc of appliedGiftCards) {
         try {
-          await redeemGiftCard(gc.code, gc.amountApplied, order.id);
+          await redeemGiftCard(gc.code, gc.amountApplied, orderId);
         } catch (gcErr) {
           logger.error("Gift card redemption failed (non-fatal):", gcErr);
         }
@@ -484,7 +488,7 @@ export default function Checkout() {
           body: {
             email: formData.email,
             customerName: formData.customerName || undefined,
-            orderNumber: order.order_number,
+            orderNumber: orderNumber,
             items: orderItems.map((item) => ({
               product_name: item.product_name,
               quantity: item.quantity,
@@ -512,7 +516,7 @@ export default function Checkout() {
       await clearCart();
 
       // Navigate to confirmation
-      navigate(`/order-confirmation/${order.id}`);
+      navigate(`/order-confirmation/${orderId}`);
     } catch (error) {
       logger.error("Order creation error:", error);
       toast({
@@ -922,7 +926,7 @@ export default function Checkout() {
               ) : (
                 <SquarePaymentForm
                   amountInCents={totalInCents}
-                  sessionId={localStorage.getItem("cart_session_id") || ""}
+                  sessionId={sessionId}
                   onSuccess={handlePaymentSuccess}
                   onError={handlePaymentError}
                   disabled={isSubmitting || cartLoading || giftCardLoading}
@@ -1066,7 +1070,7 @@ export default function Checkout() {
                   <span>${subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Tax ({(CHECKOUT_CONFIG.TAX_RATE * 100).toFixed(0)}%)</span>
+                  <span className="text-muted-foreground">Tax ({(taxRate * 100).toFixed(0)}%)</span>
                   <span>${tax.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">

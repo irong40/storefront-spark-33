@@ -32,6 +32,8 @@ const LoyaltyDashboard = lazy(() =>
 const Contact = lazy(() => import("./pages/Contact"));
 const About = lazy(() => import("./pages/About"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const Terms = lazy(() => import("./pages/Terms"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -78,6 +80,8 @@ const App = () => (
                 <Route path="/gift-cards/balance" element={<GiftCardBalance />} />
                 <Route path="/rewards" element={<Layout><LoyaltyDashboard /></Layout>} />
                 <Route path="/admin" element={<Admin />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/terms" element={<Terms />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

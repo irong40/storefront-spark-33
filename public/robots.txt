@@ -12,3 +12,14 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+Disallow: /admin
+Disallow: /checkout
+Disallow: /account
+Disallow: /order-confirmation
+Disallow: /auth
+Disallow: /reset-password
+Disallow: /rewards
+Disallow: /gift-cards/balance
+
+Sitemap: https://www.impressivejb.com/sitemap.xml

@@ -45,7 +45,7 @@ export default function Products() {
             Fresh & Natural
           </span>
           <h1 className="text-4xl md:text-5xl font-heading font-bold text-brand-brown mb-4">
-            Our Products
+            Fresh Cold-Pressed Juices, Wellness Shots &amp; Cleanses
           </h1>
           <p className="text-muted-foreground text-lg max-w-2xl">
             Fresh cold-pressed juices made daily. Choose from our selection of

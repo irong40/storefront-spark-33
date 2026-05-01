@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { z } from "zod";
 import { Layout } from "@/components/layout/Layout";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 import { logger } from "@/lib/logger";
 
 // GC-XXXX-XXXX-XXXX  (2 + 4 + 4 + 4 = 14 alphanum chars, 3 dashes = 17 total)
@@ -33,6 +34,7 @@ interface GiftCardResult {
 }
 
 export default function GiftCardBalance() {
+  useDocumentTitle("Check Gift Card Balance | imPRESSive Juice Bar");
   const [code, setCode] = useState("");
   const [result, setResult] = useState<GiftCardResult | null>(null);
   const [loading, setLoading] = useState(false);

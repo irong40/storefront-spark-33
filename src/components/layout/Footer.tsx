@@ -96,7 +96,7 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="#"
+                  href="/#locations"
                   className="text-white/70 hover:text-brand-berry transition-colors"
                 >
                   Locations
@@ -129,7 +129,7 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="#"
+                  href="/contact"
                   className="text-white/70 hover:text-brand-berry transition-colors"
                 >
                   Shipping Info
@@ -137,7 +137,7 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="#"
+                  href="/contact"
                   className="text-white/70 hover:text-brand-berry transition-colors"
                 >
                   Returns
@@ -145,7 +145,7 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="#"
+                  href="/contact"
                   className="text-white/70 hover:text-brand-berry transition-colors"
                 >
                   FAQ
@@ -163,10 +163,10 @@ export function Footer() {
             reserved.
           </p>
           <div className="flex gap-6">
-            <a href="#" className="hover:text-white transition-colors">
+            <a href="/privacy-policy" className="hover:text-white transition-colors">
               Privacy Policy
             </a>
-            <a href="#" className="hover:text-white transition-colors">
+            <a href="/terms" className="hover:text-white transition-colors">
               Terms of Service
             </a>
           </div>

@@ -2,10 +2,10 @@ import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 export async function getSquareToken(
   supabase: SupabaseClient
-): Promise<{ token: string; locationId: string }> {
+): Promise<{ token: string; locationId: string; isSandbox: boolean }> {
   const { data, error } = await supabase
     .from("square_merchant_tokens")
-    .select("access_token, location_id")
+    .select("access_token, location_id, is_sandbox")
     .eq("is_active", true)
     .maybeSingle();
 
@@ -17,5 +17,6 @@ export async function getSquareToken(
   return {
     token: data?.access_token || Deno.env.get("SQUARE_ACCESS_TOKEN") || "",
     locationId: data?.location_id || Deno.env.get("SQUARE_LOCATION_ID") || "",
+    isSandbox: data?.is_sandbox ?? false,
   };
 }

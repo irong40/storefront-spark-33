@@ -10,7 +10,15 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { ChevronLeft, Minus, Plus, Check, Leaf } from "lucide-react";
+import { Minus, Plus, Check, Leaf } from "lucide-react";
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 
@@ -232,16 +240,21 @@ export default function ProductDetail() {
   return (
     <Layout>
       <div className="container px-4 py-8">
-        <Button
-          variant="ghost"
-          asChild
-          className="mb-6 text-brand-olive hover:text-brand-berry hover:bg-brand-olive/10"
-        >
-          <Link to="/products">
-            <ChevronLeft className="h-4 w-4 mr-2" />
-            Back to Products
-          </Link>
-        </Button>
+        <Breadcrumb className="mb-6">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/">Home</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/products">Products</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>{product?.name}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
 
         <div className="grid lg:grid-cols-2 gap-12">
           {/* Product Image */}

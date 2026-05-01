@@ -52,10 +52,6 @@ export function ProductCard({ product }: ProductCardProps) {
           </p>
         )}
         <div className="flex items-center justify-between">
-          {/* Price Hidden by Request */}
-          <span className="text-sm font-medium text-muted-foreground">
-            Select Size
-          </span>
           {hasDiscount && (
             <span className="text-sm text-muted-foreground line-through ml-2">
               Sale
