@@ -56,6 +56,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Search,
+  BellRing,
 } from "lucide-react";
 import { CreateOrderDialog } from "./CreateOrderDialog";
 
@@ -347,8 +348,15 @@ export function OrdersTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {orders.map((order) => (
-                <TableRow key={order.id}>
+              {orders.map((order) => {
+                const needsAck =
+                  !order.owner_acknowledged_at &&
+                  order.status === "pending";
+                return (
+                <TableRow
+                  key={order.id}
+                  className={needsAck ? "bg-amber-50 border-l-4 border-l-amber-400" : ""}
+                >
                   <TableCell>
                     <Checkbox
                       checked={selectedOrderIds.includes(order.id)}
@@ -358,7 +366,14 @@ export function OrdersTable() {
                     />
                   </TableCell>
                   <TableCell className="font-mono font-medium">
-                    {order.order_number}
+                    <div className="flex items-center gap-2">
+                      {order.order_number}
+                      {needsAck && (
+                        <span title="Needs acknowledgment">
+                          <BellRing className="h-4 w-4 text-amber-500" />
+                        </span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {format(
@@ -418,7 +433,8 @@ export function OrdersTable() {
                     </Button>
                   </TableCell>
                 </TableRow>
-              ))}
+                );
+              })}
             </TableBody>
           </Table>
         )}
@@ -528,6 +544,12 @@ function OrderDetails({ order }: { order: OrderWithItems }) {
                 <span className="font-mono text-xs">{order.payment_id}</span>
               </p>
             )}
+            <p>
+              <span className="text-muted-foreground">Acknowledged:</span>{" "}
+              {order.owner_acknowledged_at
+                ? format(new Date(order.owner_acknowledged_at), "PPpp")
+                : <span className="text-amber-600 font-medium">Not yet</span>}
+            </p>
           </div>
         </div>
       </div>

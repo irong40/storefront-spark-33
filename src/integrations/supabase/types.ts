@@ -663,6 +663,7 @@ export type Database = {
           id: string;
           notes: string | null;
           order_number: string;
+          owner_acknowledged_at: string | null;
           payment_id: string | null;
           payment_status: string | null;
           phone: string | null;
@@ -687,6 +688,7 @@ export type Database = {
           id?: string;
           notes?: string | null;
           order_number: string;
+          owner_acknowledged_at?: string | null;
           payment_id?: string | null;
           payment_status?: string | null;
           phone?: string | null;
@@ -711,6 +713,7 @@ export type Database = {
           id?: string;
           notes?: string | null;
           order_number?: string;
+          owner_acknowledged_at?: string | null;
           payment_id?: string | null;
           payment_status?: string | null;
           phone?: string | null;

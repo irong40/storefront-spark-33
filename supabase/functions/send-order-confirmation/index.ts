@@ -66,6 +66,33 @@ const handler = async (req: Request): Promise<Response> => {
 
     const orderData: OrderEmailRequest = await req.json();
 
+    const serviceSupabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
+    const { data: orderRow, error: orderLookupError } = await serviceSupabase
+      .from("orders")
+      .select("id, created_at")
+      .eq("order_number", orderData.orderNumber)
+      .limit(1)
+      .single();
+
+    if (orderLookupError || !orderRow) {
+      return new Response(
+        JSON.stringify({ error: "Order not found" }),
+        { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } },
+      );
+    }
+
+    const orderAge = Date.now() - new Date(orderRow.created_at).getTime();
+    if (orderAge > 10 * 60 * 1000) {
+      return new Response(
+        JSON.stringify({ error: "Order confirmation window expired" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } },
+      );
+    }
+
     console.log("Sending order confirmation email to:", orderData.email);
 
     const {
@@ -217,6 +244,84 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     console.log("Email sent successfully:", emailResponse);
+
+    // Owner alert email
+    const ownerEmail = Deno.env.get("OWNER_EMAIL") || "info@impressivejb.com";
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+    const confirmUrl = `${supabaseUrl}/functions/v1/confirm-order?token=${orderRow.id}`;
+
+    const ownerItemsHtml = items
+      .map(
+        (item) => `
+        <tr>
+          <td style="padding:8px 0;border-bottom:1px solid #e5e7eb;">
+            <strong>${escapeHtml(item.product_name)}</strong>
+            <span style="color:#6b7280;margin-left:8px;">x${item.quantity}</span>
+          </td>
+          <td style="padding:8px 0;border-bottom:1px solid #e5e7eb;text-align:right;">
+            $${Number(item.total).toFixed(2)}
+          </td>
+        </tr>`
+      )
+      .join("");
+
+    const ownerEmailHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+        <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f9fafb;margin:0;padding:20px;">
+          <div style="max-width:580px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.1);">
+
+            <div style="background:#111827;padding:24px 32px;">
+              <p style="margin:0;color:#9ca3af;font-size:12px;text-transform:uppercase;letter-spacing:.05em;">New Order Alert</p>
+              <h1 style="margin:4px 0 0;color:#fff;font-size:22px;">Order ${safeOrderNumber}</h1>
+            </div>
+
+            <div style="padding:24px 32px;">
+              <div style="background:#f3f4f6;border-radius:8px;padding:14px 16px;margin-bottom:20px;">
+                <table style="width:100%;border-collapse:collapse;">
+                  <tr>
+                    <td style="color:#6b7280;font-size:13px;">Customer</td>
+                    <td style="text-align:right;font-weight:600;">${safeCustomerName || escapeHtml(email)}</td>
+                  </tr>
+                  <tr>
+                    <td style="color:#6b7280;font-size:13px;padding-top:6px;">Fulfillment</td>
+                    <td style="text-align:right;padding-top:6px;font-weight:600;">${safeFulfillmentType === 'pickup' ? 'Pickup' : 'Delivery'}</td>
+                  </tr>
+                  <tr>
+                    <td style="color:#6b7280;font-size:13px;padding-top:6px;">Total</td>
+                    <td style="text-align:right;padding-top:6px;font-weight:700;font-size:18px;">$${Number(total).toFixed(2)}</td>
+                  </tr>
+                </table>
+              </div>
+
+              <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
+                <tbody>${ownerItemsHtml}</tbody>
+              </table>
+
+              <a href="${confirmUrl}" style="display:block;background:#16a34a;color:#fff;text-align:center;padding:16px;border-radius:8px;font-size:16px;font-weight:600;text-decoration:none;">
+                &#10003; Confirm This Order
+              </a>
+              <p style="margin:12px 0 0;text-align:center;color:#9ca3af;font-size:12px;">
+                Tap to acknowledge you've seen this order.
+              </p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    try {
+      await resend.emails.send({
+        from: fromEmail,
+        to: [ownerEmail],
+        subject: `New Order: ${orderNumber} — $${Number(total).toFixed(2)} (${safeFulfillmentType})`,
+        html: ownerEmailHtml,
+      });
+      console.log("Owner alert sent to:", ownerEmail);
+    } catch (ownerEmailErr) {
+      console.error("Owner alert failed (non-fatal):", ownerEmailErr);
+    }
 
     return new Response(JSON.stringify({ success: true, ...emailResponse }), {
       status: 200,
