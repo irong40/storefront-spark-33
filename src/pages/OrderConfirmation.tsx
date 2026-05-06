@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
-import { CheckCircle, Package, Mail, ArrowRight } from "lucide-react";
+import { CheckCircle, Package, Mail, ArrowRight, Sparkles } from "lucide-react";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import { useAuth } from "@/contexts/AuthContext";
+import { useLoyaltyTransactions } from "@/hooks/use-loyalty";
 
 interface OrderItem {
   id: string;
@@ -29,6 +31,7 @@ interface Order {
   fulfillment_type: string | null;
   pickup_date: string | null;
   pickup_time: string | null;
+  delivery_time_window: string | null;
   created_at: string | null;
   payment_id: string | null;
   payment_status: string | null;
@@ -37,9 +40,16 @@ interface Order {
 export default function OrderConfirmation() {
   useDocumentTitle("Order Confirmation");
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const [order, setOrder] = useState<Order | null>(null);
   const [items, setItems] = useState<OrderItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { data: loyaltyTransactions = [] } = useLoyaltyTransactions(50);
+  const pointsEarned = user
+    ? loyaltyTransactions
+        .filter((t) => t.order_id === id && t.type === "earn")
+        .reduce((sum, t) => sum + t.points, 0)
+    : 0;
 
   useEffect(() => {
     async function fetchOrder() {
@@ -133,6 +143,23 @@ export default function OrderConfirmation() {
             <span>Confirmation sent to {order.email}</span>
           </div>
         </div>
+
+        {pointsEarned > 0 && (
+          <div className="bg-primary/10 border border-primary/30 rounded-2xl p-5 mb-8 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+              <Sparkles className="h-6 w-6 text-primary" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold">You earned {pointsEarned} points!</p>
+              <p className="text-sm text-muted-foreground">
+                Keep stacking them. Free juice unlocks at 100 points.
+              </p>
+            </div>
+            <Button asChild variant="outline" size="sm">
+              <Link to="/rewards">View rewards</Link>
+            </Button>
+          </div>
+        )}
 
         {/* Order Details */}
         <div className="bg-card rounded-2xl border border-border p-6 mb-8">
@@ -233,11 +260,21 @@ export default function OrderConfirmation() {
                 Please pick up your order at the scheduled time.
               </p>
             </div>
+          ) : order.fulfillment_type === "delivery" && order.delivery_time_window ? (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-muted-foreground">Preferred window:</span>
+                <span className="font-medium">{order.delivery_time_window}</span>
+              </div>
+              <p className="text-muted-foreground text-sm mt-3">
+                We'll notify you when your order is on the way.
+              </p>
+            </div>
           ) : (
             <p className="text-muted-foreground text-sm">
               {order.fulfillment_type === "pickup"
                 ? "We'll notify you when your order is ready for pickup at our store."
-                : "Delivery is FREE and available Monday-Friday. We'll notify you when your order is on the way."}
+                : "We'll notify you when your order is on the way."}
             </p>
           )}
         </div>

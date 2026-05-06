@@ -10,7 +10,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useCustomerOrders } from "@/hooks/use-customer-orders";
-import { User, Package, LogOut, Loader2, RefreshCw } from "lucide-react";
+import {
+  useLoyaltyMember,
+  useLoyaltyRewards,
+  getPointsToNextTier,
+} from "@/hooks/use-loyalty";
+import { User, Package, LogOut, Loader2, RefreshCw, Sparkles } from "lucide-react";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 
 export default function Account() {
@@ -27,6 +32,8 @@ export default function Account() {
   } = useAuth();
   const { reorderItems } = useCart();
   const { data: orders = [], isLoading: isLoadingOrders } = useCustomerOrders();
+  const { data: loyaltyMember } = useLoyaltyMember();
+  const { data: loyaltyRewards = [] } = useLoyaltyRewards();
 
   const [reorderingId, setReorderingId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -167,6 +174,10 @@ export default function Account() {
               <TabsTrigger value="orders" className="gap-2">
                 <Package className="h-4 w-4" />
                 Orders
+              </TabsTrigger>
+              <TabsTrigger value="rewards" className="gap-2">
+                <Sparkles className="h-4 w-4" />
+                Rewards
               </TabsTrigger>
             </TabsList>
 
@@ -318,6 +329,105 @@ export default function Account() {
                       </div>
                     ))}
                   </div>
+                )}
+              </div>
+            </TabsContent>
+
+            {/* Rewards Tab */}
+            <TabsContent value="rewards">
+              <div className="bg-card rounded-2xl border border-border p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-semibold">Your Rewards</h2>
+                  <Button asChild variant="outline" size="sm">
+                    <Link to="/rewards">View all rewards</Link>
+                  </Button>
+                </div>
+
+                {!loyaltyMember ? (
+                  <div className="text-center py-8">
+                    <Sparkles className="h-10 w-10 mx-auto text-primary mb-3" />
+                    <p className="text-lg font-medium mb-2">Join our rewards program</p>
+                    <p className="text-muted-foreground mb-4">
+                      Earn points on every order and redeem them for free juice and more.
+                    </p>
+                    <Button asChild>
+                      <Link to="/rewards">Get started</Link>
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid sm:grid-cols-3 gap-4 mb-6">
+                      <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
+                        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                          Points balance
+                        </p>
+                        <p className="text-3xl font-bold text-primary">
+                          {loyaltyMember.points_balance}
+                        </p>
+                      </div>
+                      <div className="p-4 rounded-xl bg-secondary/30 border border-border">
+                        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                          Lifetime points
+                        </p>
+                        <p className="text-3xl font-bold">{loyaltyMember.lifetime_points}</p>
+                      </div>
+                      <div className="p-4 rounded-xl bg-secondary/30 border border-border">
+                        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                          Tier
+                        </p>
+                        <p className="text-3xl font-bold capitalize">{loyaltyMember.tier}</p>
+                      </div>
+                    </div>
+
+                    {(() => {
+                      const nextTier = getPointsToNextTier(loyaltyMember.lifetime_points);
+                      return nextTier ? (
+                        <p className="text-sm text-muted-foreground mb-6">
+                          {nextTier.pointsNeeded} more points to reach{" "}
+                          <span className="font-medium text-foreground">{nextTier.nextTier}</span>.
+                        </p>
+                      ) : null;
+                    })()}
+
+                    {loyaltyRewards.length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-medium mb-3">Available rewards</h3>
+                        <div className="space-y-2">
+                          {loyaltyRewards.slice(0, 4).map((reward) => {
+                            const canRedeem =
+                              loyaltyMember.points_balance >= reward.points_required;
+                            return (
+                              <div
+                                key={reward.id}
+                                className={`flex items-center justify-between p-3 rounded-lg border ${
+                                  canRedeem
+                                    ? "border-primary/30 bg-primary/5"
+                                    : "border-border bg-muted/30"
+                                }`}
+                              >
+                                <div>
+                                  <p className="font-medium">{reward.name}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {reward.points_required} points
+                                  </p>
+                                </div>
+                                {canRedeem ? (
+                                  <Button asChild size="sm">
+                                    <Link to="/rewards">Redeem</Link>
+                                  </Button>
+                                ) : (
+                                  <p className="text-xs text-muted-foreground">
+                                    {reward.points_required - loyaltyMember.points_balance}{" "}
+                                    points away
+                                  </p>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </TabsContent>

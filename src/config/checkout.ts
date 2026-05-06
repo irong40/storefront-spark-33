@@ -5,8 +5,22 @@ export const CHECKOUT_CONFIG = {
   // Tax rate as a decimal (e.g., 0.08 = 8%)
   TAX_RATE: 0.08,
 
-  // Delivery fee in dollars (FREE delivery)
-  DELIVERY_FEE: 0,
+  // Delivery fee defaults (overridden by business_settings.delivery_fee/threshold)
+  DELIVERY_FEE: 8,
+  DELIVERY_FREE_THRESHOLD: 50,
+  DELIVERY_WINDOWS: [
+    "9:00 AM",
+    "9:30 AM",
+    "10:00 AM",
+    "10:30 AM",
+    "11:00 AM",
+    "11:30 AM",
+    "12:00 PM",
+    "12:30 PM",
+    "5:30 PM",
+    "6:00 PM",
+    "6:30 PM",
+  ] as string[],
 
   // Pickup hours by day (0 = Sunday, 1 = Monday, etc.)
   // Tuesday-Friday: 10 AM - 6 PM, Saturday: 10 AM - 5 PM

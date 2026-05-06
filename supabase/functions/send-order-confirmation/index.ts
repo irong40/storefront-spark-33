@@ -37,6 +37,9 @@ interface OrderEmailRequest {
   total: number;
   fulfillmentType: string;
   paymentStatus?: string;
+  pickupDate?: string;
+  pickupTime?: string;
+  deliveryTimeWindow?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -106,12 +109,22 @@ const handler = async (req: Request): Promise<Response> => {
       total,
       fulfillmentType,
       paymentStatus,
+      pickupDate,
+      pickupTime,
+      deliveryTimeWindow,
     } = orderData;
 
     // Fix 7: Escape user-controlled values
     const safeCustomerName = customerName ? escapeHtml(customerName) : "";
     const safeOrderNumber = escapeHtml(orderNumber);
     const safeFulfillmentType = escapeHtml(fulfillmentType || "pickup");
+    const safeDeliveryWindow = deliveryTimeWindow ? escapeHtml(deliveryTimeWindow) : "";
+    const safePickupDate = pickupDate ? escapeHtml(pickupDate) : "";
+    const safePickupTime = pickupTime ? escapeHtml(pickupTime) : "";
+    const scheduleLabel =
+      safeFulfillmentType === "delivery"
+        ? safeDeliveryWindow
+        : [safePickupDate, safePickupTime].filter(Boolean).join(" ");
 
     // Build items HTML
     const itemsHtml = items
@@ -171,6 +184,13 @@ const handler = async (req: Request): Promise<Response> => {
                       <strong style="color: #111827;">${safeFulfillmentType === 'pickup' ? '&#128205; Pickup' : '&#128666; Delivery'}</strong>
                     </td>
                   </tr>
+                  ${scheduleLabel ? `
+                  <tr>
+                    <td colspan="2" style="padding-top: 12px;">
+                      <span style="color: #6b7280; font-size: 14px;">${safeFulfillmentType === 'delivery' ? 'Preferred Delivery Window' : 'Pickup Time'}</span><br>
+                      <strong style="color: #111827;">${scheduleLabel}</strong>
+                    </td>
+                  </tr>` : ''}
                 </table>
               </div>
 
@@ -246,7 +266,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Email sent successfully:", emailResponse);
 
     // Owner alert email
-    const ownerEmail = Deno.env.get("OWNER_EMAIL") || "info@impressivejb.com";
+    const ownerEmail = Deno.env.get("OWNER_EMAIL") || "impressive.jb22@gmail.com";
     const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
     const confirmUrl = `${supabaseUrl}/functions/v1/confirm-order?token=${orderRow.id}`;
 
@@ -288,6 +308,11 @@ const handler = async (req: Request): Promise<Response> => {
                     <td style="color:#6b7280;font-size:13px;padding-top:6px;">Fulfillment</td>
                     <td style="text-align:right;padding-top:6px;font-weight:600;">${safeFulfillmentType === 'pickup' ? 'Pickup' : 'Delivery'}</td>
                   </tr>
+                  ${scheduleLabel ? `
+                  <tr>
+                    <td style="color:#6b7280;font-size:13px;padding-top:6px;">${safeFulfillmentType === 'delivery' ? 'Delivery Window' : 'Pickup Time'}</td>
+                    <td style="text-align:right;padding-top:6px;font-weight:600;">${scheduleLabel}</td>
+                  </tr>` : ''}
                   <tr>
                     <td style="color:#6b7280;font-size:13px;padding-top:6px;">Total</td>
                     <td style="text-align:right;padding-top:6px;font-weight:700;font-size:18px;">$${Number(total).toFixed(2)}</td>

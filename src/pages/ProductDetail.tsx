@@ -86,12 +86,13 @@ export default function ProductDetail() {
     ) {
       setSelectedVariantId(product.variants[0].id);
     }
-    // Default to 16 oz if available and not using variants
+    // Default to 16 oz if available and not using variants (skip Food category — sizes don't apply)
     if (
       !product?.variants?.length &&
       globalSizes.length > 0 &&
       !selectedSizeId &&
-      !requiresFlavors
+      !requiresFlavors &&
+      product?.category?.slug !== "food"
     ) {
       const defaultSize =
         globalSizes.find((s) => s.name === "16 oz") || globalSizes[0];
@@ -172,7 +173,7 @@ export default function ProductDetail() {
   const displayImage =
     product?.slug === "egift-card" && selectedVariant
       ? getGiftCardImage(currentPrice) // Note: currentPrice includes addons but gift cards don't have addons
-      : product?.image_url || null;
+      : selectedVariant?.image_url || product?.image_url || null;
 
   // Determine if we should show addons (Standard Juices only, NOT wellness shots, NOT detox packages)
   // Logic: Not requiring flavors (bundles), not gift card, not wellness shots, not detox, has category, category is one of the juice types
@@ -189,12 +190,14 @@ export default function ProductDetail() {
   // Determine if we should show size selector
   // NOT for wellness shots (fixed $3), NOT for detox packages (fixed packages)
   // Allow for 4-pack-sample-box even though it requires flavors
+  const isFood = product?.category?.slug === "food";
   const showSizeSelector =
     !product?.variants?.length &&
     product?.slug !== "egift-card" &&
     globalSizes.length > 0 &&
     !isWellnessShot &&
     !isDetoxPackage &&
+    !isFood &&
     (!requiresFlavors || product?.slug === "4-pack-sample-box");
 
   if (isLoading) {

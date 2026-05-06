@@ -42,6 +42,8 @@ const checkoutSchema = z
     // pickup fields
     pickupDate: z.string().optional(),
     pickupTime: z.string().optional(),
+    // delivery time window
+    deliveryTimeWindow: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     if (data.fulfillment_type === "delivery") {
@@ -77,6 +79,13 @@ const checkoutSchema = z
           code: z.ZodIssueCode.custom,
           path: ["zip"],
           message: "ZIP code must be 5 digits (or ZIP+4)",
+        });
+      }
+      if (!data.deliveryTimeWindow?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["deliveryTimeWindow"],
+          message: "Please choose a preferred delivery window",
         });
       }
     }
@@ -174,6 +183,8 @@ export default function Checkout() {
     // Pickup scheduling
     pickupDate: "",
     pickupTime: "",
+    // Delivery scheduling
+    deliveryTimeWindow: "",
   });
 
   // Get available pickup dates and time slots
@@ -190,8 +201,17 @@ export default function Checkout() {
     0,
   );
   const tax = subtotal * taxRate;
+  const deliveryFee = businessSettings?.delivery_fee ?? CHECKOUT_CONFIG.DELIVERY_FEE;
+  const deliveryFreeThreshold =
+    businessSettings?.delivery_free_threshold ?? CHECKOUT_CONFIG.DELIVERY_FREE_THRESHOLD;
+  const deliveryWindows =
+    businessSettings?.delivery_windows ?? CHECKOUT_CONFIG.DELIVERY_WINDOWS;
   const shipping =
-    fulfillmentType === "delivery" ? CHECKOUT_CONFIG.DELIVERY_FEE : 0;
+    fulfillmentType === "delivery"
+      ? subtotal >= deliveryFreeThreshold
+        ? 0
+        : deliveryFee
+      : 0;
   const totalBeforeGiftCard = subtotal + tax + shipping;
   const total = Math.max(0, totalBeforeGiftCard - giftCardDiscount);
   const totalInCents = Math.round(total * 100);
@@ -323,7 +343,8 @@ export default function Checkout() {
         !formData.addressLine1 ||
         !formData.city ||
         !formData.state ||
-        !formData.zip
+        !formData.zip ||
+        !formData.deliveryTimeWindow
       ) {
         return false;
       }
@@ -441,6 +462,10 @@ export default function Checkout() {
                   zip: formData.zip,
                 }
               : null,
+          delivery_time_window:
+            fulfillmentType === "delivery"
+              ? formData.deliveryTimeWindow || null
+              : null,
         });
 
       if (orderError) throw orderError;
@@ -503,6 +528,7 @@ export default function Checkout() {
             fulfillmentType,
             pickupDate: formData.pickupDate || undefined,
             pickupTime: formData.pickupTime || undefined,
+            deliveryTimeWindow: formData.deliveryTimeWindow || undefined,
             paymentStatus: "completed",
           },
         })
@@ -651,7 +677,7 @@ export default function Checkout() {
                     <div>
                       <div className="font-medium">Delivery</div>
                       <div className="text-xs text-muted-foreground">
-                        Free • Mon-Fri
+                        ${deliveryFee.toFixed(2)} • Free over ${deliveryFreeThreshold.toFixed(0)}
                       </div>
                     </div>
                   </div>
@@ -739,10 +765,10 @@ export default function Checkout() {
                   <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                   <div className="text-sm">
                     <p className="font-medium text-foreground">
-                      Free delivery Monday through Friday
+                      Delivery ${deliveryFee.toFixed(2)} (free on orders ${deliveryFreeThreshold.toFixed(0)}+)
                     </p>
                     <p className="text-muted-foreground mt-1">
-                      Delivery times vary based on your location. We'll notify
+                      Choose your preferred delivery window below. We'll notify
                       you when your order is on the way.
                     </p>
                   </div>
@@ -834,6 +860,38 @@ export default function Checkout() {
                       )}
                     </div>
                   </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="deliveryTimeWindow">Preferred Delivery Window *</Label>
+                    <Select
+                      value={formData.deliveryTimeWindow}
+                      onValueChange={(value) => {
+                        handleSelectChange("deliveryTimeWindow", value);
+                        if (formErrors.deliveryTimeWindow)
+                          setFormErrors((prev) => ({ ...prev, deliveryTimeWindow: undefined }));
+                      }}
+                      disabled={isSubmitting || paymentComplete}
+                    >
+                      <SelectTrigger
+                        id="deliveryTimeWindow"
+                        aria-invalid={!!formErrors.deliveryTimeWindow}
+                      >
+                        <SelectValue placeholder="Choose a delivery window" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {deliveryWindows.map((window) => (
+                          <SelectItem key={window} value={window}>
+                            {window}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {formErrors.deliveryTimeWindow && (
+                      <p className="text-sm text-destructive">
+                        {formErrors.deliveryTimeWindow}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -864,7 +922,10 @@ export default function Checkout() {
                     {fulfillmentType === "pickup" &&
                     (!formData.pickupDate || !formData.pickupTime)
                       ? "Please select a pickup date and time to proceed with payment."
-                      : "Please fill in the required fields above to proceed with payment."}
+                      : fulfillmentType === "delivery" &&
+                        !formData.deliveryTimeWindow
+                        ? "Please choose a preferred delivery window to proceed with payment."
+                        : "Please fill in the required fields above to proceed with payment."}
                   </p>
                 </div>
               ) : paymentComplete ? (
@@ -1074,8 +1135,10 @@ export default function Checkout() {
                   <span>${tax.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Shipping</span>
-                  <span>Free</span>
+                  <span className="text-muted-foreground">
+                    {fulfillmentType === "delivery" ? "Delivery" : "Shipping"}
+                  </span>
+                  <span>{shipping > 0 ? `$${shipping.toFixed(2)}` : "Free"}</span>
                 </div>
                 {giftCardDiscount > 0 && (
                   <div className="flex justify-between text-brand-olive">

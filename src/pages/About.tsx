@@ -315,6 +315,74 @@ export default function About() {
         </div>
       </section>
 
+      {/* Giving Back / Community Work */}
+      <section className="py-20 bg-brand-cream/40">
+        <div className="container px-4">
+          <div className="max-w-3xl mx-auto text-center mb-12">
+            <h2 className="text-3xl font-heading font-bold text-brand-brown mb-4">
+              <span className="font-script text-brand-terracotta">Giving</span>{" "}
+              Back
+            </h2>
+            <p className="text-muted-foreground text-lg">
+              Juicing is a movement we share. We spend time in our community
+              teaching children and adults the benefits and importance of
+              juicing, and we love giving back every chance we get.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {[
+              {
+                src: "/images/community/kids-class.jpg",
+                title: "Teaching the Next Generation",
+                caption:
+                  "Hands-on classes with kids on why juicing matters and how to make it part of a healthy life.",
+              },
+              {
+                src: "/images/community/ymca.png",
+                title: "YMCA Partnership",
+                caption:
+                  "Bringing fresh juice education to local YMCA wellness programs.",
+              },
+              {
+                src: "/images/community/norcom.png",
+                title: "Norcom School Visits",
+                caption:
+                  "Visiting Norcom to share the benefits of juicing with students and families.",
+              },
+              {
+                src: "/images/community/iphone-original.jpg",
+                title: "Out in the Community",
+                caption:
+                  "Pop-ups, events, and school visits across Hampton Roads.",
+              },
+            ].map((item) => (
+              <div
+                key={item.src}
+                className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow"
+              >
+                <div className="aspect-[4/3] bg-brand-kraft/30 overflow-hidden">
+                  <img
+                    src={item.src}
+                    alt={item.title}
+                    loading="lazy"
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
+                <div className="p-5">
+                  <h3 className="font-heading font-semibold text-brand-brown mb-2">
+                    {item.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {item.caption}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="py-20 bg-brand-berry text-white">
         <div className="container px-4 text-center">

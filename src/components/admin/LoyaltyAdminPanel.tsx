@@ -15,7 +15,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Users, Award, TrendingUp } from "lucide-react";
+import { Loader2, Users, Award, TrendingUp, Gift } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 const TIER_COLORS: Record<string, string> = {
   bronze: "bg-orange-100 text-orange-800",
@@ -40,6 +41,68 @@ export function LoyaltyAdminPanel() {
         .order("points_balance", { ascending: false });
       if (error) throw error;
       return data;
+    },
+  });
+
+  const { data: rewards = [], isLoading: isLoadingRewards } = useQuery({
+    queryKey: ["loyalty-rewards-admin"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("loyalty_rewards")
+        .select("*")
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const [rewardEdits, setRewardEdits] = useState<Record<string, string>>({});
+
+  const updateRewardThreshold = useMutation({
+    mutationFn: async ({ id, points }: { id: string; points: number }) => {
+      const { error } = await supabase
+        .from("loyalty_rewards")
+        .update({ points_required: points })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["loyalty-rewards-admin"] });
+      queryClient.invalidateQueries({ queryKey: ["loyalty-rewards"] });
+      setRewardEdits((prev) => {
+        const next = { ...prev };
+        delete next[vars.id];
+        return next;
+      });
+      toast({ title: "Reward updated" });
+    },
+    onError: (err) => {
+      toast({
+        title: "Error",
+        description: err instanceof Error ? err.message : "Failed to update reward",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const toggleRewardActive = useMutation({
+    mutationFn: async ({ id, active }: { id: string; active: boolean }) => {
+      const { error } = await supabase
+        .from("loyalty_rewards")
+        .update({ active })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["loyalty-rewards-admin"] });
+      queryClient.invalidateQueries({ queryKey: ["loyalty-rewards"] });
+    },
+    onError: (err) => {
+      toast({
+        title: "Error",
+        description: err instanceof Error ? err.message : "Failed to toggle reward",
+        variant: "destructive",
+      });
     },
   });
 
@@ -168,6 +231,113 @@ export function LoyaltyAdminPanel() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Rewards Catalog */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Gift className="h-5 w-5" />
+            Reward Thresholds
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoadingRewards ? (
+            <div className="space-y-3">
+              {[...Array(3)].map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
+            </div>
+          ) : rewards.length === 0 ? (
+            <p className="text-muted-foreground text-center py-8">
+              No rewards configured.
+            </p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Reward</TableHead>
+                  <TableHead className="w-32">Points Required</TableHead>
+                  <TableHead className="w-24">Active</TableHead>
+                  <TableHead className="w-24"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rewards.map((reward) => {
+                  const editValue =
+                    rewardEdits[reward.id] ?? String(reward.points_required);
+                  const dirty =
+                    rewardEdits[reward.id] !== undefined &&
+                    Number(rewardEdits[reward.id]) !== reward.points_required;
+                  return (
+                    <TableRow key={reward.id}>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{reward.name}</p>
+                          {reward.description && (
+                            <p className="text-xs text-muted-foreground">
+                              {reward.description}
+                            </p>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          min={1}
+                          value={editValue}
+                          onChange={(e) =>
+                            setRewardEdits((prev) => ({
+                              ...prev,
+                              [reward.id]: e.target.value,
+                            }))
+                          }
+                          className="w-24"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Switch
+                          checked={!!reward.active}
+                          onCheckedChange={(checked) =>
+                            toggleRewardActive.mutate({
+                              id: reward.id,
+                              active: checked,
+                            })
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={
+                            !dirty ||
+                            !editValue ||
+                            isNaN(Number(editValue)) ||
+                            Number(editValue) < 1 ||
+                            updateRewardThreshold.isPending
+                          }
+                          onClick={() =>
+                            updateRewardThreshold.mutate({
+                              id: reward.id,
+                              points: Number(editValue),
+                            })
+                          }
+                        >
+                          {updateRewardThreshold.isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            "Save"
+                          )}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Members Table */}
       <Card>

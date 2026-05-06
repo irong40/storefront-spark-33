@@ -10,6 +10,7 @@ export interface ProductVariant {
   is_subscription: boolean;
   subscription_interval: string | null;
   sort_order: number;
+  image_url: string | null;
 }
 
 export interface Product {
@@ -78,7 +79,9 @@ export function useProducts(
         )
         .eq("active", true)
         .eq("is_available", true)
-        .order("sort_order", { ascending: true });
+        .order("sort_order", { foreignTable: "categories", ascending: true })
+        .order("sort_order", { ascending: true })
+        .order("name", { ascending: true });
 
       // Apply server-side category filter when not doing client-side filtering
       // and when a specific (non-"all") slug is provided.
@@ -162,6 +165,7 @@ export function useProduct(slug: string) {
         is_subscription: o.is_subscription,
         subscription_interval: o.subscription_interval,
         sort_order: o.sort_order,
+        image_url: (o as { image_url?: string | null }).image_url ?? null,
       }));
 
       return {

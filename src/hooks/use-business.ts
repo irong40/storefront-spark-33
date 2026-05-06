@@ -18,6 +18,9 @@ export interface BusinessSettings {
   logo_url: string | null;
   favicon_url: string | null;
   tax_rate: number;
+  delivery_fee: number | null;
+  delivery_free_threshold: number | null;
+  delivery_windows: string[] | null;
   created_at: string;
 }
 
