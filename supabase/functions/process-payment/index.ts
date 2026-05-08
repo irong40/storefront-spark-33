@@ -70,20 +70,16 @@ serve(async (req) => {
 
     const authHeader = req.headers.get("Authorization");
     if (authHeader) {
-      // Validate JWT for authenticated users
       const token = authHeader.replace("Bearer ", "");
-      // Use a client with the anon key to validate the user's JWT (not service role)
+      // The Supabase client always sends the anon key as Bearer for guests, so
+      // a failed user lookup is expected for guest checkout and must NOT 401 —
+      // the sessionId + cart validation below is the guest authorization proof.
       const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey || supabaseServiceKey);
-      const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token);
-      if (authError || !user) {
-        console.error("JWT validation failed:", authError?.message);
-        return new Response(
-          JSON.stringify({ error: "Unauthorized" }),
-          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+      const { data: { user } } = await supabaseAuth.auth.getUser(token);
+      if (user) {
+        authenticatedUserId = user.id;
+        console.log("Authenticated user:", authenticatedUserId);
       }
-      authenticatedUserId = user.id;
-      console.log("Authenticated user:", authenticatedUserId);
     }
 
     // --- Rate Limiting ---
