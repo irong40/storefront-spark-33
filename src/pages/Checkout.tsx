@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { Layout } from "@/components/layout/Layout";
@@ -172,23 +172,37 @@ export default function Checkout() {
   );
   const [giftCardError, setGiftCardError] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState({
-    email: profile?.email || user?.email || "",
-    phone: profile?.phone || "",
-    customerName: profile?.full_name || "",
-    notes: "",
-    // Shipping address
-    addressLine1: "",
-    addressLine2: "",
-    city: "",
-    state: "",
-    zip: "",
-    // Pickup scheduling
-    pickupDate: "",
-    pickupTime: "",
-    // Delivery scheduling
-    deliveryTimeWindow: "",
+  const [formData, setFormData] = useState(() => {
+    const defaults = {
+      email: profile?.email || user?.email || "",
+      phone: profile?.phone || "",
+      customerName: profile?.full_name || "",
+      notes: "",
+      addressLine1: "",
+      addressLine2: "",
+      city: "",
+      state: "",
+      zip: "",
+      pickupDate: "",
+      pickupTime: "",
+      deliveryTimeWindow: "",
+    };
+    try {
+      const saved = localStorage.getItem("checkout-form");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return { ...defaults, ...parsed, notes: "", pickupDate: "", pickupTime: "", deliveryTimeWindow: "" };
+      }
+    } catch { /* ignore */ }
+    return defaults;
   });
+
+  useEffect(() => {
+    try {
+      const { notes: _n, pickupDate: _d, pickupTime: _t, deliveryTimeWindow: _w, ...persist } = formData;
+      localStorage.setItem("checkout-form", JSON.stringify(persist));
+    } catch { /* quota or disabled */ }
+  }, [formData]);
 
   // Get available pickup dates and time slots
   const availablePickupDates = useMemo(() => getAvailablePickupDates(), []);
@@ -549,6 +563,8 @@ export default function Checkout() {
 
       // Clear cart
       await clearCart();
+
+      try { localStorage.removeItem("checkout-form"); } catch { /* ignore */ }
 
       // Navigate to confirmation
       navigate(`/order-confirmation/${orderId}`);
