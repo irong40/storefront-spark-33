@@ -40,9 +40,10 @@ export class ErrorBoundary extends Component<Props, State> {
             <p className="text-muted-foreground">
               We're sorry for the inconvenience. Please try refreshing the page.
             </p>
-            {import.meta.env.DEV && this.state.error && (
+            {this.state.error && (
               <pre className="text-left text-xs bg-muted p-4 rounded-md overflow-auto max-h-48">
                 {this.state.error.message}
+                {this.state.error.stack ? `\n\n${this.state.error.stack}` : ""}
               </pre>
             )}
             <button
