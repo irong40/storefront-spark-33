@@ -152,7 +152,10 @@ export default function Checkout() {
     isLoading: giftCardLoading,
   } = useGiftCard();
   const { data: businessSettings } = useBusinessSettings();
-  const taxRate = businessSettings?.tax_rate ?? CHECKOUT_CONFIG.TAX_RATE;
+  const taxRate =
+    businessSettings?.tax_rate != null
+      ? Number(businessSettings.tax_rate)
+      : CHECKOUT_CONFIG.TAX_RATE;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fulfillmentType, setFulfillmentType] = useState<"pickup" | "delivery">("pickup");
@@ -201,9 +204,15 @@ export default function Checkout() {
     0,
   );
   const tax = subtotal * taxRate;
-  const deliveryFee = businessSettings?.delivery_fee ?? CHECKOUT_CONFIG.DELIVERY_FEE;
+  // Supabase returns numeric columns as strings — coerce to Number before any .toFixed/arithmetic
+  const deliveryFee =
+    businessSettings?.delivery_fee != null
+      ? Number(businessSettings.delivery_fee)
+      : CHECKOUT_CONFIG.DELIVERY_FEE;
   const deliveryFreeThreshold =
-    businessSettings?.delivery_free_threshold ?? CHECKOUT_CONFIG.DELIVERY_FREE_THRESHOLD;
+    businessSettings?.delivery_free_threshold != null
+      ? Number(businessSettings.delivery_free_threshold)
+      : CHECKOUT_CONFIG.DELIVERY_FREE_THRESHOLD;
   const deliveryWindows =
     businessSettings?.delivery_windows ?? CHECKOUT_CONFIG.DELIVERY_WINDOWS;
   const shipping =

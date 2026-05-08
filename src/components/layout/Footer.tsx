@@ -128,28 +128,12 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <a
-                  href="/contact"
+                <Link
+                  to="/contact"
                   className="text-white/70 hover:text-brand-berry transition-colors"
                 >
-                  Shipping Info
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/contact"
-                  className="text-white/70 hover:text-brand-berry transition-colors"
-                >
-                  Returns
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/contact"
-                  className="text-white/70 hover:text-brand-berry transition-colors"
-                >
-                  FAQ
-                </a>
+                  Contact
+                </Link>
               </li>
             </ul>
           </div>

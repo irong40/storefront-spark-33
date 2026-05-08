@@ -7,7 +7,7 @@ export function Locations() {
   const { data: business } = useBusinessSettings();
 
   return (
-    <section className="py-24 bg-card">
+    <section id="locations" className="py-24 bg-card">
       <div className="container">
         {/* Header */}
         <div className="text-center mb-16">
