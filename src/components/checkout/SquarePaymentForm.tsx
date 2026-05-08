@@ -159,42 +159,41 @@ export function SquarePaymentForm({
           <CreditCard
             buttonProps={{
               css: {
-                backgroundColor: "hsl(142, 76%, 36%)",
-                color: "white",
+                backgroundColor: "#22c55e",
+                color: "#ffffff",
                 fontSize: "16px",
                 fontWeight: "600",
                 padding: "16px",
-                borderRadius: "0.75rem",
+                borderRadius: "12px",
                 width: "100%",
                 marginTop: "16px",
                 cursor: "pointer",
-                transition: "background-color 0.2s",
               },
             }}
             style={{
               ".input-container": {
-                borderColor: "hsl(var(--border))",
-                borderRadius: "0.75rem",
+                borderColor: "#e5e7eb",
+                borderRadius: "12px",
               },
               ".input-container.is-focus": {
-                borderColor: "hsl(var(--primary))",
+                borderColor: "#22c55e",
               },
               ".input-container.is-error": {
-                borderColor: "hsl(var(--destructive))",
+                borderColor: "#ef4444",
               },
               ".message-text": {
-                color: "hsl(var(--destructive))",
+                color: "#ef4444",
               },
               ".message-icon": {
-                color: "hsl(var(--destructive))",
+                color: "#ef4444",
               },
               input: {
-                backgroundColor: "hsl(var(--background))",
-                color: "hsl(var(--foreground))",
-                fontFamily: "inherit",
+                backgroundColor: "#ffffff",
+                color: "#111827",
+                fontFamily: "Helvetica Neue, Arial, sans-serif",
               },
               "input::placeholder": {
-                color: "hsl(var(--muted-foreground))",
+                color: "#9ca3af",
               },
             }}
             includeInputLabels
