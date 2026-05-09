@@ -49,23 +49,9 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    // Fix 6: Optional auth — validate JWT if provided, allow unauthenticated for guest checkout
-    const authHeader = req.headers.get("Authorization");
-    if (authHeader) {
-      const supabaseUrl = Deno.env.get("SUPABASE_URL");
-      const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
-      if (supabaseUrl && supabaseAnonKey) {
-        const supabase = createClient(supabaseUrl, supabaseAnonKey);
-        const token = authHeader.replace("Bearer ", "");
-        const { error: authError } = await supabase.auth.getUser(token);
-        if (authError) {
-          return new Response(
-            JSON.stringify({ error: "Invalid authorization token" }),
-            { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } },
-          );
-        }
-      }
-    }
+    // Optional auth: the Supabase client always sends the anon publishable key as
+    // Bearer, which getUser() rejects. That is expected for guest checkout and must
+    // not 401 — the orderNumber lookup below is the authorization proof.
 
     const orderData: OrderEmailRequest = await req.json();
 
