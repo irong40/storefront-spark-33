@@ -20,7 +20,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
-import { generateOrderNumber } from "@/lib/utils";
+import { generateGiftCardCode, generateOrderNumber } from "@/lib/utils";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 
 // ---------------------------------------------------------------------------
@@ -520,6 +520,69 @@ export default function Checkout() {
         if (attempt === 0) await new Promise((r) => setTimeout(r, 800));
       }
       if (itemsError) throw itemsError;
+
+      // Provision purchased gift cards (non-fatal — order already created)
+      try {
+        const today = new Date().toISOString().slice(0, 10);
+        const giftCardsToInsert: Array<{
+          code: string;
+          amount: number;
+          balance: number;
+          purchaser_email: string;
+          recipient_email: string | null;
+          recipient_name: string | null;
+          is_for_self: boolean;
+          personal_message: string | null;
+          delivery_date: string;
+          status: string;
+          order_id: string;
+        }> = [];
+        for (const item of items) {
+          const gcd = item.gift_card_data;
+          if (!gcd) continue;
+          const isSelf = gcd.recipientType === "myself";
+          const deliveryDate = (gcd.deliveryDate || new Date().toISOString()).slice(0, 10);
+          for (let i = 0; i < item.quantity; i++) {
+            giftCardsToInsert.push({
+              code: generateGiftCardCode(),
+              amount: gcd.amount,
+              balance: gcd.amount,
+              purchaser_email: formData.email,
+              recipient_email: isSelf ? null : (gcd.recipientEmail || null),
+              recipient_name: isSelf ? null : (gcd.recipientName || null),
+              is_for_self: isSelf,
+              personal_message: gcd.message || null,
+              delivery_date: isSelf ? today : deliveryDate,
+              status: "active",
+              order_id: orderId,
+            });
+          }
+        }
+
+        if (giftCardsToInsert.length > 0) {
+          const { data: insertedCards, error: gcInsertErr } = await supabase
+            .from("gift_cards")
+            .insert(giftCardsToInsert)
+            .select("id, delivery_date");
+          if (gcInsertErr) {
+            logger.error("Gift card row insert failed (non-fatal):", gcInsertErr);
+          } else if (insertedCards) {
+            // Fire immediate delivery for any card whose delivery_date is today/past.
+            // Future-dated cards stay delivered=false and are picked up by the daily cron.
+            for (const card of insertedCards) {
+              if (card.delivery_date && card.delivery_date <= today) {
+                supabase.functions
+                  .invoke("send-gift-card", { body: { giftCardId: card.id } })
+                  .catch((err) =>
+                    logger.error("Gift card immediate delivery failed (non-fatal):", err),
+                  );
+              }
+            }
+          }
+        }
+      } catch (gcErr) {
+        logger.error("Gift card provisioning error (non-fatal):", gcErr);
+      }
 
       // Redeem applied gift cards (non-fatal — order already created)
       for (const gc of appliedGiftCards) {
