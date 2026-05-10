@@ -1,8 +1,24 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "https://esm.sh/resend@2.0.0";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+// SMTP via Google Workspace (info@impressivejb.com). Configured at send time
+// so missing creds don't crash the function on cold start.
+function buildSmtpClient() {
+  const username = Deno.env.get("SMTP_USER");
+  const password = Deno.env.get("SMTP_PASSWORD");
+  if (!username || !password) {
+    throw new Error("SMTP credentials not configured (SMTP_USER / SMTP_PASSWORD)");
+  }
+  return new SMTPClient({
+    connection: {
+      hostname: Deno.env.get("SMTP_HOST") || "smtp.gmail.com",
+      port: Number(Deno.env.get("SMTP_PORT") || 465),
+      tls: true,
+      auth: { username, password },
+    },
+  });
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -239,17 +255,21 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    // Fix 4: Use configurable sender with test fallback
-    const fromEmail = Deno.env.get("RESEND_FROM_EMAIL") || "Order Confirmation <onboarding@resend.dev>";
+    // Sender — defaults to the Workspace mailbox if MAIL_FROM not set
+    const fromEmail =
+      Deno.env.get("MAIL_FROM") ||
+      `imPRESSive Juice Bar <${Deno.env.get("SMTP_USER") || "info@impressivejb.com"}>`;
 
-    const emailResponse = await resend.emails.send({
+    const smtp = buildSmtpClient();
+
+    await smtp.send({
       from: fromEmail,
-      to: [email],
+      to: email,
       subject: `Order Confirmed - ${orderNumber}`,
       html: emailHtml,
     });
 
-    console.log("Email sent successfully:", emailResponse);
+    console.log("Customer email sent to:", email);
 
     // Owner alert email
     const ownerEmail = Deno.env.get("OWNER_EMAIL") || "impressive.jb22@gmail.com";
@@ -323,9 +343,9 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     try {
-      await resend.emails.send({
+      await smtp.send({
         from: fromEmail,
-        to: [ownerEmail],
+        to: ownerEmail,
         subject: `New Order: ${orderNumber} — $${Number(total).toFixed(2)} (${safeFulfillmentType})`,
         html: ownerEmailHtml,
       });
@@ -334,7 +354,9 @@ const handler = async (req: Request): Promise<Response> => {
       console.error("Owner alert failed (non-fatal):", ownerEmailErr);
     }
 
-    return new Response(JSON.stringify({ success: true, ...emailResponse }), {
+    await smtp.close();
+
+    return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
