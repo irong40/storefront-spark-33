@@ -266,14 +266,38 @@ export function AdminHelpPanel() {
               </AccordionTrigger>
               <AccordionContent className="space-y-4 text-sm">
                 <div>
+                  <h4 className="font-semibold mb-2">Order Lifecycle (Typical Flow)</h4>
+                  <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                    <li>
+                      Customer places order — you receive a "New Order" alert
+                      email at info@impressivejb.com with a Confirm button
+                    </li>
+                    <li>
+                      Order appears as <strong>Pending</strong> in this table
+                    </li>
+                    <li>
+                      Prepare the order. When it's ready, click the green
+                      <strong> Notify</strong> button — this emails the
+                      customer ("Ready for Pickup" or "Out for Delivery"
+                      depending on their fulfillment choice) and flips the
+                      status to <strong>Ready</strong>
+                    </li>
+                    <li>
+                      When the customer picks up (or delivery arrives), click
+                      the green <strong>Completed</strong> button to close the
+                      order
+                    </li>
+                  </ol>
+                </div>
+                <div>
                   <h4 className="font-semibold mb-2">Order Statuses</h4>
                   <ul className="list-disc list-inside space-y-1 text-muted-foreground">
                     <li>
-                      <strong>Pending:</strong> New order waiting to be
-                      processed
+                      <strong>Pending:</strong> New order awaiting prep
                     </li>
                     <li>
-                      <strong>Processing:</strong> Order is being prepared
+                      <strong>Ready:</strong> Customer has been notified —
+                      waiting for pickup or out for delivery
                     </li>
                     <li>
                       <strong>Completed:</strong> Order has been fulfilled
@@ -282,6 +306,34 @@ export function AdminHelpPanel() {
                       <strong>Cancelled:</strong> Order was cancelled
                     </li>
                   </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2">Action Buttons</h4>
+                  <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                    <li>
+                      <strong>Notify:</strong> Sends the customer their
+                      "ready" email and sets status to Ready. The button
+                      disappears after sending so you cannot double-notify.
+                    </li>
+                    <li>
+                      <strong>Completed:</strong> Appears once the order is
+                      Ready. One click marks the order finished.
+                    </li>
+                    <li>
+                      You can also change status manually using the dropdown
+                      in the Status column if you need to override.
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2">Owner Acknowledgment</h4>
+                  <p className="text-muted-foreground">
+                    New orders show a small bell icon next to the order
+                    number until you tap the Confirm button in the alert
+                    email (or open the order from the table). This is just a
+                    "you've seen it" marker — it does not notify the
+                    customer.
+                  </p>
                 </div>
                 <div>
                   <h4 className="font-semibold mb-2">Creating Manual Orders</h4>
