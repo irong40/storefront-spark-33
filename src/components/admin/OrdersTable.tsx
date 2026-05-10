@@ -464,6 +464,19 @@ export function OrdersTable() {
                           {notifyingId === order.id ? "Sending..." : "Notify"}
                         </Button>
                       )}
+                    {order.status === "ready" && !showArchived && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="mr-1 bg-green-50 hover:bg-green-100 text-green-800 border-green-200"
+                        disabled={updateStatus.isPending}
+                        onClick={() => handleStatusChange(order.id, "completed")}
+                        title="Mark order as completed"
+                      >
+                        <CheckCircle className="h-4 w-4 mr-1" />
+                        Completed
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       variant="ghost"
