@@ -57,7 +57,9 @@ import {
   ChevronRight,
   Search,
   BellRing,
+  Send,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { CreateOrderDialog } from "./CreateOrderDialog";
 
 const PAGE_SIZE = 50;
@@ -68,18 +70,6 @@ const ORDER_STATUSES = [
     label: "Pending",
     icon: Clock,
     color: "bg-yellow-100 text-yellow-800",
-  },
-  {
-    value: "confirmed",
-    label: "Confirmed",
-    icon: CheckCircle,
-    color: "bg-blue-100 text-blue-800",
-  },
-  {
-    value: "preparing",
-    label: "Preparing",
-    icon: Package,
-    color: "bg-purple-100 text-purple-800",
   },
   {
     value: "ready",
@@ -171,6 +161,36 @@ export function OrdersTable() {
       toast({ title: "Order status updated" });
     } catch {
       toast({ title: "Failed to update status", variant: "destructive" });
+    }
+  };
+
+  const [notifyingId, setNotifyingId] = useState<string | null>(null);
+  const handleNotifyReady = async (order: OrderWithItems) => {
+    setNotifyingId(order.id);
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        "send-order-ready",
+        { body: { orderId: order.id } },
+      );
+      if (error) throw error;
+      if ((data as { error?: string })?.error) {
+        throw new Error((data as { error: string }).error);
+      }
+      const isDelivery = order.fulfillment_type === "delivery";
+      toast({
+        title: isDelivery
+          ? "Customer notified — out for delivery"
+          : "Customer notified — ready for pickup",
+      });
+      await refetch();
+    } catch (err) {
+      toast({
+        title: "Failed to notify customer",
+        description: err instanceof Error ? err.message : "Unknown error",
+        variant: "destructive",
+      });
+    } finally {
+      setNotifyingId(null);
     }
   };
 
@@ -424,6 +444,26 @@ export function OrdersTable() {
                     )}
                   </TableCell>
                   <TableCell className="text-right">
+                    {!order.ready_notified_at &&
+                      order.status !== "completed" &&
+                      order.status !== "cancelled" &&
+                      !showArchived && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="mr-1"
+                          disabled={notifyingId === order.id}
+                          onClick={() => handleNotifyReady(order)}
+                          title={
+                            order.fulfillment_type === "delivery"
+                              ? "Notify customer order is out for delivery"
+                              : "Notify customer order is ready for pickup"
+                          }
+                        >
+                          <Send className="h-4 w-4 mr-1" />
+                          {notifyingId === order.id ? "Sending..." : "Notify"}
+                        </Button>
+                      )}
                     <Button
                       size="sm"
                       variant="ghost"
