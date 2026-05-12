@@ -354,6 +354,33 @@ const handler = async (req: Request): Promise<Response> => {
       console.error("Owner alert failed (non-fatal):", ownerEmailErr);
     }
 
+    // Owner push notification (non-blocking — email is the fallback).
+    try {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL");
+      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+      if (supabaseUrl && serviceKey) {
+        const pushRes = await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${serviceKey}`,
+          },
+          body: JSON.stringify({
+            title: `New Order ${orderNumber}`,
+            body: `$${Number(total).toFixed(2)} • ${safeFulfillmentType}`,
+            url: `/admin?order=${orderNumber}`,
+            tag: `order-${orderNumber}`,
+            recipient_role: "admin",
+          }),
+        });
+        if (!pushRes.ok) {
+          console.error("Push dispatch non-OK:", pushRes.status, await pushRes.text());
+        }
+      }
+    } catch (pushErr) {
+      console.error("Push dispatch failed (non-fatal):", pushErr);
+    }
+
     await smtp.close();
 
     return new Response(JSON.stringify({ success: true }), {

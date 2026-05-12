@@ -18,6 +18,7 @@ import { UserManagementPanel } from "@/components/admin/UserManagementPanel";
 import { AdminHelpPanel } from "@/components/admin/AdminHelpPanel";
 import { ContactSubmissionsPanel } from "@/components/admin/ContactSubmissionsPanel";
 import { LoyaltyAdminPanel } from "@/components/admin/LoyaltyAdminPanel";
+import { PushNotificationsPanel } from "@/components/admin/PushNotificationsPanel";
 import { CategoriesPanel } from "@/components/admin/CategoriesPanel";
 import {
   BarChart3,
@@ -156,7 +157,7 @@ export default function Admin() {
             <ProductVariantsPanel />
           </TabsContent>
 
-          <TabsContent value="settings">
+          <TabsContent value="settings" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Business Settings</CardTitle>
@@ -165,6 +166,7 @@ export default function Admin() {
                 <BusinessSettingsForm />
               </CardContent>
             </Card>
+            <PushNotificationsPanel />
           </TabsContent>
 
           <TabsContent value="gift-cards">
