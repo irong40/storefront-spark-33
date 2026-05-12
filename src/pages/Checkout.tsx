@@ -42,7 +42,8 @@ const checkoutSchema = z
     // pickup fields
     pickupDate: z.string().optional(),
     pickupTime: z.string().optional(),
-    // delivery time window
+    // delivery time window + date
+    deliveryDate: z.string().optional(),
     deliveryTimeWindow: z.string().optional(),
   })
   .superRefine((data, ctx) => {
@@ -79,6 +80,13 @@ const checkoutSchema = z
           code: z.ZodIssueCode.custom,
           path: ["zip"],
           message: "ZIP code must be 5 digits (or ZIP+4)",
+        });
+      }
+      if (!data.deliveryDate?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["deliveryDate"],
+          message: "Delivery date is required",
         });
       }
       if (!data.deliveryTimeWindow?.trim()) {
@@ -128,6 +136,7 @@ import {
 } from "@/components/checkout/SquarePaymentForm";
 import {
   CHECKOUT_CONFIG,
+  getAvailableDeliveryDates,
   getAvailablePickupDates,
   getAvailableTimeSlots,
 } from "@/config/checkout";
@@ -185,13 +194,14 @@ export default function Checkout() {
       zip: "",
       pickupDate: "",
       pickupTime: "",
+      deliveryDate: "",
       deliveryTimeWindow: "",
     };
     try {
       const saved = localStorage.getItem("checkout-form");
       if (saved) {
         const parsed = JSON.parse(saved);
-        return { ...defaults, ...parsed, notes: "", pickupDate: "", pickupTime: "", deliveryTimeWindow: "" };
+        return { ...defaults, ...parsed, notes: "", pickupDate: "", pickupTime: "", deliveryDate: "", deliveryTimeWindow: "" };
       }
     } catch { /* ignore */ }
     return defaults;
@@ -199,13 +209,14 @@ export default function Checkout() {
 
   useEffect(() => {
     try {
-      const { notes: _n, pickupDate: _d, pickupTime: _t, deliveryTimeWindow: _w, ...persist } = formData;
+      const { notes: _n, pickupDate: _d, pickupTime: _t, deliveryDate: _dd, deliveryTimeWindow: _w, ...persist } = formData;
       localStorage.setItem("checkout-form", JSON.stringify(persist));
     } catch { /* quota or disabled */ }
   }, [formData]);
 
   // Get available pickup dates and time slots
   const availablePickupDates = useMemo(() => getAvailablePickupDates(), []);
+  const availableDeliveryDates = useMemo(() => getAvailableDeliveryDates(), []);
   const availableTimeSlots = useMemo(
     () =>
       formData.pickupDate ? getAvailableTimeSlots(formData.pickupDate) : [],
@@ -367,6 +378,7 @@ export default function Checkout() {
         !formData.city ||
         !formData.state ||
         !formData.zip ||
+        !formData.deliveryDate ||
         !formData.deliveryTimeWindow
       ) {
         return false;
@@ -475,6 +487,8 @@ export default function Checkout() {
             fulfillmentType === "pickup" ? formData.pickupDate : null,
           pickup_time:
             fulfillmentType === "pickup" ? formData.pickupTime : null,
+          delivery_date:
+            fulfillmentType === "delivery" ? formData.deliveryDate : null,
           shipping_address:
             fulfillmentType === "delivery"
               ? {
@@ -614,6 +628,7 @@ export default function Checkout() {
             fulfillmentType,
             pickupDate: formData.pickupDate || undefined,
             pickupTime: formData.pickupTime || undefined,
+            deliveryDate: formData.deliveryDate || undefined,
             deliveryTimeWindow: formData.deliveryTimeWindow || undefined,
             paymentStatus: "completed",
           },
@@ -947,6 +962,39 @@ export default function Checkout() {
                         <p className="text-sm text-destructive">{formErrors.zip}</p>
                       )}
                     </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="deliveryDate">Delivery Date *</Label>
+                    <Select
+                      value={formData.deliveryDate}
+                      onValueChange={(value) => {
+                        handleSelectChange("deliveryDate", value);
+                        if (formErrors.deliveryDate)
+                          setFormErrors((prev) => ({ ...prev, deliveryDate: undefined }));
+                      }}
+                      disabled={isSubmitting || paymentComplete}
+                    >
+                      <SelectTrigger
+                        id="deliveryDate"
+                        aria-invalid={!!formErrors.deliveryDate}
+                      >
+                        <SelectValue placeholder="Choose a delivery date" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableDeliveryDates.map((date) => (
+                          <SelectItem key={date.value} value={date.value}>
+                            {date.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {formErrors.deliveryDate && (
+                      <p className="text-sm text-destructive">{formErrors.deliveryDate}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Orders placed after 3 PM ET are scheduled for the day after tomorrow at the earliest.
+                    </p>
                   </div>
 
                   <div className="space-y-2">

@@ -651,6 +651,7 @@ export type Database = {
           billing_address: Json | null
           created_at: string | null
           customer_name: string | null
+          delivery_date: string | null
           delivery_time_window: string | null
           email: string
           fulfillment_type: string | null
@@ -705,6 +706,7 @@ export type Database = {
           billing_address?: Json | null
           created_at?: string | null
           customer_name?: string | null
+          delivery_date?: string | null
           delivery_time_window?: string | null
           email?: string
           fulfillment_type?: string | null

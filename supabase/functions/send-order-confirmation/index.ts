@@ -55,6 +55,7 @@ interface OrderEmailRequest {
   paymentStatus?: string;
   pickupDate?: string;
   pickupTime?: string;
+  deliveryDate?: string;
   deliveryTimeWindow?: string;
 }
 
@@ -113,6 +114,7 @@ const handler = async (req: Request): Promise<Response> => {
       paymentStatus,
       pickupDate,
       pickupTime,
+      deliveryDate,
       deliveryTimeWindow,
     } = orderData;
 
@@ -121,11 +123,12 @@ const handler = async (req: Request): Promise<Response> => {
     const safeOrderNumber = escapeHtml(orderNumber);
     const safeFulfillmentType = escapeHtml(fulfillmentType || "pickup");
     const safeDeliveryWindow = deliveryTimeWindow ? escapeHtml(deliveryTimeWindow) : "";
+    const safeDeliveryDate = deliveryDate ? escapeHtml(deliveryDate) : "";
     const safePickupDate = pickupDate ? escapeHtml(pickupDate) : "";
     const safePickupTime = pickupTime ? escapeHtml(pickupTime) : "";
     const scheduleLabel =
       safeFulfillmentType === "delivery"
-        ? safeDeliveryWindow
+        ? [safeDeliveryDate, safeDeliveryWindow].filter(Boolean).join(" • ")
         : [safePickupDate, safePickupTime].filter(Boolean).join(" ");
 
     // Build items HTML
@@ -367,7 +370,7 @@ const handler = async (req: Request): Promise<Response> => {
           },
           body: JSON.stringify({
             title: `New Order ${orderNumber}`,
-            body: `$${Number(total).toFixed(2)} • ${safeFulfillmentType}`,
+            body: `$${Number(total).toFixed(2)} • ${safeFulfillmentType}${scheduleLabel ? ` • ${scheduleLabel}` : ""}`,
             url: `/admin?order=${orderNumber}`,
             tag: `order-${orderNumber}`,
             recipient_role: "admin",

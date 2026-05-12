@@ -36,26 +36,75 @@ export const CHECKOUT_CONFIG = {
   DELIVERY_DAYS: [1, 2, 3, 4, 5] as number[],
 } as const;
 
-// Helper function to get available pickup dates (next 14 days, only valid days)
+// Returns the earliest date (YYYY-MM-DD) a customer can request for pickup or delivery,
+// based on the current time in America/New_York. No same-day orders. After the 3 PM ET
+// cutoff, next-day orders are also unavailable — earliest rolls to the day after.
+export function getEarliestFulfillmentDate(now: Date = new Date()): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    hour12: false,
+  }).formatToParts(now);
+  const map: Record<string, string> = {};
+  for (const p of parts) map[p.type] = p.value;
+  const etYear = parseInt(map.year, 10);
+  const etMonth = parseInt(map.month, 10);
+  const etDay = parseInt(map.day, 10);
+  const etHour = parseInt(map.hour, 10);
+
+  const base = new Date(etYear, etMonth - 1, etDay);
+  const daysToAdd = etHour < 15 ? 1 : 2; // 3 PM ET cutoff
+  base.setDate(base.getDate() + daysToAdd);
+
+  const y = base.getFullYear();
+  const m = String(base.getMonth() + 1).padStart(2, "0");
+  const d = String(base.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+// Helper function to get available pickup dates (Tue-Sat within the next ~21 days,
+// starting from the earliest allowable date per the same-day / 3 PM cutoff rule).
 export function getAvailablePickupDates(): { value: string; label: string }[] {
+  return buildAvailableDates(
+    (dayOfWeek) => !!CHECKOUT_CONFIG.PICKUP_HOURS[dayOfWeek],
+  );
+}
+
+// Helper function to get available delivery dates (Mon-Fri within the next ~21 days,
+// starting from the earliest allowable date per the same-day / 3 PM cutoff rule).
+export function getAvailableDeliveryDates(): { value: string; label: string }[] {
+  return buildAvailableDates(
+    (dayOfWeek) => CHECKOUT_CONFIG.DELIVERY_DAYS.includes(dayOfWeek),
+  );
+}
+
+function buildAvailableDates(
+  isAvailable: (dayOfWeek: number) => boolean,
+): { value: string; label: string }[] {
   const dates: { value: string; label: string }[] = [];
-  const today = new Date();
+  const earliest = getEarliestFulfillmentDate();
+  const [ey, em, ed] = earliest.split("-").map(Number);
+  const cursor = new Date(ey, em - 1, ed);
 
-  for (let i = 0; i < 14; i++) {
-    const date = new Date(today);
-    date.setDate(today.getDate() + i);
-    const dayOfWeek = date.getDay();
-
-    // Check if this day has pickup hours (Tue-Sat: 2-6)
-    if (CHECKOUT_CONFIG.PICKUP_HOURS[dayOfWeek]) {
-      const dateStr = date.toISOString().split("T")[0];
-      const label = date.toLocaleDateString("en-US", {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
+  // Scan 21 days from the earliest allowable date.
+  for (let i = 0; i < 21; i++) {
+    if (isAvailable(cursor.getDay())) {
+      const y = cursor.getFullYear();
+      const m = String(cursor.getMonth() + 1).padStart(2, "0");
+      const d = String(cursor.getDate()).padStart(2, "0");
+      dates.push({
+        value: `${y}-${m}-${d}`,
+        label: cursor.toLocaleDateString("en-US", {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+        }),
       });
-      dates.push({ value: dateStr, label });
     }
+    cursor.setDate(cursor.getDate() + 1);
   }
 
   return dates;
