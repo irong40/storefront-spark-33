@@ -22,7 +22,7 @@ export function Locations() {
           {/* Map */}
           <div className="h-64 overflow-hidden">
             <GoogleMapEmbed
-              address={`${business?.address_line1 || "719 High St."}, ${business?.city || "Portsmouth"}, ${business?.state || "VA"} ${business?.zip || "23703"}`}
+              address={`${business?.address_line1 || "719 High St."}, ${business?.city || "Portsmouth"}, ${business?.state || "VA"} ${business?.zip || "23704"}`}
               className="rounded-none rounded-t-3xl"
             />
           </div>
@@ -39,7 +39,7 @@ export function Locations() {
                   {business?.address_line1 || "719 High St."}
                   <br />
                   {business?.city || "Portsmouth"}, {business?.state || "VA"}{" "}
-                  {business?.zip || "23703"}
+                  {business?.zip || "23704"}
                 </span>
               </div>
               <div className="flex items-start gap-4">

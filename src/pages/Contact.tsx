@@ -8,12 +8,11 @@ import { useToast } from "@/hooks/use-toast";
 import { useBusinessSettings } from "@/hooks/use-business";
 import { supabase } from "@/integrations/supabase/client";
 import { Mail, Phone, MapPin, Clock, Loader2, Send } from "lucide-react";
-import { useDocumentTitle } from "@/hooks/use-document-title";
+import { PageSeo } from "@/components/PageSeo";
 import { formatHoursLines } from "@/lib/format-hours";
 import { GoogleMapEmbed } from "@/components/ui/google-map-embed";
 
 export default function Contact() {
-  useDocumentTitle("Contact");
   const { toast } = useToast();
   const { data: business } = useBusinessSettings();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -74,6 +73,10 @@ export default function Contact() {
 
   return (
     <Layout>
+      <PageSeo
+        title="Contact imPRESSive Juice Bar — Portsmouth, VA"
+        description="Contact imPRESSive Juice Bar at 719 High St, Portsmouth, VA 23704. Call 757.381.6980 or email info@impressivejb.com. Pickup Tue-Sat, delivery across Hampton Roads."
+      />
       {/* Hero */}
       <section className="bg-gradient-to-br from-primary/10 via-secondary to-accent/10 py-16">
         <div className="container px-4 text-center">

@@ -20,13 +20,12 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { ProductImage } from "@/components/ui/ProductImage";
-import { useDocumentTitle } from "@/hooks/use-document-title";
+import { PageSeo } from "@/components/PageSeo";
 
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
   const { data: product, isLoading, error } = useProduct(slug || "");
   const { data: addons } = useAddons();
-  useDocumentTitle(product?.name);
 
   // Use effective sizes (product overrides or global sizes)
   const { sizes: globalSizes, isLoading: sizesLoading } =
@@ -244,8 +243,19 @@ export default function ProductDetail() {
   const hasDiscount =
     product.compare_at_price && product.compare_at_price > currentPrice;
 
+  const seoDescription =
+    product.short_description ||
+    product.description ||
+    `Order ${product.name} from imPRESSive Juice Bar in Portsmouth, VA. Cold-pressed, made fresh, pickup or Hampton Roads delivery.`;
+
   return (
     <Layout>
+      <PageSeo
+        title={`${product.name} — Cold-Pressed Juice`}
+        description={seoDescription.slice(0, 200)}
+        ogImage={product.image_url || undefined}
+        type="product"
+      />
       <div className="container px-4 py-8">
         <Breadcrumb className="mb-6">
           <BreadcrumbList>

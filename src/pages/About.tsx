@@ -1,5 +1,5 @@
 import { Layout } from "@/components/layout/Layout";
-import { useDocumentTitle } from "@/hooks/use-document-title";
+import { PageSeo } from "@/components/PageSeo";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { MapPin, Clock } from "lucide-react";
@@ -54,10 +54,13 @@ const values = [
 ];
 
 export default function About() {
-  useDocumentTitle("About");
   const { data: business } = useBusinessSettings();
   return (
     <Layout>
+      <PageSeo
+        title="About imPRESSive Juice Bar — Portsmouth's Cold-Pressed Juice Shop"
+        description="Family-owned cold-pressed juice bar at 719 High St in Portsmouth, VA. Fresh, no added sugar, no preservatives. Serving Hampton Roads since 2024."
+      />
       {/* Hero Section - Kraft Paper Style */}
       <section className="relative pt-8 pb-20 overflow-hidden bg-brand-kraft">
         {/* Watercolor decorative elements */}
