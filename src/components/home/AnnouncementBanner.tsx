@@ -14,11 +14,8 @@ export function AnnouncementBanner() {
 
   return (
     <div className="bg-brand-berry text-white py-2 overflow-hidden">
-      <div className="relative">
-        <div className="animate-marquee whitespace-nowrap">
-          <span className="mx-4 text-sm font-medium">{combinedMessage}</span>
-          <span className="mx-4 text-sm font-medium">{combinedMessage}</span>
-        </div>
+      <div className="animate-marquee whitespace-nowrap text-sm font-medium">
+        {combinedMessage}
       </div>
     </div>
   );

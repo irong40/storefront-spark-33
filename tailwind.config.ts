@@ -152,6 +152,10 @@ export default {
           "0%": { transform: "translateX(0)" },
           "100%": { transform: "translateX(-50%)" },
         },
+        "marquee": {
+          "0%": { transform: "translateX(100%)" },
+          "100%": { transform: "translateX(-100%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -162,7 +166,7 @@ export default {
         "scale-in": "scale-in 0.3s ease-out",
         "float-card": "float-card var(--float-duration, 25s) ease-in-out var(--float-delay, 0s) infinite",
         "scroll": "scroll 20s linear infinite",
-        "marquee": "scroll 30s linear infinite",
+        "marquee": "marquee 30s linear infinite",
       },
       transitionTimingFunction: {
         "ease-out-expo": "cubic-bezier(0.16, 1, 0.3, 1)",
