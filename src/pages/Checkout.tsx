@@ -630,6 +630,16 @@ export default function Checkout() {
             pickupTime: formData.pickupTime || undefined,
             deliveryDate: formData.deliveryDate || undefined,
             deliveryTimeWindow: formData.deliveryTimeWindow || undefined,
+            shippingAddress:
+              fulfillmentType === "delivery"
+                ? {
+                    line1: formData.addressLine1,
+                    line2: formData.addressLine2,
+                    city: formData.city,
+                    state: formData.state,
+                    zip: formData.zip,
+                  }
+                : undefined,
             paymentStatus: "completed",
           },
         })

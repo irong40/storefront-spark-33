@@ -591,6 +591,60 @@ function OrderDetails({ order }: { order: OrderWithItems }) {
                 {order.pickup_date} at {order.pickup_time}
               </p>
             )}
+            {order.fulfillment_type === "delivery" && order.delivery_date && (
+              <p>
+                <span className="text-muted-foreground">Delivery:</span>{" "}
+                {order.delivery_date}
+                {order.delivery_time_window ? ` (${order.delivery_time_window})` : ""}
+              </p>
+            )}
+            {order.fulfillment_type === "delivery" && order.shipping_address && (() => {
+              const addr = order.shipping_address as {
+                line1?: string;
+                line2?: string;
+                city?: string;
+                state?: string;
+                zip?: string;
+              };
+              const formatted = [
+                addr.line1,
+                addr.line2,
+                [addr.city, addr.state].filter(Boolean).join(", "),
+                addr.zip,
+              ]
+                .filter(Boolean)
+                .join(", ");
+              const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formatted)}`;
+              return (
+                <div className="mt-2 p-2 bg-brand-kraft/30 rounded border border-brand-olive/20">
+                  <p className="text-muted-foreground text-xs font-semibold mb-1">
+                    Delivery Address:
+                  </p>
+                  <p className="font-medium">{addr.line1}</p>
+                  {addr.line2 && <p>{addr.line2}</p>}
+                  <p>
+                    {addr.city}, {addr.state} {addr.zip}
+                  </p>
+                  <div className="flex gap-3 mt-1">
+                    <a
+                      href={mapsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-brand-berry hover:underline text-xs"
+                    >
+                      Open in Maps
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => navigator.clipboard.writeText(formatted)}
+                      className="text-brand-berry hover:underline text-xs"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
             {order.payment_id && (
               <p>
                 <span className="text-muted-foreground">Payment ID:</span>{" "}

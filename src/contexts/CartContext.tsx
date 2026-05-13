@@ -358,25 +358,42 @@ export function CartProvider({ children }: { children: ReactNode }) {
     async function initCart() {
       setIsLoading(true);
       try {
-        let { data: cart } = await supabase
-          .from("carts")
-          .select("id")
-          .eq("session_id", sessionId)
-          .single();
+        const { data: authData } = await supabase.auth.getUser();
+        const userId = authData?.user?.id ?? null;
 
-        if (!cart) {
-          const { data: newCart } = await supabase
+        // Look up existing cart. For authed users, match by user_id so the
+        // row passes the "Authenticated users can read own carts" RLS policy;
+        // for anon users, match by session_id.
+        const lookup = supabase.from("carts").select("id");
+        const { data: cart } = await (userId
+          ? lookup.eq("user_id", userId)
+          : lookup.eq("session_id", sessionId)
+        )
+          .maybeSingle();
+
+        let resolvedCart = cart;
+
+        if (!resolvedCart) {
+          // Include user_id when authenticated so the returning SELECT is
+          // allowed by RLS (otherwise PostgREST returns 403 with empty body).
+          const insertPayload: { session_id: string; user_id?: string } = {
+            session_id: sessionId,
+          };
+          if (userId) insertPayload.user_id = userId;
+
+          const { data: newCart, error: insertErr } = await supabase
             .from("carts")
-            .insert({ session_id: sessionId })
+            .insert(insertPayload)
             .select("id")
             .single();
-          cart = newCart;
+          if (insertErr) throw insertErr;
+          resolvedCart = newCart;
         }
 
-        if (cart) {
-          setCartId(cart.id);
+        if (resolvedCart) {
+          setCartId(resolvedCart.id);
           // Initial load is not debounced — fetch immediately
-          await fetchCartItems(cart.id);
+          await fetchCartItems(resolvedCart.id);
         }
       } catch (error) {
         logger.error("Error initializing cart:", error);

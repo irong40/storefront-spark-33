@@ -57,6 +57,13 @@ interface OrderEmailRequest {
   pickupTime?: string;
   deliveryDate?: string;
   deliveryTimeWindow?: string;
+  shippingAddress?: {
+    line1?: string;
+    line2?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+  };
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -116,6 +123,7 @@ const handler = async (req: Request): Promise<Response> => {
       pickupTime,
       deliveryDate,
       deliveryTimeWindow,
+      shippingAddress,
     } = orderData;
 
     // Fix 7: Escape user-controlled values
@@ -130,6 +138,33 @@ const handler = async (req: Request): Promise<Response> => {
       safeFulfillmentType === "delivery"
         ? [safeDeliveryDate, safeDeliveryWindow].filter(Boolean).join(" • ")
         : [safePickupDate, safePickupTime].filter(Boolean).join(" ");
+
+    const addressLines: string[] =
+      safeFulfillmentType === "delivery" && shippingAddress
+        ? [
+            shippingAddress.line1,
+            shippingAddress.line2,
+            [shippingAddress.city, shippingAddress.state]
+              .filter(Boolean)
+              .join(", "),
+            shippingAddress.zip,
+          ]
+            .filter((s): s is string => Boolean(s && s.trim()))
+            .map((s) => escapeHtml(s))
+        : [];
+    const addressOneLine = addressLines.join(", ");
+    const mapsUrl = addressOneLine
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressOneLine)}`
+      : "";
+    const ownerAddressBlockHtml =
+      safeFulfillmentType === "delivery" && addressLines.length > 0
+        ? `
+              <div style="background:#fef3c7;border-left:4px solid #d97706;border-radius:6px;padding:12px 16px;margin-bottom:20px;">
+                <p style="margin:0 0 6px;color:#92400e;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">Delivery Address</p>
+                <p style="margin:0;color:#111827;font-size:15px;font-weight:600;line-height:1.5;">${addressLines.join("<br>")}</p>
+                ${mapsUrl ? `<p style="margin:8px 0 0;"><a href="${mapsUrl}" style="color:#b45309;font-size:13px;font-weight:600;text-decoration:underline;">Open in Maps &rarr;</a></p>` : ""}
+              </div>`
+        : "";
 
     // Build items HTML
     const itemsHtml = items
@@ -328,6 +363,8 @@ const handler = async (req: Request): Promise<Response> => {
                   </tr>
                 </table>
               </div>
+
+              ${ownerAddressBlockHtml}
 
               <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
                 <tbody>${ownerItemsHtml}</tbody>

@@ -86,13 +86,17 @@ export default function ProductDetail() {
     ) {
       setSelectedVariantId(product.variants[0].id);
     }
-    // Default to 16 oz if available and not using variants (skip Food category — sizes don't apply)
+    // Default to 16 oz if available and not using variants (skip Food category and wellness shots — sizes don't apply)
+    const slugIsWellnessShot =
+      product?.slug?.startsWith("wellness-shot-") &&
+      product?.slug !== "wellness-shot-subscription";
     if (
       !product?.variants?.length &&
       globalSizes.length > 0 &&
       !selectedSizeId &&
       !requiresFlavors &&
-      product?.category?.slug !== "food"
+      product?.category?.slug !== "food" &&
+      !slugIsWellnessShot
     ) {
       const defaultSize =
         globalSizes.find((s) => s.name === "16 oz") || globalSizes[0];
@@ -129,8 +133,8 @@ export default function ProductDetail() {
   // Price Calculation
   let currentPrice = 0;
   if (isWellnessShot) {
-    // Wellness shots are always $3
-    currentPrice = 3;
+    // Wellness shots: use DB price (currently $4)
+    currentPrice = Number(product?.price || 0);
   } else if (selectedVariant) {
     currentPrice = Number(selectedVariant.price);
   } else if (
@@ -532,7 +536,9 @@ export default function ProductDetail() {
               productId={product.id}
               quantity={quantity}
               sizeId={
-                !selectedVariantId ? selectedSizeId || undefined : undefined
+                !selectedVariantId && !isWellnessShot
+                  ? selectedSizeId || undefined
+                  : undefined
               }
               sizeOverrideId={selectedVariantId || undefined}
               giftCardData={
