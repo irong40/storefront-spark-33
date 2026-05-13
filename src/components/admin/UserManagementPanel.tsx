@@ -5,6 +5,7 @@ import {
   useRemoveRole,
   useCreateUser,
   useResetUserPassword,
+  useDeleteUser,
   UserWithRole,
 } from "@/hooks/use-users";
 import { useAuth } from "@/contexts/AuthContext";
@@ -54,6 +55,7 @@ import {
   ShieldCheck,
   Plus,
   KeyRound,
+  Trash2,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -64,6 +66,27 @@ export function UserManagementPanel() {
   const removeRole = useRemoveRole();
   const createUser = useCreateUser();
   const resetPassword = useResetUserPassword();
+  const deleteUser = useDeleteUser();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<UserWithRole | null>(null);
+
+  const openDeleteDialog = (user: UserWithRole) => {
+    setUserToDelete(user);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteUser = () => {
+    if (!userToDelete) return;
+    deleteUser.mutate(
+      { userId: userToDelete.id },
+      {
+        onSuccess: () => {
+          setDeleteDialogOpen(false);
+          setUserToDelete(null);
+        },
+      },
+    );
+  };
 
   const [searchQuery, setSearchQuery] = useState("");
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
@@ -307,6 +330,20 @@ export function UserManagementPanel() {
                     <UserPlus className="h-4 w-4 mr-1" />
                     Assign Role
                   </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => openDeleteDialog(user)}
+                    disabled={user.id === currentUser?.id}
+                    title={
+                      user.id === currentUser?.id
+                        ? "You can't delete your own account"
+                        : "Delete user"
+                    }
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </TableCell>
             </TableRow>
@@ -495,6 +532,31 @@ export function UserManagementPanel() {
               disabled={resetPassword.isPending}
             >
               {resetPassword.isPending ? "Sending..." : "Send Reset Email"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete User Confirmation */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete user?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently deletes <strong>{userToDelete?.email}</strong>{" "}
+              and removes their profile, roles, loyalty membership, and push
+              subscriptions. Their past orders stay in the order history for
+              records. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteUser}
+              disabled={deleteUser.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteUser.isPending ? "Deleting..." : "Delete user"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

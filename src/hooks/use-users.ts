@@ -157,6 +157,39 @@ export function useRemoveRole() {
   });
 }
 
+export function useDeleteUser() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ userId }: { userId: string }) => {
+      if (userId === user?.id) {
+        throw new Error("You cannot delete your own account");
+      }
+      const { data, error } = await supabase.functions.invoke("delete-user", {
+        body: { userId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      toast({ title: "User deleted" });
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+      queryClient.invalidateQueries({ queryKey: ["loyalty-members-admin"] });
+    },
+    onError: (error: Error) => {
+      logger.error("Error deleting user:", error);
+      toast({
+        title: "Failed to delete user",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+}
+
 export function useResetUserPassword() {
   const { toast } = useToast();
 
