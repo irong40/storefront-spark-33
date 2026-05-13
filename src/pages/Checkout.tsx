@@ -22,6 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
 import { generateGiftCardCode, generateOrderNumber } from "@/lib/utils";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import { isInDeliveryZone, DELIVERY_ZONE_LABEL } from "@/lib/delivery-zones";
 
 // ---------------------------------------------------------------------------
 // Checkout validation schema — conditional on fulfillment_type
@@ -80,6 +81,12 @@ const checkoutSchema = z
           code: z.ZodIssueCode.custom,
           path: ["zip"],
           message: "ZIP code must be 5 digits (or ZIP+4)",
+        });
+      } else if (!isInDeliveryZone(data.zip)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["zip"],
+          message: `We only deliver inside ${DELIVERY_ZONE_LABEL}. Please choose pickup or order from a supported ZIP.`,
         });
       }
       if (!data.deliveryDate?.trim()) {
