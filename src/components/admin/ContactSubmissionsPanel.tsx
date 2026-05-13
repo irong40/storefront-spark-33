@@ -27,7 +27,8 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
-import { ChevronDown, ChevronRight, Loader2, Save } from "lucide-react";
+import { ChevronDown, ChevronRight, Loader2, Save, Send } from "lucide-react";
+import { format } from "date-fns";
 
 type SubmissionStatus = "new" | "read" | "replied" | "archived";
 
@@ -43,6 +44,7 @@ export function ContactSubmissionsPanel() {
   const queryClient = useQueryClient();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [adminNotes, setAdminNotes] = useState<Record<string, string>>({});
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
 
   const { data: submissions = [], isLoading } = useQuery({
     queryKey: ["contact-submissions"],
@@ -73,6 +75,39 @@ export function ContactSubmissionsPanel() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contact-submissions"] });
       toast({ title: "Status updated" });
+    },
+  });
+
+  const sendReply = useMutation({
+    mutationFn: async ({
+      id,
+      replyText,
+    }: {
+      id: string;
+      replyText: string;
+    }) => {
+      const { data, error } = await supabase.functions.invoke(
+        "send-contact-reply",
+        { body: { submissionId: id, replyText } },
+      );
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["contact-submissions"] });
+      setReplyDrafts((prev) => {
+        const next = { ...prev };
+        delete next[vars.id];
+        return next;
+      });
+      toast({ title: "Reply sent" });
+    },
+    onError: (err) => {
+      toast({
+        title: "Failed to send reply",
+        description: err instanceof Error ? err.message : "Unknown error",
+        variant: "destructive",
+      });
     },
   });
 
@@ -216,6 +251,66 @@ export function ContactSubmissionsPanel() {
                                       <SelectItem value="archived">Archived</SelectItem>
                                     </SelectContent>
                                   </Select>
+                                </div>
+                              </div>
+
+                              {sub.reply_message && (
+                                <div className="rounded-md border border-green-200 bg-green-50 p-3">
+                                  <p className="text-xs font-semibold text-green-800 mb-1">
+                                    Reply sent
+                                    {sub.replied_at
+                                      ? ` · ${format(new Date(sub.replied_at as string), "PPp")}`
+                                      : ""}
+                                  </p>
+                                  <p className="text-sm text-green-900 whitespace-pre-wrap">
+                                    {sub.reply_message as string}
+                                  </p>
+                                </div>
+                              )}
+
+                              <div>
+                                <p className="text-sm font-medium mb-1">
+                                  {sub.reply_message ? "Send another reply" : "Reply to customer"}
+                                </p>
+                                <p className="text-xs text-muted-foreground mb-2">
+                                  Sends from info@impressivejb.com to {sub.email}.
+                                </p>
+                                <div className="flex gap-2">
+                                  <Textarea
+                                    value={replyDrafts[sub.id] ?? ""}
+                                    onChange={(e) =>
+                                      setReplyDrafts((prev) => ({
+                                        ...prev,
+                                        [sub.id]: e.target.value,
+                                      }))
+                                    }
+                                    rows={4}
+                                    className="flex-1"
+                                    placeholder="Write your reply here..."
+                                  />
+                                  <Button
+                                    size="sm"
+                                    onClick={() =>
+                                      sendReply.mutate({
+                                        id: sub.id,
+                                        replyText: replyDrafts[sub.id] ?? "",
+                                      })
+                                    }
+                                    disabled={
+                                      !replyDrafts[sub.id]?.trim() ||
+                                      sendReply.isPending
+                                    }
+                                    className="self-start"
+                                  >
+                                    {sendReply.isPending ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                      <>
+                                        <Send className="h-4 w-4 mr-1" />
+                                        Send
+                                      </>
+                                    )}
+                                  </Button>
                                 </div>
                               </div>
 

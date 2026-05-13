@@ -35,12 +35,27 @@ export function LoyaltyAdminPanel() {
   const { data: members = [], isLoading } = useQuery({
     queryKey: ["loyalty-members-admin"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: rows, error } = await supabase
         .from("loyalty_members")
-        .select("*, profiles:user_id(full_name, email)")
+        .select("*")
         .order("points_balance", { ascending: false });
       if (error) throw error;
-      return data;
+      if (!rows || rows.length === 0) return [];
+
+      const userIds = Array.from(new Set(rows.map((r) => r.user_id)));
+      const { data: profiles, error: profilesErr } = await supabase
+        .from("customer_profiles")
+        .select("id, email, full_name")
+        .in("id", userIds);
+      if (profilesErr) throw profilesErr;
+
+      const profileMap = new Map(
+        (profiles ?? []).map((p) => [p.id, p]),
+      );
+      return rows.map((r) => ({
+        ...r,
+        profiles: profileMap.get(r.user_id) ?? null,
+      }));
     },
   });
 
