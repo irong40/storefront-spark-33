@@ -51,7 +51,7 @@ export function Header() {
             <img
               src={logo}
               alt="imPRESSive Juice Bar"
-              className={`w-auto object-contain transition-all duration-300 group-hover:scale-105 group-hover:drop-shadow-[0_8px_20px_rgba(0,0,0,0.15)] ${
+              className={`w-auto object-contain mix-blend-multiply transition-all duration-300 group-hover:scale-105 group-hover:drop-shadow-[0_8px_20px_rgba(0,0,0,0.15)] ${
                 isScrolled
                   ? "h-10 md:h-12 lg:h-14"
                   : "h-[70px] md:h-[90px] lg:h-[100px]"
