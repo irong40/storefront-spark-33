@@ -156,16 +156,50 @@ export function LoyaltyAdminPanel() {
     },
   });
 
+  // Products eligible for a free-product reward: must offer a 10 oz size
+  // (either via a product_size_overrides row with size_oz=10, or by falling
+  // back to global product_sizes which includes 10 oz). Wellness shots and
+  // egift cards are excluded — they don't use the size selector.
   const { data: products = [] } = useQuery({
-    queryKey: ["products-for-loyalty"],
+    queryKey: ["products-for-loyalty-10oz"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: globalSizes, error: gsErr } = await supabase
+        .from("product_sizes")
+        .select("size_oz")
+        .eq("active", true);
+      if (gsErr) throw gsErr;
+      const globalHas10oz = (globalSizes ?? []).some((s) => s.size_oz === 10);
+
+      const { data: rows, error } = await supabase
         .from("products")
-        .select("id, name")
+        .select("id, name, slug, category:categories(slug), product_size_overrides(size_oz, active)")
         .eq("active", true)
         .order("name");
       if (error) throw error;
-      return data as { id: string; name: string }[];
+
+      type Row = {
+        id: string;
+        name: string;
+        slug: string | null;
+        category: { slug: string | null } | null;
+        product_size_overrides: { size_oz: number | null; active: boolean | null }[] | null;
+      };
+
+      return (rows as unknown as Row[])
+        .filter((r) => {
+          const slug = r.slug ?? "";
+          const catSlug = r.category?.slug ?? "";
+          if (catSlug === "wellness-shots") return false;
+          if (slug === "egift-card") return false;
+          const activeOverrides = (r.product_size_overrides ?? []).filter(
+            (o) => o.active !== false,
+          );
+          if (activeOverrides.length > 0) {
+            return activeOverrides.some((o) => o.size_oz === 10);
+          }
+          return globalHas10oz;
+        })
+        .map((r) => ({ id: r.id, name: r.name }));
     },
   });
 
@@ -604,13 +638,19 @@ export function LoyaltyAdminPanel() {
             )}
             {draft.reward_type === "free_product" && (
               <div className="space-y-1.5">
-                <Label>Free product</Label>
+                <Label>Free product (10 oz)</Label>
                 <Select
                   value={draft.product_id}
                   onValueChange={(v) => setDraft({ ...draft, product_id: v })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Pick a product" />
+                    <SelectValue
+                      placeholder={
+                        products.length === 0
+                          ? "No products with a 10 oz option"
+                          : "Pick a product"
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {products.map((p) => (
@@ -620,6 +660,10 @@ export function LoyaltyAdminPanel() {
                     ))}
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground">
+                  Only products that offer a 10 oz size are shown. Wellness
+                  shots and gift cards are excluded.
+                </p>
               </div>
             )}
             <div className="grid grid-cols-2 gap-3">
