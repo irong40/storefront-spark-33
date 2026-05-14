@@ -812,6 +812,25 @@ export default function Checkout() {
                   <Clock className="h-5 w-5" />
                   Pickup Details
                 </h2>
+                <div className="rounded-lg border border-brand-olive/30 bg-brand-kraft/30 p-4 mb-4 flex items-start gap-3">
+                  <MapPin className="h-5 w-5 text-brand-olive mt-0.5 flex-shrink-0" />
+                  <div className="text-sm">
+                    <p className="font-semibold text-brand-brown mb-1">
+                      Pick up at Bloom Market
+                    </p>
+                    <p className="text-brand-warm-gray">
+                      719 High St, Portsmouth, VA 23704
+                    </p>
+                    <a
+                      href="https://www.google.com/maps/search/?api=1&query=719+High+St+Portsmouth+VA+23704"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-brand-berry hover:underline text-xs font-medium inline-block mt-1"
+                    >
+                      Open in Maps →
+                    </a>
+                  </div>
+                </div>
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="pickupDate">Pickup Date *</Label>
