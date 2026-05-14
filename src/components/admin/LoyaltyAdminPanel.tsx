@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -14,9 +16,92 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Users, Award, TrendingUp, Gift } from "lucide-react";
+import { Loader2, Users, Award, TrendingUp, Gift, Pencil, Trash2, Plus } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+
+type RewardType = "discount_percent" | "discount_fixed" | "free_product" | "free_shipping";
+
+type RewardRow = {
+  id: string;
+  name: string;
+  description: string | null;
+  points_required: number;
+  reward_type: RewardType;
+  reward_value: number | null;
+  product_id: string | null;
+  min_order_amount: number | null;
+  active: boolean;
+  sort_order: number;
+};
+
+type RewardDraft = {
+  name: string;
+  description: string;
+  points_required: string;
+  reward_type: RewardType;
+  reward_value: string;
+  product_id: string;
+  min_order_amount: string;
+  sort_order: string;
+  active: boolean;
+};
+
+const REWARD_TYPE_LABELS: Record<RewardType, string> = {
+  discount_percent: "% off order",
+  discount_fixed: "$ off order",
+  free_product: "Free product",
+  free_shipping: "Free shipping/delivery",
+};
+
+const emptyDraft = (sortOrder: number): RewardDraft => ({
+  name: "",
+  description: "",
+  points_required: "100",
+  reward_type: "discount_percent",
+  reward_value: "10",
+  product_id: "",
+  min_order_amount: "0",
+  sort_order: String(sortOrder),
+  active: true,
+});
+
+const rowToDraft = (r: RewardRow): RewardDraft => ({
+  name: r.name,
+  description: r.description ?? "",
+  points_required: String(r.points_required),
+  reward_type: r.reward_type,
+  reward_value: r.reward_value != null ? String(r.reward_value) : "",
+  product_id: r.product_id ?? "",
+  min_order_amount: r.min_order_amount != null ? String(r.min_order_amount) : "0",
+  sort_order: String(r.sort_order ?? 0),
+  active: r.active,
+});
 
 const TIER_COLORS: Record<string, string> = {
   bronze: "bg-orange-100 text-orange-800",
@@ -71,32 +156,118 @@ export function LoyaltyAdminPanel() {
     },
   });
 
-  const [rewardEdits, setRewardEdits] = useState<Record<string, string>>({});
-
-  const updateRewardThreshold = useMutation({
-    mutationFn: async ({ id, points }: { id: string; points: number }) => {
-      const { error } = await supabase
-        .from("loyalty_rewards")
-        .update({ points_required: points })
-        .eq("id", id);
+  const { data: products = [] } = useQuery({
+    queryKey: ["products-for-loyalty"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, name")
+        .eq("active", true)
+        .order("name");
       if (error) throw error;
+      return data as { id: string; name: string }[];
     },
-    onSuccess: (_, vars) => {
+  });
+
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editorMode, setEditorMode] = useState<"create" | "edit">("create");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [draft, setDraft] = useState<RewardDraft>(emptyDraft(0));
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const openCreate = () => {
+    const nextSort = (rewards as RewardRow[]).reduce(
+      (m, r) => Math.max(m, r.sort_order ?? 0),
+      0,
+    ) + 10;
+    setDraft(emptyDraft(nextSort));
+    setEditingId(null);
+    setEditorMode("create");
+    setEditorOpen(true);
+  };
+
+  const openEdit = (r: RewardRow) => {
+    setDraft(rowToDraft(r));
+    setEditingId(r.id);
+    setEditorMode("edit");
+    setEditorOpen(true);
+  };
+
+  const saveReward = useMutation({
+    mutationFn: async () => {
+      const points = Number(draft.points_required);
+      if (!draft.name.trim()) throw new Error("Name is required");
+      if (!Number.isFinite(points) || points < 1)
+        throw new Error("Points required must be at least 1");
+      const valueNeeded =
+        draft.reward_type === "discount_percent" ||
+        draft.reward_type === "discount_fixed";
+      const rewardValue = draft.reward_value === "" ? null : Number(draft.reward_value);
+      if (valueNeeded && (rewardValue == null || !Number.isFinite(rewardValue) || rewardValue <= 0))
+        throw new Error("Reward value is required for discount rewards");
+      if (draft.reward_type === "free_product" && !draft.product_id)
+        throw new Error("Pick a product for a free-product reward");
+      const minOrder = draft.min_order_amount === "" ? 0 : Number(draft.min_order_amount);
+
+      const payload = {
+        name: draft.name.trim(),
+        description: draft.description.trim() || null,
+        points_required: points,
+        reward_type: draft.reward_type,
+        reward_value: valueNeeded ? rewardValue : null,
+        product_id: draft.reward_type === "free_product" ? draft.product_id : null,
+        min_order_amount: minOrder,
+        active: draft.active,
+        sort_order: Number(draft.sort_order) || 0,
+      };
+
+      if (editorMode === "edit" && editingId) {
+        const { error } = await supabase
+          .from("loyalty_rewards")
+          .update(payload)
+          .eq("id", editingId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("loyalty_rewards").insert(payload);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["loyalty-rewards-admin"] });
       queryClient.invalidateQueries({ queryKey: ["loyalty-rewards"] });
-      setRewardEdits((prev) => {
-        const next = { ...prev };
-        delete next[vars.id];
-        return next;
-      });
-      toast({ title: "Reward updated" });
+      setEditorOpen(false);
+      toast({ title: editorMode === "edit" ? "Reward updated" : "Reward created" });
     },
     onError: (err) => {
       toast({
         title: "Error",
-        description: err instanceof Error ? err.message : "Failed to update reward",
+        description: err instanceof Error ? err.message : "Failed to save reward",
         variant: "destructive",
       });
+    },
+  });
+
+  const deleteReward = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("loyalty_rewards").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["loyalty-rewards-admin"] });
+      queryClient.invalidateQueries({ queryKey: ["loyalty-rewards"] });
+      setDeleteId(null);
+      toast({ title: "Reward deleted" });
+    },
+    onError: (err) => {
+      toast({
+        title: "Error",
+        description:
+          err instanceof Error
+            ? err.message
+            : "Failed to delete reward (it may be referenced by past redemptions — try deactivating instead).",
+        variant: "destructive",
+      });
+      setDeleteId(null);
     },
   });
 
@@ -249,11 +420,14 @@ export function LoyaltyAdminPanel() {
 
       {/* Rewards Catalog */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle className="flex items-center gap-2">
             <Gift className="h-5 w-5" />
-            Reward Thresholds
+            Rewards Catalog
           </CardTitle>
+          <Button size="sm" onClick={openCreate}>
+            <Plus className="h-4 w-4 mr-1" /> New Reward
+          </Button>
         </CardHeader>
         <CardContent>
           {isLoadingRewards ? (
@@ -271,18 +445,22 @@ export function LoyaltyAdminPanel() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Reward</TableHead>
-                  <TableHead className="w-32">Points Required</TableHead>
-                  <TableHead className="w-24">Active</TableHead>
-                  <TableHead className="w-24"></TableHead>
+                  <TableHead className="w-32">Offer</TableHead>
+                  <TableHead className="w-24">Points</TableHead>
+                  <TableHead className="w-20">Active</TableHead>
+                  <TableHead className="w-32 text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rewards.map((reward) => {
-                  const editValue =
-                    rewardEdits[reward.id] ?? String(reward.points_required);
-                  const dirty =
-                    rewardEdits[reward.id] !== undefined &&
-                    Number(rewardEdits[reward.id]) !== reward.points_required;
+                {(rewards as RewardRow[]).map((reward) => {
+                  const offerText =
+                    reward.reward_type === "discount_percent"
+                      ? `${reward.reward_value ?? 0}% off`
+                      : reward.reward_type === "discount_fixed"
+                        ? `$${reward.reward_value ?? 0} off`
+                        : reward.reward_type === "free_shipping"
+                          ? "Free shipping"
+                          : "Free product";
                   return (
                     <TableRow key={reward.id}>
                       <TableCell>
@@ -295,19 +473,9 @@ export function LoyaltyAdminPanel() {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min={1}
-                          value={editValue}
-                          onChange={(e) =>
-                            setRewardEdits((prev) => ({
-                              ...prev,
-                              [reward.id]: e.target.value,
-                            }))
-                          }
-                          className="w-24"
-                        />
+                      <TableCell className="text-sm">{offerText}</TableCell>
+                      <TableCell className="font-mono text-sm">
+                        {reward.points_required}
                       </TableCell>
                       <TableCell>
                         <Switch
@@ -320,30 +488,25 @@ export function LoyaltyAdminPanel() {
                           }
                         />
                       </TableCell>
-                      <TableCell>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={
-                            !dirty ||
-                            !editValue ||
-                            isNaN(Number(editValue)) ||
-                            Number(editValue) < 1 ||
-                            updateRewardThreshold.isPending
-                          }
-                          onClick={() =>
-                            updateRewardThreshold.mutate({
-                              id: reward.id,
-                              points: Number(editValue),
-                            })
-                          }
-                        >
-                          {updateRewardThreshold.isPending ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            "Save"
-                          )}
-                        </Button>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => openEdit(reward)}
+                            aria-label="Edit reward"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => setDeleteId(reward.id)}
+                            aria-label="Delete reward"
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -353,6 +516,192 @@ export function LoyaltyAdminPanel() {
           )}
         </CardContent>
       </Card>
+
+      {/* Editor Dialog */}
+      <Dialog open={editorOpen} onOpenChange={setEditorOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {editorMode === "edit" ? "Edit Reward" : "New Reward"}
+            </DialogTitle>
+            <DialogDescription>
+              Configure what members get when they redeem points.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="reward-name">Name</Label>
+              <Input
+                id="reward-name"
+                value={draft.name}
+                placeholder="$5 off your order"
+                onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="reward-description">Description (optional)</Label>
+              <Textarea
+                id="reward-description"
+                rows={2}
+                value={draft.description}
+                placeholder="Shown to members on the rewards page"
+                onChange={(e) => setDraft({ ...draft, description: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Reward type</Label>
+                <Select
+                  value={draft.reward_type}
+                  onValueChange={(v) =>
+                    setDraft({ ...draft, reward_type: v as RewardType })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(Object.keys(REWARD_TYPE_LABELS) as RewardType[]).map((k) => (
+                      <SelectItem key={k} value={k}>
+                        {REWARD_TYPE_LABELS[k]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="reward-points">Points required</Label>
+                <Input
+                  id="reward-points"
+                  type="number"
+                  min={1}
+                  value={draft.points_required}
+                  onChange={(e) =>
+                    setDraft({ ...draft, points_required: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+            {(draft.reward_type === "discount_percent" ||
+              draft.reward_type === "discount_fixed") && (
+              <div className="space-y-1.5">
+                <Label htmlFor="reward-value">
+                  {draft.reward_type === "discount_percent"
+                    ? "Percent off (e.g. 10 = 10%)"
+                    : "Dollar amount off (e.g. 5 = $5)"}
+                </Label>
+                <Input
+                  id="reward-value"
+                  type="number"
+                  min={0}
+                  step={draft.reward_type === "discount_percent" ? "1" : "0.01"}
+                  value={draft.reward_value}
+                  onChange={(e) =>
+                    setDraft({ ...draft, reward_value: e.target.value })
+                  }
+                />
+              </div>
+            )}
+            {draft.reward_type === "free_product" && (
+              <div className="space-y-1.5">
+                <Label>Free product</Label>
+                <Select
+                  value={draft.product_id}
+                  onValueChange={(v) => setDraft({ ...draft, product_id: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pick a product" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {products.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="reward-min-order">Min. order ($)</Label>
+                <Input
+                  id="reward-min-order"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={draft.min_order_amount}
+                  onChange={(e) =>
+                    setDraft({ ...draft, min_order_amount: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="reward-sort">Sort order</Label>
+                <Input
+                  id="reward-sort"
+                  type="number"
+                  value={draft.sort_order}
+                  onChange={(e) =>
+                    setDraft({ ...draft, sort_order: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="reward-active">Active (visible to members)</Label>
+              <Switch
+                id="reward-active"
+                checked={draft.active}
+                onCheckedChange={(checked) =>
+                  setDraft({ ...draft, active: checked })
+                }
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditorOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => saveReward.mutate()}
+              disabled={saveReward.isPending}
+            >
+              {saveReward.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : editorMode === "edit" ? (
+                "Save changes"
+              ) : (
+                "Create reward"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete confirmation */}
+      <AlertDialog
+        open={!!deleteId}
+        onOpenChange={(open) => !open && setDeleteId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this reward?</AlertDialogTitle>
+            <AlertDialogDescription>
+              If members have already redeemed it, deletion may fail — deactivate
+              instead to hide it from the rewards page while keeping history.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteId && deleteReward.mutate(deleteId)}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Members Table */}
       <Card>
