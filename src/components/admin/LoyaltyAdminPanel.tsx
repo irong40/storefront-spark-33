@@ -245,8 +245,6 @@ export function LoyaltyAdminPanel() {
       const rewardValue = draft.reward_value === "" ? null : Number(draft.reward_value);
       if (valueNeeded && (rewardValue == null || !Number.isFinite(rewardValue) || rewardValue <= 0))
         throw new Error("Reward value is required for discount rewards");
-      if (draft.reward_type === "free_product" && !draft.product_id)
-        throw new Error("Pick a product for a free-product reward");
       const minOrder = draft.min_order_amount === "" ? 0 : Number(draft.min_order_amount);
 
       const payload = {
@@ -255,7 +253,10 @@ export function LoyaltyAdminPanel() {
         points_required: points,
         reward_type: draft.reward_type,
         reward_value: valueNeeded ? rewardValue : null,
-        product_id: draft.reward_type === "free_product" ? draft.product_id : null,
+        product_id:
+          draft.reward_type === "free_product" && draft.product_id
+            ? draft.product_id
+            : null,
         min_order_amount: minOrder,
         active: draft.active,
         sort_order: Number(draft.sort_order) || 0,
@@ -646,13 +647,18 @@ export function LoyaltyAdminPanel() {
               <div className="space-y-1.5">
                 <Label>Free product</Label>
                 <Select
-                  value={draft.product_id}
-                  onValueChange={(v) => setDraft({ ...draft, product_id: v })}
+                  value={draft.product_id || "__any__"}
+                  onValueChange={(v) =>
+                    setDraft({ ...draft, product_id: v === "__any__" ? "" : v })
+                  }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Pick a product" />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="__any__">
+                      Any 10 oz juice (customer picks at checkout)
+                    </SelectItem>
                     {products.map((p) => (
                       <SelectItem key={p.id} value={p.id}>
                         <div className="flex flex-col">
@@ -669,8 +675,9 @@ export function LoyaltyAdminPanel() {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  Customer redeems at checkout — the size they choose is the
-                  size they get free.
+                  Leave as "Any 10 oz juice" to let customers pick any 10 oz
+                  juice at checkout. Choose a specific product to lock the
+                  reward to that item.
                 </p>
               </div>
             )}
