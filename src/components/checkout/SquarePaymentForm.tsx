@@ -17,6 +17,16 @@ interface SquarePaymentFormProps {
   onSuccess: (paymentResult: PaymentResult) => void;
   onError: (message: string) => void;
   disabled?: boolean;
+  redemptionId?: string | null;
+}
+
+export interface AppliedLoyalty {
+  redemption_id: string;
+  reward_type: string;
+  discount: number;
+  applied_to_product_id: string | null;
+  applied_to_size_name: string | null;
+  free_shipping: boolean;
 }
 
 export interface PaymentResult {
@@ -28,6 +38,7 @@ export interface PaymentResult {
     brand: string;
   };
   walletType?: "apple_pay" | "google_pay" | "card";
+  loyaltyApplied?: AppliedLoyalty | null;
 }
 
 export function SquarePaymentForm({
@@ -36,6 +47,7 @@ export function SquarePaymentForm({
   onSuccess,
   onError,
   disabled = false,
+  redemptionId = null,
 }: SquarePaymentFormProps) {
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -58,6 +70,7 @@ export function SquarePaymentForm({
           body: {
             sourceId: token,
             sessionId: sessionId,
+            redemptionId: redemptionId || undefined,
           },
         },
       );
@@ -79,6 +92,7 @@ export function SquarePaymentForm({
           receiptUrl: data.payment.receiptUrl,
           cardDetails: data.payment.cardDetails,
           walletType,
+          loyaltyApplied: data.loyaltyApplied ?? null,
         });
       } else {
         throw new Error("Unexpected payment response");

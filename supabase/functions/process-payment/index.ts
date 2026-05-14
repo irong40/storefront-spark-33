@@ -40,12 +40,13 @@ serve(async (req) => {
   }
 
   try {
-    const { sourceId, sessionId, currency = "USD" } = await req.json();
+    const { sourceId, sessionId, currency = "USD", redemptionId } = await req.json();
 
     console.log("Processing payment with server-side validation:", {
       sourceId: sourceId?.substring(0, 20) + "...",
       sessionId,
-      currency
+      currency,
+      hasRedemption: !!redemptionId,
     });
 
     if (!sourceId || !sessionId) {
@@ -127,14 +128,15 @@ serve(async (req) => {
       });
     }
 
-    // Fetch cart items with all pricing data
+    // Fetch cart items with all pricing data (plus slug + size_oz for loyalty)
     const { data: cartItems, error: itemsError } = await supabase
       .from('cart_items')
       .select(`
         quantity,
-        product:products(price),
-        size:product_sizes(price),
-        size_override:product_size_overrides(price),
+        product_id,
+        product:products(price, slug),
+        size:product_sizes(price, name, size_oz),
+        size_override:product_size_overrides(price, size_name, size_oz),
         addon_ids
       `)
       .eq('cart_id', cart.id);
@@ -203,7 +205,165 @@ serve(async (req) => {
     }
 
     const tax = subtotal * TAX_RATE;
-    const total = subtotal + tax;
+
+    // --- Loyalty redemption (optional) ---
+    // Validate, compute discount, and reserve the code BEFORE charging Square.
+    // One reward per order: caller passes at most one redemptionId.
+    type LoyaltyApplied = {
+      redemption_id: string;
+      reward_type: string;
+      discount: number;
+      applied_to_product_id: string | null;
+      applied_to_size_name: string | null;
+      free_shipping: boolean;
+    } | null;
+    let loyaltyApplied: LoyaltyApplied = null;
+
+    if (redemptionId) {
+      if (!authenticatedUserId) {
+        console.error("Loyalty redemption attempted without authentication");
+        throw new Error("Sign in to use a loyalty reward");
+      }
+
+      const { data: redemption, error: redemptionErr } = await supabase
+        .from("loyalty_redemptions")
+        .select(`
+          id, status, expires_at, member_id, points_spent,
+          member:loyalty_members(user_id),
+          reward:loyalty_rewards(reward_type, reward_value, product_id, min_order_amount, active)
+        `)
+        .eq("id", redemptionId)
+        .maybeSingle();
+
+      if (redemptionErr || !redemption) {
+        console.error("Redemption lookup failed:", redemptionErr);
+        throw new Error("Loyalty reward not found");
+      }
+
+      const member = redemption.member as unknown as { user_id: string } | null;
+      const reward = redemption.reward as unknown as {
+        reward_type: string;
+        reward_value: number | null;
+        product_id: string | null;
+        min_order_amount: number | null;
+        active: boolean;
+      } | null;
+
+      if (!member || member.user_id !== authenticatedUserId) {
+        throw new Error("This reward belongs to a different account");
+      }
+      if (redemption.status !== "active") {
+        throw new Error("This reward has already been used or expired");
+      }
+      if (new Date(redemption.expires_at).getTime() < Date.now()) {
+        throw new Error("This reward has expired");
+      }
+      if (!reward || !reward.active) {
+        throw new Error("This reward is no longer offered");
+      }
+      const minOrder = Number(reward.min_order_amount ?? 0);
+      if (subtotal < minOrder) {
+        throw new Error(`Minimum order of $${minOrder.toFixed(2)} required to use this reward`);
+      }
+
+      // Compute the discount against the validated server-side cart.
+      let discount = 0;
+      let appliedProductId: string | null = null;
+      let appliedSizeName: string | null = null;
+      let freeShipping = false;
+
+      if (reward.reward_type === "discount_fixed") {
+        discount = Math.min(Number(reward.reward_value ?? 0), subtotal);
+      } else if (reward.reward_type === "discount_percent") {
+        discount = subtotal * (Number(reward.reward_value ?? 0) / 100);
+      } else if (reward.reward_type === "free_shipping") {
+        freeShipping = true; // tax/total already exclude shipping in this fn — see note below
+      } else if (reward.reward_type === "free_product") {
+        // Pick the cheapest eligible line. Eligible = (a) matches reward.product_id if set,
+        // (b) otherwise any line whose effective size_oz === 10.
+        type EligibleLine = {
+          unitPrice: number;
+          productId: string;
+          sizeName: string | null;
+        };
+        const eligible: EligibleLine[] = [];
+        for (const item of cartItems) {
+          const product = item.product as unknown as { price: number; slug: string | null } | null;
+          const size = item.size as unknown as { price: number; name: string | null; size_oz: number | null } | null;
+          const sizeOverride = item.size_override as unknown as {
+            price: number;
+            size_name: string | null;
+            size_oz: number | null;
+          } | null;
+
+          let unitPrice = 0;
+          let sizeOz: number | null = null;
+          let sizeName: string | null = null;
+          if (sizeOverride && sizeOverride.price != null) {
+            unitPrice = Number(sizeOverride.price);
+            sizeOz = sizeOverride.size_oz ?? null;
+            sizeName = sizeOverride.size_name ?? null;
+          } else if (size && size.price != null) {
+            unitPrice = Number(size.price);
+            sizeOz = size.size_oz ?? null;
+            sizeName = size.name ?? null;
+          } else if (product && product.price != null) {
+            unitPrice = Number(product.price);
+          }
+
+          const productId = (item as { product_id: string }).product_id;
+          const matchesProduct = reward.product_id
+            ? productId === reward.product_id
+            : sizeOz === 10;
+          if (matchesProduct && unitPrice > 0) {
+            eligible.push({ unitPrice, productId, sizeName });
+          }
+        }
+        if (eligible.length === 0) {
+          throw new Error(
+            reward.product_id
+              ? "This reward requires the matching product in your cart"
+              : "This reward requires a 10 oz juice in your cart",
+          );
+        }
+        eligible.sort((a, b) => a.unitPrice - b.unitPrice);
+        const cheapest = eligible[0];
+        discount = cheapest.unitPrice;
+        appliedProductId = cheapest.productId;
+        appliedSizeName = cheapest.sizeName;
+      }
+
+      // Reserve the code now: flip to 'used' before charging Square. If the
+      // Square charge fails below we restore it. order_id is patched in by the
+      // client right after the orders row is inserted.
+      const { error: reserveErr } = await supabase
+        .from("loyalty_redemptions")
+        .update({
+          status: "used",
+          used_at: new Date().toISOString(),
+          discount_amount: Number(discount.toFixed(2)),
+          applied_to_product_id: appliedProductId,
+          applied_to_size_name: appliedSizeName,
+        })
+        .eq("id", redemptionId)
+        .eq("status", "active"); // optimistic concurrency
+      if (reserveErr) {
+        console.error("Failed to reserve redemption:", reserveErr);
+        throw new Error("Could not reserve loyalty reward — try again");
+      }
+
+      loyaltyApplied = {
+        redemption_id: redemptionId,
+        reward_type: reward.reward_type,
+        discount: Number(discount.toFixed(2)),
+        applied_to_product_id: appliedProductId,
+        applied_to_size_name: appliedSizeName,
+        free_shipping: freeShipping,
+      };
+    }
+
+    const loyaltyDiscount = loyaltyApplied?.discount ?? 0;
+    const total = Math.max(0, subtotal + tax - loyaltyDiscount);
 
     // Convert to cents for Square API
     const amountInCents = Math.round(total * 100);
@@ -211,6 +371,7 @@ serve(async (req) => {
     console.log("Calculated payment amount:", {
       subtotal,
       tax,
+      loyaltyDiscount,
       total,
       amountInCents,
       itemCount: cartItems.length
@@ -218,6 +379,13 @@ serve(async (req) => {
 
     if (amountInCents <= 0) {
       console.error("Invalid calculated amount");
+      // Roll back redemption reservation if any
+      if (loyaltyApplied) {
+        await supabase
+          .from("loyalty_redemptions")
+          .update({ status: "active", used_at: null, discount_amount: null, applied_to_product_id: null, applied_to_size_name: null })
+          .eq("id", loyaltyApplied.redemption_id);
+      }
       throw new Error("Invalid order amount");
     }
 
@@ -270,6 +438,19 @@ serve(async (req) => {
     if (!squareResponse.ok) {
       console.error("Square API error:", JSON.stringify(squareData));
       const errorMessage = squareData.errors?.[0]?.detail || "Payment processing failed";
+      // Roll back redemption reservation so the customer can try again
+      if (loyaltyApplied) {
+        await supabase
+          .from("loyalty_redemptions")
+          .update({
+            status: "active",
+            used_at: null,
+            discount_amount: null,
+            applied_to_product_id: null,
+            applied_to_size_name: null,
+          })
+          .eq("id", loyaltyApplied.redemption_id);
+      }
       return new Response(
         JSON.stringify({ error: errorMessage }),
         {
@@ -298,7 +479,9 @@ serve(async (req) => {
           subtotal,
           tax,
           total,
-        }
+          loyaltyDiscount,
+        },
+        loyaltyApplied,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

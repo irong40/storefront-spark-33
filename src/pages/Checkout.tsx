@@ -149,6 +149,7 @@ import {
 } from "@/config/checkout";
 import { useGiftCard } from "@/hooks/use-gift-card";
 import { useBusinessSettings } from "@/hooks/use-business";
+import { useLoyaltyRedemptions, type LoyaltyRedemption } from "@/hooks/use-loyalty";
 
 interface AppliedGiftCard {
   code: string;
@@ -187,6 +188,12 @@ export default function Checkout() {
     [],
   );
   const [giftCardError, setGiftCardError] = useState<string | null>(null);
+
+  // Loyalty reward state (one per order)
+  const { data: allRedemptions } = useLoyaltyRedemptions();
+  const [appliedRedemption, setAppliedRedemption] =
+    useState<LoyaltyRedemption | null>(null);
+  const [loyaltyError, setLoyaltyError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState(() => {
     const defaults = {
@@ -253,7 +260,94 @@ export default function Checkout() {
         ? 0
         : deliveryFee
       : 0;
-  const totalBeforeGiftCard = subtotal + tax + shipping;
+  // Loyalty reward preview (server is source of truth — this matches its math)
+  const activeRedemptions = useMemo(
+    () =>
+      (allRedemptions ?? []).filter(
+        (r) =>
+          r.status === "active" &&
+          new Date(r.expires_at).getTime() > Date.now(),
+      ),
+    [allRedemptions],
+  );
+
+  const computeLoyaltyDiscount = (
+    redemption: LoyaltyRedemption | null,
+  ): { discount: number; error: string | null; freeShipping: boolean } => {
+    if (!redemption || !redemption.reward) {
+      return { discount: 0, error: null, freeShipping: false };
+    }
+    const reward = redemption.reward;
+    const minOrder = Number(reward.min_order_amount ?? 0);
+    if (subtotal < minOrder) {
+      return {
+        discount: 0,
+        error: `Minimum order $${minOrder.toFixed(2)} required for this reward`,
+        freeShipping: false,
+      };
+    }
+    if (reward.reward_type === "discount_fixed") {
+      return {
+        discount: Math.min(Number(reward.reward_value ?? 0), subtotal),
+        error: null,
+        freeShipping: false,
+      };
+    }
+    if (reward.reward_type === "discount_percent") {
+      return {
+        discount: subtotal * (Number(reward.reward_value ?? 0) / 100),
+        error: null,
+        freeShipping: false,
+      };
+    }
+    if (reward.reward_type === "free_shipping") {
+      return { discount: 0, error: null, freeShipping: true };
+    }
+    if (reward.reward_type === "free_product") {
+      // Eligible line = matches reward.product_id, else any 10 oz line
+      const eligibleLines = items
+        .map((item) => {
+          const sizeName =
+            item.size_override?.size_name ?? item.size?.name ?? null;
+          const unitPrice = getItemEffectiveUnitPriceFromCart(item);
+          const is10oz = sizeName === "10 oz";
+          const matchesProduct = reward.product_id
+            ? item.product_id === reward.product_id
+            : is10oz;
+          return { matchesProduct, unitPrice };
+        })
+        .filter((e) => e.matchesProduct && e.unitPrice > 0)
+        .sort((a, b) => a.unitPrice - b.unitPrice);
+      if (eligibleLines.length === 0) {
+        return {
+          discount: 0,
+          error: reward.product_id
+            ? "Add the matching product to your cart to use this reward"
+            : "Add a 10 oz juice to your cart to use this reward",
+          freeShipping: false,
+        };
+      }
+      return { discount: eligibleLines[0].unitPrice, error: null, freeShipping: false };
+    }
+    return { discount: 0, error: null, freeShipping: false };
+  };
+
+  // Local-scope helper used by computeLoyaltyDiscount above. Mirrors the
+  // getItemEffectiveUnitPrice defined later in this component — duplicated
+  // here only because the discount preview needs it during render math.
+  function getItemEffectiveUnitPriceFromCart(
+    item: (typeof items)[number],
+  ): number {
+    const basePrice =
+      item.size_override?.price ?? item.size?.price ?? item.product.price;
+    const addonTotal = item.addons?.reduce((sum, a) => sum + a.price, 0) ?? 0;
+    return basePrice + addonTotal;
+  }
+
+  const { discount: loyaltyDiscount, error: loyaltyAppliedError, freeShipping: loyaltyFreeShipping } =
+    computeLoyaltyDiscount(appliedRedemption);
+
+  const totalBeforeGiftCard = subtotal + tax + (loyaltyFreeShipping ? 0 : shipping) - loyaltyDiscount;
   const total = Math.max(0, totalBeforeGiftCard - giftCardDiscount);
   const totalInCents = Math.round(total * 100);
 
@@ -329,6 +423,36 @@ export default function Checkout() {
   const removeGiftCard = (code: string) => {
     setAppliedGiftCards((prev) => prev.filter((gc) => gc.code !== code));
   };
+
+  // Apply a loyalty redemption. One-per-order: replaces any previous selection.
+  const handleApplyRedemption = (redemption: LoyaltyRedemption) => {
+    setLoyaltyError(null);
+    const preview = computeLoyaltyDiscount(redemption);
+    if (preview.error) {
+      setLoyaltyError(preview.error);
+      return;
+    }
+    setAppliedRedemption(redemption);
+    toast({
+      title: "Loyalty reward applied",
+      description: redemption.reward?.name ?? "Reward applied to your order",
+    });
+  };
+
+  const removeRedemption = () => {
+    setAppliedRedemption(null);
+    setLoyaltyError(null);
+  };
+
+  // If the cart changes and the currently-applied redemption is no longer
+  // valid (e.g., user removed the eligible 10 oz juice), surface the error
+  // and auto-clear so the customer doesn't get a confusing checkout failure.
+  useEffect(() => {
+    if (appliedRedemption && loyaltyAppliedError) {
+      setLoyaltyError(loyaltyAppliedError);
+      setAppliedRedemption(null);
+    }
+  }, [appliedRedemption, loyaltyAppliedError]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -513,6 +637,22 @@ export default function Checkout() {
         });
 
       if (orderError) throw orderError;
+
+      // Link the consumed loyalty redemption to the order for audit/history.
+      // process-payment already marked the redemption 'used' before charging,
+      // but couldn't know the order_id (this row is inserted client-side).
+      if (payment.loyaltyApplied?.redemption_id) {
+        const { error: linkErr } = await supabase.rpc(
+          "link_redemption_to_order",
+          {
+            p_redemption_id: payment.loyaltyApplied.redemption_id,
+            p_order_id: orderId,
+          },
+        );
+        if (linkErr) {
+          logger.error("Failed to link redemption to order (non-fatal):", linkErr);
+        }
+      }
 
       // Create order items with effective prices (respects size overrides + addons)
       const orderItems = items.map((item) => {
@@ -1160,6 +1300,7 @@ export default function Checkout() {
                 <SquarePaymentForm
                   amountInCents={totalInCents}
                   sessionId={sessionId}
+                  redemptionId={appliedRedemption?.id ?? null}
                   onSuccess={handlePaymentSuccess}
                   onError={handlePaymentError}
                   disabled={isSubmitting || cartLoading || giftCardLoading}
@@ -1295,6 +1436,86 @@ export default function Checkout() {
                 )}
               </div>
 
+              {/* Loyalty Reward Section */}
+              {activeRedemptions.length > 0 && !paymentComplete && (
+                <>
+                  <Separator className="my-4" />
+                  <div className="mb-4">
+                    <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
+                      <Gift className="h-4 w-4 text-brand-olive" />
+                      Loyalty Reward
+                    </h3>
+                    {appliedRedemption ? (
+                      <div className="flex items-center justify-between p-2 bg-brand-olive/10 rounded-lg text-sm">
+                        <div className="flex items-center gap-2">
+                          <Check className="h-4 w-4 text-brand-olive" />
+                          <span>
+                            {appliedRedemption.reward?.name ?? "Reward"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-brand-olive font-medium">
+                            {loyaltyFreeShipping
+                              ? "Free delivery"
+                              : `-$${loyaltyDiscount.toFixed(2)}`}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={removeRedemption}
+                            className="text-muted-foreground hover:text-destructive transition-colors"
+                            aria-label="Remove loyalty reward"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <p className="text-xs text-muted-foreground">
+                          One reward per order
+                        </p>
+                        {activeRedemptions.map((r) => {
+                          const preview = computeLoyaltyDiscount(r);
+                          const eligible = !preview.error;
+                          return (
+                            <div
+                              key={r.id}
+                              className="flex items-center justify-between gap-2 p-2 border rounded-lg text-sm"
+                            >
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate">
+                                  {r.reward?.name ?? r.code}
+                                </p>
+                                <p className="text-xs text-muted-foreground truncate">
+                                  Code: {r.code}
+                                  {!eligible && preview.error
+                                    ? ` · ${preview.error}`
+                                    : ""}
+                                </p>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleApplyRedemption(r)}
+                                disabled={!eligible || isSubmitting}
+                              >
+                                Apply
+                              </Button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {loyaltyError && (
+                      <p className="text-sm text-destructive mt-1">
+                        {loyaltyError}
+                      </p>
+                    )}
+                  </div>
+                </>
+              )}
+
               <Separator className="my-4" />
 
               <div className="space-y-2 text-sm">
@@ -1312,6 +1533,23 @@ export default function Checkout() {
                   </span>
                   <span>{shipping > 0 ? `$${shipping.toFixed(2)}` : "Free"}</span>
                 </div>
+                {loyaltyDiscount > 0 && (
+                  <div className="flex justify-between text-brand-olive">
+                    <span>
+                      Loyalty Reward
+                      {appliedRedemption?.reward?.name
+                        ? ` · ${appliedRedemption.reward.name}`
+                        : ""}
+                    </span>
+                    <span>-${loyaltyDiscount.toFixed(2)}</span>
+                  </div>
+                )}
+                {loyaltyFreeShipping && (
+                  <div className="flex justify-between text-brand-olive">
+                    <span>Loyalty Reward · Free Delivery</span>
+                    <span>-${shipping.toFixed(2)}</span>
+                  </div>
+                )}
                 {giftCardDiscount > 0 && (
                   <div className="flex justify-between text-brand-olive">
                     <span>Gift Card</span>
