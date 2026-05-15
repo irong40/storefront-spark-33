@@ -2,9 +2,8 @@ import { useEffect, useState } from "react";
 import { useFeaturedProducts } from "@/hooks/use-products";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ArrowRight, Plus } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCart } from "@/contexts/CartContext";
 import { ProductImage } from "@/components/ui/ProductImage";
 
 const CYCLE_MS = 15000;
@@ -12,7 +11,6 @@ const SLIDE_MS = 500;
 
 export function FeaturedProducts() {
   const { data: products, isLoading } = useFeaturedProducts();
-  const { addItem } = useCart();
 
   const [startIndex, setStartIndex] = useState(0);
   const [sliding, setSliding] = useState(false);
@@ -127,13 +125,16 @@ export function FeaturedProducts() {
                         {product.ingredients || product.short_description}
                       </p>
 
-                      <div className="mt-auto flex items-center justify-between">
+                      <div className="mt-auto flex items-center justify-end">
                         <Button
-                          size="icon"
-                          className="rounded-full bg-brand-berry hover:bg-brand-berry-dark hover:scale-110 transition-all shadow-sm"
-                          onClick={() => addItem(product.id)}
+                          asChild
+                          size="sm"
+                          className="rounded-full bg-brand-berry hover:bg-brand-berry-dark hover:scale-105 transition-all shadow-sm px-4"
                         >
-                          <Plus className="h-5 w-5" />
+                          <Link to={`/products/${product.slug}`}>
+                            Choose Size
+                            <ArrowRight className="ml-1 h-4 w-4" />
+                          </Link>
                         </Button>
                       </div>
                     </div>
