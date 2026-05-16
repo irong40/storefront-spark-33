@@ -150,6 +150,47 @@ export function useUnarchiveOrders() {
   });
 }
 
+export function useRefundOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      orderId,
+      amount,
+      reason,
+    }: {
+      orderId: string;
+      amount?: number;
+      reason?: string;
+    }) => {
+      const { data, error } = await supabase.functions.invoke("refund-payment", {
+        body: { orderId, amount, reason },
+      });
+
+      if (error) {
+        // Edge function returns JSON error in response body; surface it
+        const fnError = (data as { error?: string } | null)?.error;
+        throw new Error(fnError || error.message || "Refund failed");
+      }
+      if ((data as { error?: string } | null)?.error) {
+        throw new Error((data as { error: string }).error);
+      }
+
+      return data as {
+        success: boolean;
+        refundId?: string;
+        refundStatus?: string;
+        refundedAmount: number;
+        isFullRefund: boolean;
+        warning?: string;
+      };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
+    },
+  });
+}
+
 export function useCreateOrder() {
   const queryClient = useQueryClient();
 

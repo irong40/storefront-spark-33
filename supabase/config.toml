@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.refresh-square-token]
 verify_jwt = false
+
+[functions.refund-payment]
+verify_jwt = false

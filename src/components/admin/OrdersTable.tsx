@@ -5,6 +5,7 @@ import {
   useUpdateOrderStatus,
   useArchiveOrders,
   useUnarchiveOrders,
+  useRefundOrder,
   OrderWithItems,
   ArchiveType,
 } from "@/hooks/use-orders";
@@ -28,6 +29,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -58,6 +71,7 @@ import {
   Search,
   BellRing,
   Send,
+  Undo2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CreateOrderDialog } from "./CreateOrderDialog";
@@ -91,6 +105,22 @@ const ORDER_STATUSES = [
   },
 ];
 
+// Statuses set programmatically (not user-selectable from the dropdown)
+const REFUND_STATUSES = [
+  {
+    value: "refunded",
+    label: "Refunded",
+    icon: Undo2,
+    color: "bg-purple-100 text-purple-800",
+  },
+  {
+    value: "partially_refunded",
+    label: "Partial Refund",
+    icon: Undo2,
+    color: "bg-purple-100 text-purple-800",
+  },
+];
+
 const ARCHIVE_OPTIONS: { value: ArchiveType; label: string }[] = [
   { value: "archived_weekly", label: "Weekly Archive" },
   { value: "archived_monthly", label: "Monthly Archive" },
@@ -109,7 +139,9 @@ function getStatusBadge(status: string) {
     );
   }
   const statusConfig =
-    ORDER_STATUSES.find((s) => s.value === status) || ORDER_STATUSES[0];
+    ORDER_STATUSES.find((s) => s.value === status) ||
+    REFUND_STATUSES.find((s) => s.value === status) ||
+    ORDER_STATUSES[0];
   return (
     <Badge className={`${statusConfig.color} border-0`}>
       {statusConfig.label}
@@ -537,7 +569,12 @@ export function OrdersTable() {
           <DialogHeader>
             <DialogTitle>Order {selectedOrder?.order_number}</DialogTitle>
           </DialogHeader>
-          {selectedOrder && <OrderDetails order={selectedOrder} />}
+          {selectedOrder && (
+            <OrderDetails
+              order={selectedOrder}
+              onClose={() => setSelectedOrder(null)}
+            />
+          )}
         </DialogContent>
       </Dialog>
 
@@ -549,7 +586,70 @@ export function OrdersTable() {
   );
 }
 
-function OrderDetails({ order }: { order: OrderWithItems }) {
+function OrderDetails({
+  order,
+  onClose,
+}: {
+  order: OrderWithItems;
+  onClose: () => void;
+}) {
+  const { toast } = useToast();
+  const refund = useRefundOrder();
+  // refunded_amount comes from a recent migration; types may not be regenerated yet
+  const refundedAmount = Number(
+    (order as unknown as { refunded_amount?: number }).refunded_amount ?? 0,
+  );
+  const refundedAt = (order as unknown as { refunded_at?: string }).refunded_at;
+  const refundCeiling = Math.max(0, order.total - refundedAmount);
+  const hasPaymentId = !!order.payment_id;
+  const canRefund = hasPaymentId && refundCeiling > 0.005;
+
+  const [refundOpen, setRefundOpen] = useState(false);
+  const [refundInput, setRefundInput] = useState("");
+  const [refundReason, setRefundReason] = useState("");
+
+  const openRefund = () => {
+    setRefundInput(refundCeiling.toFixed(2));
+    setRefundReason("");
+    setRefundOpen(true);
+  };
+
+  const handleRefund = async () => {
+    const parsed = parseFloat(refundInput);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      toast({ title: "Enter a valid refund amount", variant: "destructive" });
+      return;
+    }
+    if (parsed > refundCeiling + 0.005) {
+      toast({
+        title: `Amount exceeds refundable balance of $${refundCeiling.toFixed(2)}`,
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      const result = await refund.mutateAsync({
+        orderId: order.id,
+        amount: parsed,
+        reason: refundReason.trim() || undefined,
+      });
+      toast({
+        title: result.isFullRefund
+          ? "Full refund issued"
+          : `Refund of $${parsed.toFixed(2)} issued`,
+        description: result.warning,
+      });
+      setRefundOpen(false);
+      onClose();
+    } catch (err) {
+      toast({
+        title: "Refund failed",
+        description: err instanceof Error ? err.message : "Unknown error",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-6">
@@ -703,8 +803,88 @@ function OrderDetails({ order }: { order: OrderWithItems }) {
             <span>Total</span>
             <span>${order.total.toFixed(2)}</span>
           </div>
+          {refundedAmount > 0 && (
+            <div className="flex justify-between text-purple-700 pt-1">
+              <span>
+                Refunded
+                {refundedAt &&
+                  ` on ${format(new Date(refundedAt), "MMM d, yyyy")}`}
+              </span>
+              <span>−${refundedAmount.toFixed(2)}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-4 flex items-center justify-between">
+          <div className="text-xs text-muted-foreground">
+            {!hasPaymentId && "No Square payment on file — refund via Square dashboard or cash"}
+            {hasPaymentId && refundCeiling <= 0.005 && "Fully refunded"}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={!canRefund}
+            onClick={openRefund}
+            className="text-purple-700 border-purple-200 hover:bg-purple-50"
+          >
+            <Undo2 className="h-4 w-4 mr-2" />
+            {refundedAmount > 0 ? "Issue Additional Refund" : "Issue Refund"}
+          </Button>
         </div>
       </div>
+
+      <AlertDialog open={refundOpen} onOpenChange={setRefundOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Refund order {order.order_number}</AlertDialogTitle>
+            <AlertDialogDescription>
+              This refunds the customer through Square. Up to $
+              {refundCeiling.toFixed(2)} is refundable on this order.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-3 py-2">
+            <div>
+              <Label htmlFor="refund-amount">Amount (USD)</Label>
+              <Input
+                id="refund-amount"
+                type="number"
+                step="0.01"
+                min="0.01"
+                max={refundCeiling}
+                value={refundInput}
+                onChange={(e) => setRefundInput(e.target.value)}
+                disabled={refund.isPending}
+              />
+            </div>
+            <div>
+              <Label htmlFor="refund-reason">Reason (optional)</Label>
+              <Textarea
+                id="refund-reason"
+                value={refundReason}
+                onChange={(e) => setRefundReason(e.target.value)}
+                placeholder="e.g. Customer requested cancellation"
+                rows={2}
+                disabled={refund.isPending}
+              />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={refund.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleRefund();
+              }}
+              disabled={refund.isPending}
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              {refund.isPending ? "Processing..." : "Confirm Refund"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {order.notes && (
         <div>
