@@ -357,6 +357,45 @@ export function AdminHelpPanel() {
                     </li>
                   </ul>
                 </div>
+                <div>
+                  <h4 className="font-semibold mb-2">Issuing Refunds</h4>
+                  <p className="text-muted-foreground mb-2">
+                    Refunds are processed through Square — the money goes back
+                    to the same card the customer originally paid with
+                    (typically 5-10 business days to land).
+                  </p>
+                  <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                    <li>
+                      Click the eye icon on any order to open its detail dialog
+                    </li>
+                    <li>
+                      Click "Issue Refund" at the bottom of the totals section
+                    </li>
+                    <li>
+                      The amount field defaults to the full remaining balance —
+                      lower it for a partial refund
+                    </li>
+                    <li>
+                      Optionally add a reason (e.g. "Customer requested
+                      cancellation") — it's logged on the order and sent to
+                      Square
+                    </li>
+                    <li>
+                      The order status becomes <strong>Refunded</strong> (full)
+                      or <strong>Partial Refund</strong>, and a refunded line
+                      shows in the totals
+                    </li>
+                    <li>
+                      You can issue multiple partial refunds until the balance
+                      reaches zero
+                    </li>
+                    <li>
+                      Cash orders and manually-created orders with no Square
+                      payment can't be refunded in-app — handle those through
+                      the Square dashboard or in cash
+                    </li>
+                  </ul>
+                </div>
               </AccordionContent>
             </AccordionItem>
 
