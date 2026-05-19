@@ -565,7 +565,7 @@ export function OrdersTable() {
         open={!!selectedOrder}
         onOpenChange={() => setSelectedOrder(null)}
       >
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Order {selectedOrder?.order_number}</DialogTitle>
           </DialogHeader>
@@ -764,20 +764,49 @@ function OrderDetails({
       <div>
         <h3 className="font-semibold mb-2">Items</h3>
         <div className="border rounded-lg divide-y">
-          {order.order_items?.map((item) => (
-            <div
-              key={item.id}
-              className="p-3 flex justify-between items-center"
-            >
-              <div>
-                <p className="font-medium">{item.product_name}</p>
-                <p className="text-sm text-muted-foreground">
-                  ${item.product_price.toFixed(2)} × {item.quantity}
-                </p>
+          {order.order_items?.map((item) => {
+            const addons = (item.addons as Array<{ display_name?: string; name?: string; price?: number }> | null) ?? [];
+            const flavors = (item.selected_flavors as Array<{ display_name?: string; name?: string }> | string[] | null) ?? [];
+            const flavorList = Array.isArray(flavors)
+              ? flavors.map((f) => (typeof f === "string" ? f : f.display_name ?? f.name)).filter(Boolean)
+              : [];
+            return (
+              <div
+                key={item.id}
+                className="p-3 flex justify-between items-start gap-3"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium">{item.product_name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    ${item.product_price.toFixed(2)} × {item.quantity}
+                  </p>
+                  {item.size_name && (
+                    <p className="text-sm text-muted-foreground">
+                      Size: {item.size_name}
+                      {item.size_price ? ` ($${Number(item.size_price).toFixed(2)})` : ""}
+                    </p>
+                  )}
+                  {addons.length > 0 && (
+                    <p className="text-sm text-brand-berry">
+                      Add-ons:{" "}
+                      {addons
+                        .map(
+                          (a) =>
+                            `${a.display_name ?? a.name}${a.price ? ` (+$${Number(a.price).toFixed(2)})` : ""}`,
+                        )
+                        .join(", ")}
+                    </p>
+                  )}
+                  {flavorList.length > 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      Flavors: {flavorList.join(", ")}
+                    </p>
+                  )}
+                </div>
+                <p className="font-medium whitespace-nowrap">${item.total.toFixed(2)}</p>
               </div>
-              <p className="font-medium">${item.total.toFixed(2)}</p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
