@@ -770,6 +770,7 @@ function OrderDetails({
             const flavorList = Array.isArray(flavors)
               ? flavors.map((f) => (typeof f === "string" ? f : f.display_name ?? f.name)).filter(Boolean)
               : [];
+            const dressing = (item as unknown as { dressing?: string | null }).dressing ?? null;
             return (
               <div
                 key={item.id}
@@ -800,6 +801,11 @@ function OrderDetails({
                   {flavorList.length > 0 && (
                     <p className="text-sm text-muted-foreground">
                       Flavors: {flavorList.join(", ")}
+                    </p>
+                  )}
+                  {dressing && (
+                    <p className="text-sm text-brand-berry">
+                      Dressing: {dressing}
                     </p>
                   )}
                 </div>

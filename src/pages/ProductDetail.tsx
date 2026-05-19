@@ -64,6 +64,7 @@ export default function ProductDetail() {
   const [selectedSizeId, setSelectedSizeId] = useState<string | null>(null);
   const [selectedFlavors, setSelectedFlavors] = useState<Product[]>([]);
   const [selectedAddonIds, setSelectedAddonIds] = useState<string[]>([]); // Addon state
+  const [selectedDressing, setSelectedDressing] = useState<string | null>(null);
 
   const flavorLimit = product ? getFlavorSelectionLimit(product.slug) : 0;
   const requiresFlavors = flavorLimit > 0;
@@ -129,6 +130,10 @@ export default function ProductDetail() {
     product?.slug?.startsWith("wellness-shot-") &&
     product?.slug !== "wellness-shot-subscription";
 
+  const isFoodCategory = product?.category?.slug === "food";
+  const isSalad = !!product?.slug?.includes("salad");
+  const DRESSING_OPTIONS = ["Ranch", "Italian", "Caesar"] as const;
+
   // Price Calculation
   let currentPrice = 0;
   if (isWellnessShot) {
@@ -139,6 +144,7 @@ export default function ProductDetail() {
   } else if (
     !product?.variants?.length &&
     product?.slug !== "egift-card" &&
+    !isFoodCategory &&
     selectedSize
   ) {
     currentPrice = selectedSize.price;
@@ -158,6 +164,7 @@ export default function ProductDetail() {
     if (product?.slug === "egift-card" && !giftCardForm.recipientEmail)
       return true;
     if (requiresFlavors && selectedFlavors.length !== flavorLimit) return true;
+    if (isSalad && !selectedDressing) return true;
     return false;
   };
 
@@ -515,6 +522,37 @@ export default function ProductDetail() {
               </div>
             )}
 
+            {/* Dressing Selector (salads only — required) */}
+            {isSalad && (
+              <div className="mb-8">
+                <span className="font-medium text-brand-brown block mb-3">
+                  Dressing: <span className="text-brand-berry">*</span>
+                </span>
+                <div className="flex flex-wrap gap-3">
+                  {DRESSING_OPTIONS.map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setSelectedDressing(option)}
+                      aria-pressed={selectedDressing === option}
+                      className={`px-4 py-2 rounded-xl border-2 transition-all font-medium text-sm ${
+                        selectedDressing === option
+                          ? "border-brand-berry bg-brand-berry/5 text-brand-berry"
+                          : "border-brand-warm-gray/20 text-brand-brown hover:border-brand-olive hover:text-brand-olive bg-white"
+                      }`}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+                {!selectedDressing && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Please choose a dressing.
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Quantity Selector */}
             <div className="flex items-center gap-4 mb-6">
               <span className="font-medium text-brand-brown">Quantity:</span>
@@ -556,6 +594,7 @@ export default function ProductDetail() {
               }
               selectedFlavorIds={selectedFlavors.map((p) => p.id)}
               addonIds={selectedAddonIds}
+              dressing={isSalad ? selectedDressing ?? undefined : undefined}
               disabled={isAddToCartDisabled()}
               className="w-full md:w-auto mb-8 bg-brand-berry hover:bg-brand-berry/90 shadow-lg"
               size="lg"

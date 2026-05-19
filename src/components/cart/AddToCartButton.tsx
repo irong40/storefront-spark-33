@@ -18,6 +18,7 @@ interface AddToCartButtonProps {
   selectedFlavorIds?: string[]; // Added flavor IDs
   addonIds?: string[]; // Added addon IDs
   giftCardData?: GiftCardData;
+  dressing?: string;
   disabled?: boolean;
   className?: string;
   size?: "default" | "sm" | "lg" | "icon";
@@ -31,6 +32,7 @@ export function AddToCartButton({
   selectedFlavorIds,
   addonIds = [],
   giftCardData,
+  dressing,
   disabled,
   className,
   size = "default",
@@ -58,6 +60,7 @@ export function AddToCartButton({
         addonIds,
         giftCardData,
         selectedFlavorIds,
+        dressing,
       );
     } finally {
       setIsAdding(false);

@@ -29,6 +29,7 @@ export interface CartItem {
   addon_ids: string[];
   selected_flavor_ids: string[];
   gift_card_data: GiftCardData | null;
+  dressing: string | null;
   product: Pick<
     Product,
     "id" | "name" | "slug" | "price" | "image_url" | "is_available"
@@ -62,6 +63,7 @@ interface CartContextType {
     addonIds?: string[],
     giftCardData?: GiftCardData,
     selectedFlavorIds?: string[],
+    dressing?: string,
   ) => Promise<void>;
   updateQuantity: (itemId: string, quantity: number) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
@@ -326,6 +328,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       addon_ids: (item.addon_ids as string[]) || [],
       selected_flavor_ids: (item.selected_flavor_ids as string[]) || [],
       gift_card_data: giftCardData,
+      dressing: ((item as unknown as { dressing?: string | null }).dressing ?? null),
       product: {
         id: productRow.id,
         name: productRow.name,
@@ -451,6 +454,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     addonIds: string[] = [],
     giftCardData?: GiftCardData,
     selectedFlavorIds: string[] = [],
+    dressing?: string,
   ) {
     if (!cartId) return;
 
@@ -470,6 +474,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             addon_ids: addonIds,
             selected_flavor_ids: selectedFlavorIds,
             gift_card_data: giftCardData || null,
+            dressing: dressing || null,
           };
 
           const { error } = await supabase.from("cart_items").insert(insertData);

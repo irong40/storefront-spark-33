@@ -657,6 +657,18 @@ export default function Checkout() {
       // Create order items with effective prices (respects size overrides + addons)
       const orderItems = items.map((item) => {
         const effectivePrice = getItemEffectiveUnitPrice(item);
+        const sizeName = item.size_override?.size_name ?? item.size?.name ?? null;
+        const sizePrice =
+          item.size_override?.price ?? item.size?.price ?? null;
+        const addons = (item.addons ?? []).map((a) => ({
+          id: a.id,
+          display_name: a.display_name,
+          price: a.price,
+        }));
+        const flavors = (item.flavors ?? []).map((f) => ({
+          id: f.id,
+          name: f.name,
+        }));
         return {
           order_id: orderId,
           product_id: item.product_id,
@@ -664,6 +676,11 @@ export default function Checkout() {
           product_price: effectivePrice,
           quantity: item.quantity,
           total: effectivePrice * item.quantity,
+          size_name: sizeName,
+          size_price: sizePrice,
+          addons,
+          selected_flavors: flavors,
+          dressing: item.dressing ?? null,
         };
       });
 

@@ -18,6 +18,7 @@ export function CartItem({ item }: CartItemProps) {
     addons,
     flavors,
     gift_card_data,
+    dressing,
   } = item;
 
   // Calculate item price: variant override > standard size > base price
@@ -83,6 +84,11 @@ export function CartItem({ item }: CartItemProps) {
             Add-ons: {addons.map((a) => a.display_name).join(", ")} (+$
             {addonsTotal.toFixed(2)})
           </p>
+        )}
+
+        {/* Dressing (salads) */}
+        {dressing && (
+          <p className="text-xs text-muted-foreground">Dressing: {dressing}</p>
         )}
 
         {/* Gift card info */}
