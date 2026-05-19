@@ -86,17 +86,21 @@ export default function ProductDetail() {
     ) {
       setSelectedVariantId(product.variants[0].id);
     }
-    // Default to 16 oz if available and not using variants (skip Food category and wellness shots — sizes don't apply)
-    const slugIsWellnessShot =
-      product?.slug?.startsWith("wellness-shot-") &&
-      product?.slug !== "wellness-shot-subscription";
+    // Default to 16 oz only for juice categories; everything else (food,
+    // wellness shots, detox packages, subscriptions, uncategorized) uses
+    // product.price and ignores global juice sizes.
+    const JUICE_CATEGORIES = new Set([
+      "sweet-treats",
+      "energy-immunity-booster",
+      "detox-fat-burners",
+    ]);
+    const isJuiceCategory = JUICE_CATEGORIES.has(product?.category?.slug ?? "");
     if (
+      isJuiceCategory &&
       !product?.variants?.length &&
       globalSizes.length > 0 &&
       !selectedSizeId &&
-      !requiresFlavors &&
-      product?.category?.slug !== "food" &&
-      !slugIsWellnessShot
+      !requiresFlavors
     ) {
       const defaultSize =
         globalSizes.find((s) => s.name === "16 oz") || globalSizes[0];
@@ -130,9 +134,20 @@ export default function ProductDetail() {
     product?.slug?.startsWith("wellness-shot-") &&
     product?.slug !== "wellness-shot-subscription";
 
-  const isFoodCategory = product?.category?.slug === "food";
   const isSalad = !!product?.slug?.includes("salad");
   const DRESSING_OPTIONS = ["Ranch", "Italian", "Caesar"] as const;
+
+  // Only these three categories may use the global product_sizes price
+  // table. Every other category (food, wellness-shots, detox-packages,
+  // subscriptions, uncategorized) must fall back to product.price.
+  const JUICE_CATEGORIES_FOR_SIZES = new Set([
+    "sweet-treats",
+    "energy-immunity-booster",
+    "detox-fat-burners",
+  ]);
+  const allowsGlobalSize = JUICE_CATEGORIES_FOR_SIZES.has(
+    product?.category?.slug ?? "",
+  );
 
   // Price Calculation
   let currentPrice = 0;
@@ -144,7 +159,7 @@ export default function ProductDetail() {
   } else if (
     !product?.variants?.length &&
     product?.slug !== "egift-card" &&
-    !isFoodCategory &&
+    allowsGlobalSize &&
     selectedSize
   ) {
     currentPrice = selectedSize.price;

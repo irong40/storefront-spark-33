@@ -128,18 +128,29 @@ serve(async (req) => {
       });
     }
 
-    // Fetch cart items with all pricing data (plus slug + size_oz for loyalty)
+    // Fetch cart items with all pricing data (plus slug + size_oz for loyalty
+    // + category slug so we can ignore stale juice-size IDs on non-juice items)
     const { data: cartItems, error: itemsError } = await supabase
       .from('cart_items')
       .select(`
         quantity,
         product_id,
-        product:products(price, slug),
+        product:products(price, slug, category:categories(slug)),
         size:product_sizes(price, name, size_oz),
         size_override:product_size_overrides(price, size_name, size_oz),
         addon_ids
       `)
       .eq('cart_id', cart.id);
+
+    // Only these categories may price off the global product_sizes table.
+    // Anything else (food, wellness-shots, detox-packages, subscriptions,
+    // uncategorized) must ignore size.price even if a stale cart row carries
+    // a size_id — fall through to product.price instead.
+    const JUICE_SIZE_CATEGORIES = new Set([
+      "sweet-treats",
+      "energy-immunity-booster",
+      "detox-fat-burners",
+    ]);
 
     if (itemsError) {
       console.error("Cart items lookup error:", itemsError);
@@ -180,13 +191,17 @@ serve(async (req) => {
       let itemPrice = 0;
 
       // Handle the joined relations - they come back as objects, not arrays when using .single() joins
-      const product = item.product as unknown as { price: number } | null;
+      const product = item.product as unknown as
+        | { price: number; category?: { slug?: string } | null }
+        | null;
       const size = item.size as unknown as { price: number } | null;
       const sizeOverride = item.size_override as unknown as { price: number } | null;
+      const categorySlug = product?.category?.slug ?? "";
+      const canUseGlobalSize = JUICE_SIZE_CATEGORIES.has(categorySlug);
 
       if (sizeOverride && sizeOverride.price != null) {
         itemPrice = Number(sizeOverride.price);
-      } else if (size && size.price != null) {
+      } else if (canUseGlobalSize && size && size.price != null) {
         itemPrice = Number(size.price);
       } else if (product && product.price != null) {
         itemPrice = Number(product.price);
