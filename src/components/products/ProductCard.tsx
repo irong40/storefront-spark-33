@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AddToCartButton } from "@/components/cart/AddToCartButton";
+import { Button } from "@/components/ui/button";
 import type { Product } from "@/hooks/use-products";
 import { ProductImage } from "@/components/ui/ProductImage";
 
@@ -57,7 +57,9 @@ export function ProductCard({ product }: ProductCardProps) {
               Sale
             </span>
           )}
-          <AddToCartButton productId={product.id} size="sm" />
+          <Button asChild size="sm">
+            <Link to={`/products/${product.slug}`}>View Options</Link>
+          </Button>
         </div>
       </CardContent>
     </Card>
