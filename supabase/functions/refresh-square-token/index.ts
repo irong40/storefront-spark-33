@@ -17,9 +17,13 @@ serve(async (req) => {
     const squareAppId = Deno.env.get("SQUARE_APP_ID")!;
     const squareAppSecret = Deno.env.get("SQUARE_APP_SECRET")!;
 
-    // Only service-role callers (cron jobs) or admins may trigger a token refresh
+    // Only cron callers (shared secret), service-role callers, or admins may trigger a token refresh
+    const cronSecret = Deno.env.get("CRON_SECRET");
+    const isCronCall =
+      !!cronSecret && req.headers.get("x-cron-secret") === cronSecret;
+
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
+    if (!isCronCall && !authHeader) {
       return new Response(
         JSON.stringify({ error: "Authorization required" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
@@ -27,10 +31,10 @@ serve(async (req) => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const token = authHeader.replace("Bearer ", "");
+    const token = authHeader?.replace("Bearer ", "") ?? "";
     const isServiceRole = token === supabaseServiceKey;
 
-    if (!isServiceRole) {
+    if (!isCronCall && !isServiceRole) {
       const { data: { user }, error: authError } = await supabase.auth.getUser(token);
       if (authError || !user) {
         return new Response(
