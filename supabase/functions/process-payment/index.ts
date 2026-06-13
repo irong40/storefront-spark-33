@@ -109,16 +109,38 @@ serve(async (req) => {
 
     if (!cart) {
       console.error("Cart not found for session:", sessionId);
-      throw new Error("Cart not found");
+      return new Response(
+        JSON.stringify({ error: "Your cart session was not found. Please refresh the page and re-add your items." }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
-    const cartAge = Date.now() - new Date(cart.created_at).getTime();
+    // Expire by last cart ACTIVITY, not cart creation — returning customers
+    // keep one cart row per session for weeks, so judging age by created_at
+    // permanently locked them out of checkout ("Cart session expired" on
+    // every attempt once the row was >24h old).
+    const { data: latestItem } = await supabase
+      .from('cart_items')
+      .select('created_at')
+      .eq('cart_id', cart.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const lastActivity = latestItem?.created_at ?? cart.created_at;
+    const cartAge = Date.now() - new Date(lastActivity).getTime();
     const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
     if (cartAge > TWENTY_FOUR_HOURS) {
-      return new Response(JSON.stringify({ error: "Cart session expired" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "Your cart has expired. Please re-add your items and try again." }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     if (authenticatedUserId !== null && cart.user_id !== authenticatedUserId) {
@@ -159,7 +181,13 @@ serve(async (req) => {
 
     if (!cartItems || cartItems.length === 0) {
       console.error("Cart is empty");
-      throw new Error("Cart is empty");
+      return new Response(
+        JSON.stringify({ error: "Your cart is empty. Please re-add your items and try again." }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     // Read tax rate from business_settings (single source of truth)

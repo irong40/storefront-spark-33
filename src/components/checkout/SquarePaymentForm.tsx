@@ -77,7 +77,15 @@ export function SquarePaymentForm({
 
       if (error) {
         logger.error("Edge function error:", error);
-        throw new Error(error.message || "Payment processing failed");
+        // FunctionsHttpError.message is always the generic "Edge Function
+        // returned a non-2xx status code" — the real reason (card declined,
+        // cart expired, etc.) is in the response body on error.context.
+        let detail = "";
+        try {
+          const body = await (error as { context?: Response }).context?.json();
+          if (body && typeof body.error === "string") detail = body.error;
+        } catch { /* body not JSON or already consumed */ }
+        throw new Error(detail || error.message || "Payment processing failed");
       }
 
       if (data?.error) {
