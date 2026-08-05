@@ -19,8 +19,8 @@ export default function Terms() {
         </p>
         <h2 className="text-xl font-semibold mt-8 mb-4">Pickup and Delivery</h2>
         <p className="mb-4">
-          Pickup is available Tuesday–Saturday. Delivery is available Monday–Friday within our
-          service area. See our Contact page for current hours.
+          Available fulfillment options are shown at checkout and may change during store
+          closures, renovations, or holidays. See our Contact page for current hours.
         </p>
         <h2 className="text-xl font-semibold mt-8 mb-4">Contact Us</h2>
         <p>For questions about these terms, contact us at the email or address on our Contact page.</p>
