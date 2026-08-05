@@ -1382,6 +1382,7 @@ export default function Checkout() {
                   amountInCents={totalInCents}
                   sessionId={sessionId}
                   redemptionId={appliedRedemption?.id ?? null}
+                  fulfillmentType={fulfillmentType}
                   onSuccess={handlePaymentSuccess}
                   onError={handlePaymentError}
                   disabled={isSubmitting || cartLoading || giftCardLoading}

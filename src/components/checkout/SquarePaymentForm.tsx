@@ -18,6 +18,8 @@ interface SquarePaymentFormProps {
   onError: (message: string) => void;
   disabled?: boolean;
   redemptionId?: string | null;
+  // Lets the server apply the delivery fee. Only the mode is sent, never an amount.
+  fulfillmentType?: "pickup" | "delivery";
 }
 
 export interface AppliedLoyalty {
@@ -48,6 +50,7 @@ export function SquarePaymentForm({
   onError,
   disabled = false,
   redemptionId = null,
+  fulfillmentType = "pickup",
 }: SquarePaymentFormProps) {
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -71,6 +74,7 @@ export function SquarePaymentForm({
             sourceId: token,
             sessionId: sessionId,
             redemptionId: redemptionId || undefined,
+            fulfillmentType,
           },
         },
       );

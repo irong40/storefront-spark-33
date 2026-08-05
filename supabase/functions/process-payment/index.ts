@@ -40,13 +40,25 @@ serve(async (req) => {
   }
 
   try {
-    const { sourceId, sessionId, currency = "USD", redemptionId } = await req.json();
+    const {
+      sourceId,
+      sessionId,
+      currency = "USD",
+      redemptionId,
+      fulfillmentType = "pickup",
+    } = await req.json();
+
+    // Only the mode is taken from the client, never an amount. A forged "pickup"
+    // simply underpays by the delivery fee — i.e. the pre-fix behavior — so this
+    // is a safe widening of the request contract.
+    const isDelivery = fulfillmentType === "delivery";
 
     console.log("Processing payment with server-side validation:", {
       sourceId: sourceId?.substring(0, 20) + "...",
       sessionId,
       currency,
       hasRedemption: !!redemptionId,
+      fulfillmentType,
     });
 
     if (!sourceId || !sessionId) {
@@ -190,12 +202,18 @@ serve(async (req) => {
       );
     }
 
-    // Read tax rate from business_settings (single source of truth)
+    // Read tax rate and delivery pricing from business_settings (single source of truth).
+    // The delivery fee is derived here, never accepted from the client — that is the
+    // whole point of taking a sessionId instead of an amount.
     const { data: bizSettings } = await supabase
       .from("business_settings")
-      .select("tax_rate")
+      .select("tax_rate, delivery_fee, delivery_free_threshold")
       .single();
     const TAX_RATE: number = bizSettings?.tax_rate ?? 0.08;
+    const DELIVERY_FEE: number = Number(bizSettings?.delivery_fee ?? 8);
+    const DELIVERY_FREE_THRESHOLD: number = Number(
+      bizSettings?.delivery_free_threshold ?? 50,
+    );
 
     // Fetch addon prices separately (since addon_ids is an array)
     const allAddonIds = cartItems.flatMap(item => (item.addon_ids as string[]) || []);
@@ -320,7 +338,7 @@ serve(async (req) => {
       } else if (reward.reward_type === "discount_percent") {
         discount = subtotal * (Number(reward.reward_value ?? 0) / 100);
       } else if (reward.reward_type === "free_shipping") {
-        freeShipping = true; // tax/total already exclude shipping in this fn — see note below
+        freeShipping = true; // surfaces as loyaltyApplied.free_shipping, which zeroes the delivery fee below
       } else if (reward.reward_type === "free_product") {
         // Pick the cheapest eligible line. Eligible = (a) matches reward.product_id if set,
         // (b) otherwise any line whose effective size_oz === 10.
@@ -406,13 +424,25 @@ serve(async (req) => {
     }
 
     const loyaltyDiscount = loyaltyApplied?.discount ?? 0;
-    const total = Math.max(0, subtotal + tax - loyaltyDiscount);
+
+    // Delivery fee — mirrors the client's math in Checkout.tsx so the amount
+    // charged matches the amount displayed. Shipping stays outside the tax base
+    // on both sides.
+    const shipping =
+      isDelivery &&
+      !loyaltyApplied?.free_shipping &&
+      subtotal < DELIVERY_FREE_THRESHOLD
+        ? DELIVERY_FEE
+        : 0;
+
+    const total = Math.max(0, subtotal + tax + shipping - loyaltyDiscount);
 
     // Convert to cents for Square API
     const amountInCents = Math.round(total * 100);
 
     console.log("Calculated payment amount:", {
       subtotal,
+      shipping,
       tax,
       loyaltyDiscount,
       total,
