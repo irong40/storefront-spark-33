@@ -86,7 +86,7 @@ const checkoutSchema = z
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["zip"],
-          message: `We only deliver inside ${DELIVERY_ZONE_LABEL}. Please choose pickup or order from a supported ZIP.`,
+          message: `We only deliver inside ${DELIVERY_ZONE_LABEL}. Please use an address in our service area, or call us to arrange your order.`,
         });
       }
       if (!data.deliveryDate?.trim()) {
@@ -94,6 +94,15 @@ const checkoutSchema = z
           code: z.ZodIssueCode.custom,
           path: ["deliveryDate"],
           message: "Delivery date is required",
+        });
+      } else if (!isDeliveryDateAllowed(data.deliveryDate)) {
+        // Guards a tab left open across the renovation cutover — the date list
+        // is memoized for the session and can go stale.
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["deliveryDate"],
+          message:
+            "We're no longer delivering on that date. Please refresh the page and choose pickup.",
         });
       }
       if (!data.deliveryTimeWindow?.trim()) {
@@ -111,6 +120,13 @@ const checkoutSchema = z
           code: z.ZodIssueCode.custom,
           path: ["pickupDate"],
           message: "Pickup date is required",
+        });
+      } else if (!isPickupDateAllowed(data.pickupDate)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["pickupDate"],
+          message:
+            "The shop isn't open for pickup on that date. Please choose a later date.",
         });
       }
       if (!data.pickupTime?.trim()) {
@@ -143,9 +159,11 @@ import {
 } from "@/components/checkout/SquarePaymentForm";
 import {
   CHECKOUT_CONFIG,
-  getAvailableDeliveryDates,
-  getAvailablePickupDates,
   getAvailableTimeSlots,
+  getFulfillmentAvailability,
+  isDeliveryDateAllowed,
+  isPickupDateAllowed,
+  type FulfillmentMode,
 } from "@/config/checkout";
 import { useGiftCard } from "@/hooks/use-gift-card";
 import { useBusinessSettings } from "@/hooks/use-business";
@@ -175,7 +193,12 @@ export default function Checkout() {
       : CHECKOUT_CONFIG.TAX_RATE;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [fulfillmentType, setFulfillmentType] = useState<"pickup" | "delivery">("pickup");
+  // Which fulfillment modes are bookable right now, and the dates for each.
+  // Computed once per mount — must be declared before the state that seeds from it.
+  const availability = useMemo(() => getFulfillmentAvailability(), []);
+  const [fulfillmentType, setFulfillmentType] = useState<FulfillmentMode>(
+    () => availability.defaultMode,
+  );
   const [paymentComplete, setPaymentComplete] = useState(false);
   const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(
     null,
@@ -228,9 +251,7 @@ export default function Checkout() {
     } catch { /* quota or disabled */ }
   }, [formData]);
 
-  // Get available pickup dates and time slots
-  const availablePickupDates = useMemo(() => getAvailablePickupDates(), []);
-  const availableDeliveryDates = useMemo(() => getAvailableDeliveryDates(), []);
+  // Get available time slots for the selected pickup date
   const availableTimeSlots = useMemo(
     () =>
       formData.pickupDate ? getAvailableTimeSlots(formData.pickupDate) : [],
@@ -915,55 +936,98 @@ export default function Checkout() {
             {/* Fulfillment Type */}
             <div>
               <h2 className="text-xl font-semibold mb-4">Fulfillment</h2>
-              <RadioGroup
-                value={fulfillmentType}
-                onValueChange={(v) => setFulfillmentType(v as "pickup" | "delivery")}
-                className="grid sm:grid-cols-2 gap-4"
-                disabled={isSubmitting || paymentComplete}
-              >
-                <Label
-                  htmlFor="pickup"
-                  className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-colors ${
-                    fulfillmentType === "pickup"
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/50"
-                  } ${isSubmitting || paymentComplete ? "opacity-50 cursor-not-allowed" : ""}`}
-                >
-                  <RadioGroupItem value="pickup" id="pickup" />
-                  <div className="flex items-center gap-3">
-                    <MapPin className="h-5 w-5 text-primary" />
-                    <div>
-                      <div className="font-medium">Pickup</div>
-                      <div className="text-xs text-muted-foreground">
-                        Free • Tue-Fri 10-6, Sat 10-5
-                      </div>
+              {availability.modes.length === 0 ? (
+                <div className="rounded-xl border-2 border-border p-4 text-sm text-muted-foreground">
+                  Online ordering is temporarily unavailable. Please call us to
+                  place an order.
+                </div>
+              ) : availability.modes.length === 1 ? (
+                // Only one mode is bookable — show it as already selected rather
+                // than a disabled radio, which just invites "why can't I click
+                // this?" support calls.
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="flex items-center gap-4 p-4 rounded-xl border-2 border-primary bg-primary/5">
+                    <div className="flex items-center gap-3">
+                      {availability.modes[0] === "pickup" ? (
+                        <>
+                          <MapPin className="h-5 w-5 text-primary" />
+                          <div>
+                            <div className="font-medium">Pickup</div>
+                            <div className="text-xs text-muted-foreground">
+                              Free • Tue-Fri 10-6, Sat 10-5
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <Truck className="h-5 w-5 text-primary" />
+                          <div>
+                            <div className="font-medium">Delivery</div>
+                            <div className="text-xs text-muted-foreground">
+                              ${deliveryFee.toFixed(2)} • Free over ${deliveryFreeThreshold.toFixed(0)}
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
-                </Label>
-                <Label
-                  htmlFor="delivery"
-                  className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-colors ${
-                    fulfillmentType === "delivery"
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/50"
-                  } ${isSubmitting || paymentComplete ? "opacity-50 cursor-not-allowed" : ""}`}
+                </div>
+              ) : (
+                <RadioGroup
+                  value={fulfillmentType}
+                  onValueChange={(v) => setFulfillmentType(v as FulfillmentMode)}
+                  className="grid sm:grid-cols-2 gap-4"
+                  disabled={isSubmitting || paymentComplete}
                 >
-                  <RadioGroupItem value="delivery" id="delivery" />
-                  <div className="flex items-center gap-3">
-                    <Truck className="h-5 w-5 text-primary" />
-                    <div>
-                      <div className="font-medium">Delivery</div>
-                      <div className="text-xs text-muted-foreground">
-                        ${deliveryFee.toFixed(2)} • Free over ${deliveryFreeThreshold.toFixed(0)}
+                  <Label
+                    htmlFor="pickup"
+                    className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-colors ${
+                      fulfillmentType === "pickup"
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary/50"
+                    } ${isSubmitting || paymentComplete ? "opacity-50 cursor-not-allowed" : ""}`}
+                  >
+                    <RadioGroupItem value="pickup" id="pickup" />
+                    <div className="flex items-center gap-3">
+                      <MapPin className="h-5 w-5 text-primary" />
+                      <div>
+                        <div className="font-medium">Pickup</div>
+                        <div className="text-xs text-muted-foreground">
+                          Free • Tue-Fri 10-6, Sat 10-5
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Label>
-              </RadioGroup>
+                  </Label>
+                  <Label
+                    htmlFor="delivery"
+                    className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-colors ${
+                      fulfillmentType === "delivery"
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary/50"
+                    } ${isSubmitting || paymentComplete ? "opacity-50 cursor-not-allowed" : ""}`}
+                  >
+                    <RadioGroupItem value="delivery" id="delivery" />
+                    <div className="flex items-center gap-3">
+                      <Truck className="h-5 w-5 text-primary" />
+                      <div>
+                        <div className="font-medium">Delivery</div>
+                        <div className="text-xs text-muted-foreground">
+                          ${deliveryFee.toFixed(2)} • Free over ${deliveryFreeThreshold.toFixed(0)}
+                        </div>
+                      </div>
+                    </div>
+                  </Label>
+                </RadioGroup>
+              )}
+              {availability.notice && (
+                <p className="text-sm text-muted-foreground mt-3">
+                  {availability.notice}
+                </p>
+              )}
             </div>
 
             {/* Pickup Scheduling */}
-            {fulfillmentType === "pickup" && (
+            {fulfillmentType === "pickup" && availability.modes.includes("pickup") && (
               <div>
                 <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
                   <Clock className="h-5 w-5" />
@@ -1003,7 +1067,7 @@ export default function Checkout() {
                         <SelectValue placeholder="Select a date" />
                       </SelectTrigger>
                       <SelectContent>
-                        {availablePickupDates.map((date) => (
+                        {availability.pickupDates.map((date) => (
                           <SelectItem key={date.value} value={date.value}>
                             {date.label}
                           </SelectItem>
@@ -1052,7 +1116,7 @@ export default function Checkout() {
             )}
 
             {/* Delivery Address */}
-            {fulfillmentType === "delivery" && (
+            {fulfillmentType === "delivery" && availability.modes.includes("delivery") && (
               <div>
                 <h2 className="text-xl font-semibold mb-4">Delivery Address</h2>
 
@@ -1175,7 +1239,7 @@ export default function Checkout() {
                         <SelectValue placeholder="Choose a delivery date" />
                       </SelectTrigger>
                       <SelectContent>
-                        {availableDeliveryDates.map((date) => (
+                        {availability.deliveryDates.map((date) => (
                           <SelectItem key={date.value} value={date.value}>
                             {date.label}
                           </SelectItem>

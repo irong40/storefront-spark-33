@@ -36,10 +36,60 @@ export const CHECKOUT_CONFIG = {
   DELIVERY_DAYS: [1, 2, 3, 4, 5] as number[],
 } as const;
 
-// Returns the earliest date (YYYY-MM-DD) a customer can request for pickup or delivery,
-// based on the current time in America/New_York. No same-day orders. After the 3 PM ET
-// cutoff, next-day orders are also unavailable — earliest rolls to the day after.
-export function getEarliestFulfillmentDate(now: Date = new Date()): string {
+export type FulfillmentMode = "pickup" | "delivery";
+
+// ---------------------------------------------------------------------------
+// Renovation window
+//
+// The shop at 719 High St. is closed to walk-in customers for renovations.
+// Until PICKUP_RESUMES_DATE we deliver only; from that date on we do pickup only
+// (delivery is paused until third-party couriers are set up).
+//
+// The date is a plain America/New_York calendar date. Override it on Vercel with
+// VITE_PICKUP_RESUMES_DATE if the renovation slips — Vite inlines env vars at
+// build time, so the project must be REDEPLOYED for a change to take effect.
+// ---------------------------------------------------------------------------
+
+const DEFAULT_PICKUP_RESUMES_DATE = "2026-09-16";
+
+// A malformed override must not silently poison every date comparison.
+function readCutoverDate(): string {
+  const raw = import.meta.env.VITE_PICKUP_RESUMES_DATE;
+  return typeof raw === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw)
+    ? raw
+    : DEFAULT_PICKUP_RESUMES_DATE;
+}
+
+export const PICKUP_RESUMES_DATE = readCutoverDate();
+
+// YYYY-MM-DD compares lexicographically = chronologically, so no Date object
+// exists at comparison time and no timezone can shift the boundary.
+export const isPickupDateAllowed = (isoDate: string): boolean =>
+  isoDate >= PICKUP_RESUMES_DATE;
+export const isDeliveryDateAllowed = (isoDate: string): boolean =>
+  isoDate < PICKUP_RESUMES_DATE;
+
+// "T12:00:00" is load-bearing: new Date("2026-09-16") parses as UTC midnight,
+// which is Sept 15 in Eastern Time and would print the wrong day.
+const CUTOVER_LABEL = new Date(
+  `${PICKUP_RESUMES_DATE}T12:00:00`,
+).toLocaleDateString("en-US", { month: "long", day: "numeric" });
+
+const DELIVERY_ONLY_NOTICE =
+  `Our shop at 719 High St. is closed for renovations, so we're delivery-only ` +
+  `right now. In-store pickup returns ${CUTOVER_LABEL}.`;
+
+const PICKUP_ONLY_NOTICE =
+  `We're back open at 719 High St.! Pickup only for the moment — delivery is ` +
+  `paused while we get fully settled back in.`;
+
+// Calendar parts for a moment as observed in America/New_York.
+function getEtDateParts(now: Date): {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+} {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: "America/New_York",
     year: "numeric",
@@ -50,53 +100,74 @@ export function getEarliestFulfillmentDate(now: Date = new Date()): string {
   }).formatToParts(now);
   const map: Record<string, string> = {};
   for (const p of parts) map[p.type] = p.value;
-  const etYear = parseInt(map.year, 10);
-  const etMonth = parseInt(map.month, 10);
-  const etDay = parseInt(map.day, 10);
-  const etHour = parseInt(map.hour, 10);
+  return {
+    year: parseInt(map.year, 10),
+    month: parseInt(map.month, 10),
+    day: parseInt(map.day, 10),
+    hour: parseInt(map.hour, 10),
+  };
+}
 
-  const base = new Date(etYear, etMonth - 1, etDay);
-  const daysToAdd = etHour < 15 ? 1 : 2; // 3 PM ET cutoff
-  base.setDate(base.getDate() + daysToAdd);
-
-  const y = base.getFullYear();
-  const m = String(base.getMonth() + 1).padStart(2, "0");
-  const d = String(base.getDate()).padStart(2, "0");
+function toIsoDate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
+}
+
+// Returns the earliest date (YYYY-MM-DD) a customer can request for pickup or delivery,
+// based on the current time in America/New_York. No same-day orders. After the 3 PM ET
+// cutoff, next-day orders are also unavailable — earliest rolls to the day after.
+export function getEarliestFulfillmentDate(now: Date = new Date()): string {
+  const et = getEtDateParts(now);
+  const base = new Date(et.year, et.month - 1, et.day);
+  const daysToAdd = et.hour < 15 ? 1 : 2; // 3 PM ET cutoff
+  base.setDate(base.getDate() + daysToAdd);
+  return toIsoDate(base);
 }
 
 // Helper function to get available pickup dates (Tue-Sat within the next ~21 days,
 // starting from the earliest allowable date per the same-day / 3 PM cutoff rule).
-export function getAvailablePickupDates(): { value: string; label: string }[] {
+// Dates before the renovation cutover are excluded — the shop is closed to walk-ins.
+export function getAvailablePickupDates(
+  now: Date = new Date(),
+): { value: string; label: string }[] {
   return buildAvailableDates(
     (dayOfWeek) => !!CHECKOUT_CONFIG.PICKUP_HOURS[dayOfWeek],
+    isPickupDateAllowed,
+    now,
   );
 }
 
 // Helper function to get available delivery dates (Mon-Fri within the next ~21 days,
 // starting from the earliest allowable date per the same-day / 3 PM cutoff rule).
-export function getAvailableDeliveryDates(): { value: string; label: string }[] {
+// Dates on or after the renovation cutover are excluded — delivery is paused then.
+export function getAvailableDeliveryDates(
+  now: Date = new Date(),
+): { value: string; label: string }[] {
   return buildAvailableDates(
     (dayOfWeek) => CHECKOUT_CONFIG.DELIVERY_DAYS.includes(dayOfWeek),
+    isDeliveryDateAllowed,
+    now,
   );
 }
 
 function buildAvailableDates(
-  isAvailable: (dayOfWeek: number) => boolean,
+  isDayAvailable: (dayOfWeek: number) => boolean,
+  isDateAllowed: (isoDate: string) => boolean = () => true,
+  now: Date = new Date(),
 ): { value: string; label: string }[] {
   const dates: { value: string; label: string }[] = [];
-  const earliest = getEarliestFulfillmentDate();
+  const earliest = getEarliestFulfillmentDate(now);
   const [ey, em, ed] = earliest.split("-").map(Number);
   const cursor = new Date(ey, em - 1, ed);
 
   // Scan 21 days from the earliest allowable date.
   for (let i = 0; i < 21; i++) {
-    if (isAvailable(cursor.getDay())) {
-      const y = cursor.getFullYear();
-      const m = String(cursor.getMonth() + 1).padStart(2, "0");
-      const d = String(cursor.getDate()).padStart(2, "0");
+    const iso = toIsoDate(cursor);
+    if (isDayAvailable(cursor.getDay()) && isDateAllowed(iso)) {
       dates.push({
-        value: `${y}-${m}-${d}`,
+        value: iso,
         label: cursor.toLocaleDateString("en-US", {
           weekday: "short",
           month: "short",
@@ -108,6 +179,42 @@ function buildAvailableDates(
   }
 
   return dates;
+}
+
+export interface FulfillmentAvailability {
+  // Modes a customer can actually book right now. A mode is offered if and only
+  // if it has at least one bookable date — availability is derived, not declared.
+  modes: FulfillmentMode[];
+  defaultMode: FulfillmentMode;
+  pickupDates: { value: string; label: string }[];
+  deliveryDates: { value: string; label: string }[];
+  // Explanation shown to the customer when a mode is missing. Null when both run.
+  notice: string | null;
+}
+
+export function getFulfillmentAvailability(
+  now: Date = new Date(),
+): FulfillmentAvailability {
+  const pickupDates = getAvailablePickupDates(now);
+  const deliveryDates = getAvailableDeliveryDates(now);
+
+  // Pickup first so the existing left/right card order is preserved.
+  const modes: FulfillmentMode[] = [];
+  if (pickupDates.length > 0) modes.push("pickup");
+  if (deliveryDates.length > 0) modes.push("delivery");
+
+  let notice: string | null = null;
+  if (modes.length === 1) {
+    notice = modes[0] === "delivery" ? DELIVERY_ONLY_NOTICE : PICKUP_ONLY_NOTICE;
+  }
+
+  return {
+    modes,
+    defaultMode: modes.includes("pickup") ? "pickup" : "delivery",
+    pickupDates,
+    deliveryDates,
+    notice,
+  };
 }
 
 // Helper function to get available time slots for a given date
