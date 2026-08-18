@@ -10,6 +10,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { Analytics } from "@vercel/analytics/react";
 
 // Critical path — eager imports
 import Home from "./pages/Home";
@@ -90,6 +91,7 @@ const App = () => (
             </Suspense>
             <CartDrawer />
           </BrowserRouter>
+          <Analytics />
         </TooltipProvider>
       </CartProvider>
     </AuthProvider>
