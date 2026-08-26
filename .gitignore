@@ -34,3 +34,10 @@ eslint_out.txt
 lint_log.txt
 lint_log_clean.txt
 lint_report.json
+
+# Session and CLI scratch (regenerated per session — not shared state)
+.claude/project-state.json
+.claude/session-handoff.md
+.planning/agent-history.json
+supabase/.temp/
+logs/
