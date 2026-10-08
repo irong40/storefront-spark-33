@@ -11,10 +11,15 @@ import { Mail, Phone, MapPin, Clock, Loader2, Send } from "lucide-react";
 import { PageSeo } from "@/components/PageSeo";
 import { formatHoursLines } from "@/lib/format-hours";
 import {
+  BUSINESS_EMAIL,
+  BUSINESS_PHONE,
+  CITY,
   FALLBACK_HOURS,
-  HOURS_SUMMARY,
+  STATE,
   STREET_ADDRESS,
+  ZIP,
 } from "@/config/business";
+import { CONTACT_PAGE, PAGE_SEO } from "@/config/page-content";
 import { GoogleMapEmbed } from "@/components/ui/google-map-embed";
 
 export default function Contact() {
@@ -79,18 +84,17 @@ export default function Contact() {
   return (
     <Layout>
       <PageSeo
-        title="Hours & Pickup, 719 High St | imPRESSive Portsmouth"
-        description={`imPRESSive Juice Bar, 719 High St, Portsmouth, VA 23704. Open ${HOURS_SUMMARY}. Call (757) 381-6980 or order online for pickup.`}
+        title={PAGE_SEO.contact.title}
+        description={PAGE_SEO.contact.description}
       />
       {/* Hero */}
       <section className="bg-gradient-to-br from-primary/10 via-secondary to-accent/10 py-16">
         <div className="container px-4 text-center">
           <h1 className="text-4xl md:text-5xl font-display font-bold text-foreground mb-4">
-            Get in Touch
+            {CONTACT_PAGE.h1}
           </h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Have a question, feedback, or just want to say hello? We'd love to
-            hear from you!
+            {CONTACT_PAGE.lead}
           </p>
         </div>
       </section>
@@ -197,10 +201,10 @@ export default function Contact() {
                   <div>
                     <h3 className="font-semibold mb-1">Email</h3>
                     <a
-                      href={`mailto:${business?.email || "hello@impressivejuicebar.com"}`}
+                      href={`mailto:${business?.email || BUSINESS_EMAIL}`}
                       className="text-muted-foreground hover:text-primary"
                     >
-                      {business?.email || "hello@impressivejuicebar.com"}
+                      {business?.email || BUSINESS_EMAIL}
                     </a>
                   </div>
                 </div>
@@ -212,10 +216,10 @@ export default function Contact() {
                   <div>
                     <h3 className="font-semibold mb-1">Phone</h3>
                     <a
-                      href={`tel:${business?.phone?.replace(/[^0-9]/g, "") || ""}`}
+                      href={`tel:${(business?.phone || BUSINESS_PHONE).replace(/[^0-9]/g, "")}`}
                       className="text-muted-foreground hover:text-primary"
                     >
-                      {business?.phone || "(555) 123-JUICE"}
+                      {business?.phone || BUSINESS_PHONE}
                     </a>
                   </div>
                 </div>
@@ -227,10 +231,10 @@ export default function Contact() {
                   <div>
                     <h3 className="font-semibold mb-1">Location</h3>
                     <p className="text-muted-foreground">
-                      {business?.address_line1 || "123 Main Street"}
+                      {business?.address_line1 || STREET_ADDRESS}
                       <br />
-                      {business?.city || "Anytown"}, {business?.state || "USA"}{" "}
-                      {business?.zip || "12345"}
+                      {business?.city || CITY}, {business?.state || STATE}{" "}
+                      {business?.zip || ZIP}
                     </p>
                   </div>
                 </div>
@@ -253,7 +257,7 @@ export default function Contact() {
               {/* Map */}
               <div className="aspect-video rounded-2xl overflow-hidden border border-border">
                 <GoogleMapEmbed
-                  address={`${business?.address_line1 || STREET_ADDRESS}, ${business?.city || "Portsmouth"}, ${business?.state || "VA"} ${business?.zip || "23704"}`}
+                  address={`${business?.address_line1 || STREET_ADDRESS}, ${business?.city || CITY}, ${business?.state || STATE} ${business?.zip || ZIP}`}
                 />
               </div>
             </div>

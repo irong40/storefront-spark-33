@@ -1,19 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { useLocation } from "react-router-dom";
-import { FULFILLMENT_SNIPPET } from "@/config/business";
-
-const SITE_NAME = "imPRESSive Juice Bar";
-const SITE_URL = "https://www.impressivejb.com";
-const DEFAULT_DESCRIPTION =
-  `Fresh cold-pressed juices, wellness shots, and detox packages from imPRESSive Juice Bar in Portsmouth, VA. ${FULFILLMENT_SNIPPET}`;
-const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.jpg`;
-
-/** Social scrapers need absolute image URLs; DB rows can hold "/products/x.png". */
-function absoluteUrl(url: string): string {
-  if (/^https?:\/\//i.test(url)) return url;
-  if (url.startsWith("//")) return `https:${url}`;
-  return `${SITE_URL}${url.startsWith("/") ? "" : "/"}${url}`;
-}
+import { seoTags } from "@/lib/seo-meta";
 
 interface PageSeoProps {
   title: string;
@@ -29,38 +16,43 @@ interface PageSeoProps {
  * Renders all per-page SEO tags: <title>, meta description, canonical link,
  * Open Graph + Twitter Card tags. Drop in once per page near the top of the
  * page component. App.tsx already wires <HelmetProvider />.
+ *
+ * The tag values come from seoTags() in src/lib/seo-meta.ts, which the
+ * build-time prerender (scripts/prerender.js) also uses.
  */
 export function PageSeo({
   title,
-  description = DEFAULT_DESCRIPTION,
+  description,
   canonicalPath,
-  ogImage = DEFAULT_OG_IMAGE,
-  type = "website",
+  ogImage,
+  type,
   noindex,
 }: PageSeoProps) {
   const location = useLocation();
-  // Titles that already carry the brand ("| imPRESSive Portsmouth") keep
-  // their own form so they stay near 60 characters.
-  const fullTitle = title.includes("imPRESSive")
-    ? title
-    : `${title} | ${SITE_NAME}`;
-  const canonical = `${SITE_URL}${canonicalPath ?? location.pathname}`;
-  const image = absoluteUrl(ogImage);
+  const tags = seoTags({
+    title,
+    description,
+    canonicalPath: canonicalPath ?? location.pathname,
+    ogImage,
+    type,
+    noindex,
+  });
+  const canonical = tags.canonical as string;
 
   return (
     <Helmet>
-      <title>{fullTitle}</title>
-      <meta name="description" content={description} />
+      <title>{tags.title}</title>
+      <meta name="description" content={tags.description} />
       <link rel="canonical" href={canonical} />
-      <meta property="og:title" content={fullTitle} />
-      <meta property="og:description" content={description} />
+      <meta property="og:title" content={tags.title} />
+      <meta property="og:description" content={tags.description} />
       <meta property="og:url" content={canonical} />
-      <meta property="og:image" content={image} />
-      <meta property="og:type" content={type} />
-      <meta name="twitter:title" content={fullTitle} />
-      <meta name="twitter:description" content={description} />
-      <meta name="twitter:image" content={image} />
-      {noindex && <meta name="robots" content="noindex, nofollow" />}
+      <meta property="og:image" content={tags.image} />
+      <meta property="og:type" content={tags.type} />
+      <meta name="twitter:title" content={tags.title} />
+      <meta name="twitter:description" content={tags.description} />
+      <meta name="twitter:image" content={tags.image} />
+      {tags.noindex && <meta name="robots" content="noindex, nofollow" />}
     </Helmet>
   );
 }

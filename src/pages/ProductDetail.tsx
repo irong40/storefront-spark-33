@@ -30,6 +30,13 @@ import {
   productJsonLd,
   productTitle,
 } from "@/lib/product-seo";
+import {
+  flavorSelectionLimit,
+  isDetoxPackageSlug,
+  isWellnessShotSlug,
+  offeredPrices as offeredPricesFor,
+  showsSizeSelector,
+} from "@/lib/product-pricing";
 
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -40,31 +47,8 @@ export default function ProductDetail() {
   const { sizes: globalSizes, isLoading: sizesLoading } =
     useEffectiveProductSizes(product?.id || "");
 
-  // Flavor Selection Configuration
-  const getFlavorSelectionLimit = (slug: string) => {
-    switch (slug) {
-      case "4-pack-sample-box":
-        return 4;
-      case "sample-box":
-        return 4;
-      case "3-pack-subscription":
-        return 3;
-      case "gallon-subscription":
-        return 1;
-      case "full-gallon-subscription":
-        return 1;
-      case "half-gallon-subscription":
-        return 1;
-      default:
-        return 0;
-    }
-  };
-
   // Check if product is a detox package (1-day, 3-day) - no sizes, no add-ons
-  const isDetoxPackage =
-    product?.slug?.includes("-day-detox") ||
-    product?.slug === "1-day-detox" ||
-    product?.slug === "3-day-detox";
+  const isDetoxPackage = isDetoxPackageSlug(product?.slug);
 
   const [quantity, setQuantity] = useState(1);
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(
@@ -75,7 +59,7 @@ export default function ProductDetail() {
   const [selectedAddonIds, setSelectedAddonIds] = useState<string[]>([]); // Addon state
   const [selectedDressing, setSelectedDressing] = useState<string | null>(null);
 
-  const flavorLimit = product ? getFlavorSelectionLimit(product.slug) : 0;
+  const flavorLimit = product ? flavorSelectionLimit(product.slug) : 0;
   const requiresFlavors = flavorLimit > 0;
 
   // Gift Card Form State
@@ -139,9 +123,7 @@ export default function ProductDetail() {
 
   // Check if product is a wellness shot (fixed $3 price, no sizes, no addons)
   // Wellness shots have slugs starting with "wellness-shot-" (not subscription)
-  const isWellnessShot =
-    product?.slug?.startsWith("wellness-shot-") &&
-    product?.slug !== "wellness-shot-subscription";
+  const isWellnessShot = isWellnessShotSlug(product?.slug);
 
   const isSalad = !!product?.slug?.includes("salad");
   const DRESSING_OPTIONS = ["Ranch", "Italian", "Caesar"] as const;
@@ -222,17 +204,10 @@ export default function ProductDetail() {
     );
 
   // Determine if we should show size selector
-  // NOT for wellness shots (fixed $3), NOT for detox packages (fixed packages)
-  // Allow for 4-pack-sample-box even though it requires flavors
-  const isFood = product?.category?.slug === "food";
+  // NOT for wellness shots (fixed $3), NOT for detox packages (fixed packages),
+  // NOT for food. Allow for 4-pack-sample-box even though it requires flavors.
   const showSizeSelector =
-    !product?.variants?.length &&
-    product?.slug !== "egift-card" &&
-    globalSizes.length > 0 &&
-    !isWellnessShot &&
-    !isDetoxPackage &&
-    !isFood &&
-    (!requiresFlavors || product?.slug === "4-pack-sample-box");
+    !!product && showsSizeSelector(product, globalSizes.length);
 
   if (isLoading) {
     return (
@@ -275,18 +250,12 @@ export default function ProductDetail() {
   const hasDiscount =
     product.compare_at_price && product.compare_at_price > currentPrice;
 
-  // Every price a shopper can pick on this page, from the same branches as
-  // currentPrice above. Empty while the size table loads so search tags never
-  // carry the products.price placeholder for a sized item.
+  // Every price a shopper can pick on this page (src/lib/product-pricing.ts,
+  // also used by the build-time prerender). Empty while the size table loads
+  // so search tags never carry the products.price placeholder for a sized item.
   const offeredPrices: number[] = sizesLoading
     ? []
-    : isWellnessShot
-      ? [Number(product.price)]
-      : product.variants && product.variants.length > 0
-        ? product.variants.map((v) => Number(v.price))
-        : product.slug !== "egift-card" && allowsGlobalSize && showSizeSelector
-          ? globalSizes.map((s) => Number(s.price))
-          : [Number(product.price)];
+    : offeredPricesFor(product, globalSizes);
 
   const canonicalUrl = `${SITE_URL}/products/${product.slug}`;
   const seoImage = product.image_url;

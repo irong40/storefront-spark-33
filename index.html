@@ -13,9 +13,11 @@
     <title>imPRESSive Juice Bar | Cold-Pressed Juice Bar in Portsmouth, VA</title>
     <!-- data-rh="true" marks tags react-helmet-async owns: PageSeo replaces them
          after render instead of adding duplicates. Non-JS scrapers see these.
-         No static canonical or og:url here: the shell is served for every URL,
-         so a fixed value would point every page at the homepage. PageSeo sets
-         both per page. -->
+         No static canonical or og:url here: this shell is also served (as
+         dist/app-shell.html) for app routes that have no prerendered file, so
+         a fixed value would point those pages at the homepage. PageSeo sets
+         both per page, and scripts/prerender.js writes them into each
+         prerendered page. -->
     <meta name="description" content="Cold-pressed juices, wellness shots and juice cleanses at 719 High St, Portsmouth, VA. Order online for pickup. Organic. Elevated. Extraordinary." data-rh="true" />
     <meta name="author" content="imPRESSive Juice Bar" />
 

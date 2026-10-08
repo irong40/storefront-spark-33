@@ -10,6 +10,7 @@ import {
   PICKUP_LOCATION_NAME,
   STREET_ADDRESS,
 } from "@/config/business";
+import { ABOUT_PAGE, PAGE_SEO } from "@/config/page-content";
 
 // Import value illustrations
 import valueOrganic from "@/assets/value-organic.png";
@@ -64,8 +65,8 @@ export default function About() {
   return (
     <Layout>
       <PageSeo
-        title="Our Story | imPRESSive Juice Bar, Portsmouth VA"
-        description="Founder Delisea Jackson started imPRESSive after her own juice cleanse. A family-owned Portsmouth, VA juice bar pressing fresh juice at 719 High St."
+        title={PAGE_SEO.about.title}
+        description={PAGE_SEO.about.description}
       />
       {/* Hero Section - Kraft Paper Style */}
       <section className="relative pt-8 pb-20 overflow-hidden bg-brand-kraft">
@@ -79,15 +80,12 @@ export default function About() {
         <div className="container px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
             <span className="font-script text-3xl text-brand-berry mb-2 block">
-              Our Story
+              {ABOUT_PAGE.tagline}
             </span>
             <h1 className="text-4xl md:text-5xl font-heading font-bold text-brand-brown mb-6">
-              Crafted with Love, Pressed with Purpose
+              {ABOUT_PAGE.h1}
             </h1>
-            <p className="text-muted-foreground text-lg">
-              From a trip to NYC to your community's favorite juice bar — here's
-              how imPRESSive came to be.
-            </p>
+            <p className="text-muted-foreground text-lg">{ABOUT_PAGE.lead}</p>
           </div>
         </div>
       </section>
@@ -98,40 +96,18 @@ export default function About() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="order-2 lg:order-1">
               <span className="font-script text-2xl text-brand-terracotta mb-2 block">
-                Meet the Founder
+                {ABOUT_PAGE.founderLabel}
               </span>
               <h2 className="text-3xl font-heading font-bold text-brand-brown mb-6">
-                Hi, I'm Delisea Jackson
+                {ABOUT_PAGE.founderHeading}
               </h2>
               <div className="space-y-4 text-muted-foreground leading-relaxed">
                 <p className="text-lg font-medium text-brand-olive">
-                  And the benefits of juicing are nothing short of imPRESSive.
+                  {ABOUT_PAGE.founderLead}
                 </p>
-                <p>
-                  One trip with lousy eating habits put me on this path. Now I'm
-                  here to hand you healthy choices in a bottle.
-                </p>
-                <p>
-                  Eating on the run every day can be terrible for your body,
-                  even worse when you take a trip out of town. No stove and
-                  those tiny refrigerators are a recipe for disaster. I was in
-                  New York City on a work trip, which is the Mecca of eating on
-                  the run.
-                </p>
-                <p>
-                  With my eating habits at an all-time low, my stomach declared
-                  its disappointment with me loud and clear. I was extremely
-                  bloated and feeling blah, so eventually, I came to my good
-                  senses and decided to stop pushing down junk food and try a
-                  juice cleanse.
-                </p>
-                <p>
-                  I'd heard of juice cleanses and had never tried one, but I
-                  knew I'd have to try something since I hit rock bottom.
-                  Desperation turned to curiosity which led to tons of research
-                  about the health benefits of various vegetables, fruits,
-                  herbs, and spices.
-                </p>
+                {ABOUT_PAGE.founderStory.map((paragraph) => (
+                  <p key={paragraph}>{paragraph}</p>
+                ))}
               </div>
             </div>
             <div className="order-1 lg:order-2">
@@ -156,13 +132,13 @@ export default function About() {
         <div className="container px-4">
           <div className="max-w-3xl mx-auto">
             <h2 className="text-3xl font-heading font-bold text-brand-brown text-center mb-8">
-              <span className="font-script text-brand-berry">My Quest to</span>{" "}
-              imPRESS
+              <span className="font-script text-brand-berry">
+                {ABOUT_PAGE.missionScript}
+              </span>{" "}
+              {ABOUT_PAGE.missionHeading}
             </h2>
             <p className="text-lg text-center text-muted-foreground leading-relaxed">
-              Our vision is to become a trusted wellness brand that inspires
-              everyday balance, nourishes communities, and proves that
-              intentional nutrition can be both beautiful and delicious.
+              {ABOUT_PAGE.mission}
             </p>
           </div>
         </div>

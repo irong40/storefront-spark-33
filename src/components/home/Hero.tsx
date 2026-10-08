@@ -5,6 +5,7 @@ import { ArrowRight } from "lucide-react";
 import { useFeaturedProducts, useProducts } from "@/hooks/use-products";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProductImage } from "@/components/ui/ProductImage";
+import { HOME_HERO } from "@/config/page-content";
 
 // Categories whose products are juice blends (same set the size picker uses).
 const JUICE_CATEGORY_SLUGS = new Set([
@@ -97,28 +98,27 @@ export function Hero() {
             <div className="flex items-center gap-4 mb-6">
               <span className="w-10 h-0.5 bg-brand-berry rounded-full" />
               <span className="font-script text-xl md:text-2xl text-brand-berry">
-                Cold-Pressed Happiness
+                {HOME_HERO.tagline}
               </span>
             </div>
 
             {/* Title */}
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-medium text-brand-brown mb-6 leading-tight">
-              Cold-Pressed Juice in{" "}
+              {HOME_HERO.h1Lead}{" "}
               <span className="relative inline-block text-brand-olive">
-                Portsmouth, VA
+                {HOME_HERO.h1Place}
                 <span className="absolute bottom-1 left-0 right-0 h-3 bg-brand-mustard/40 -z-10 rounded-full" />
               </span>
             </h1>
 
             {/* Subtitle (the H1 carries the keyword and the city) */}
             <p className="text-base text-brand-terracotta font-medium mb-4">
-              Nourish Your Body, Elevate Your Day
+              {HOME_HERO.subtitle}
             </p>
 
             {/* Description */}
             <p className="text-lg text-brand-warm-gray mb-8 max-w-md">
-              Fresh, cold-pressed juices crafted daily with love. No additives,
-              no preservatives — just pure, vibrant nutrition in every sip.
+              {HOME_HERO.description}
             </p>
 
             {/* Actions */}

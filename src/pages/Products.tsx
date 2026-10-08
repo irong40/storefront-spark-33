@@ -6,6 +6,7 @@ import { CategoryFilter } from "@/components/products/CategoryFilter";
 import { useProducts } from "@/hooks/use-products";
 import { PageSeo } from "@/components/PageSeo";
 import { CATEGORY_SEO } from "@/config/category-seo";
+import { PAGE_SEO, PRODUCTS_PAGE } from "@/config/page-content";
 
 export default function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -33,11 +34,7 @@ export default function Products() {
   // A known category is its own page: own title, H1, intro and a canonical
   // that points at itself. Anything else canonicalizes to /products.
   const categorySeo = categoryParam ? CATEGORY_SEO[categoryParam] : undefined;
-  const seo = categorySeo ?? {
-    title: "Juice Bar Menu, Portsmouth VA | imPRESSive Juice Bar",
-    description:
-      "Full menu: cold-pressed juices, $4 wellness shots, juice cleanse packages, salads and parfaits. Pressed fresh in Portsmouth, VA. Order ahead for pickup.",
-  };
+  const seo = categorySeo ?? PAGE_SEO.products;
   const canonicalPath = categorySeo
     ? `/products?category=${categoryParam}`
     : "/products";
@@ -59,11 +56,10 @@ export default function Products() {
 
         <div className="container px-4 relative z-10">
           <span className="font-script text-2xl text-brand-terracotta mb-2 block">
-            Fresh & Natural
+            {PRODUCTS_PAGE.tagline}
           </span>
           <h1 className="text-4xl md:text-5xl font-heading font-bold text-brand-brown mb-4">
-            {categorySeo?.h1 ??
-              "Fresh Cold-Pressed Juices, Wellness Shots & Cleanses"}
+            {categorySeo?.h1 ?? PRODUCTS_PAGE.h1}
           </h1>
           {categorySeo ? (
             <div className="text-muted-foreground text-base md:text-lg max-w-3xl space-y-3">
@@ -73,8 +69,7 @@ export default function Products() {
             </div>
           ) : (
             <p className="text-muted-foreground text-lg max-w-2xl">
-              Fresh cold-pressed juices made daily. Choose from our selection of
-              juices, wellness shots, and cleanse programs.
+              {PRODUCTS_PAGE.intro}
             </p>
           )}
         </div>

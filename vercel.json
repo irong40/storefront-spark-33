@@ -1,4 +1,6 @@
 {
+  "cleanUrls": true,
+  "trailingSlash": false,
   "redirects": [
     {
       "source": "/((?!\\.well-known/).*)",
@@ -20,9 +22,27 @@
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
+    },
+    {
+      "source": "/app-shell",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }]
     }
   ],
   "rewrites": [
-    { "source": "/((?!assets/|\\.well-known/)[^.]*)", "destination": "/index.html" }
+    { "source": "/products", "destination": "/app-shell.html" },
+    { "source": "/products/:slug", "destination": "/app-shell.html" },
+    { "source": "/about", "destination": "/app-shell.html" },
+    { "source": "/contact", "destination": "/app-shell.html" },
+    { "source": "/privacy-policy", "destination": "/app-shell.html" },
+    { "source": "/terms", "destination": "/app-shell.html" },
+    { "source": "/checkout", "destination": "/app-shell.html" },
+    { "source": "/order-confirmation/:id", "destination": "/app-shell.html" },
+    { "source": "/auth", "destination": "/app-shell.html" },
+    { "source": "/reset-password", "destination": "/app-shell.html" },
+    { "source": "/account", "destination": "/app-shell.html" },
+    { "source": "/account/orders", "destination": "/app-shell.html" },
+    { "source": "/gift-cards/balance", "destination": "/app-shell.html" },
+    { "source": "/rewards", "destination": "/app-shell.html" },
+    { "source": "/admin", "destination": "/app-shell.html" }
   ]
 }
