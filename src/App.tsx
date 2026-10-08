@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,6 +10,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { PageSeo } from "@/components/PageSeo";
 
 // Critical path — eager imports
 import Home from "./pages/Home";
@@ -35,6 +36,15 @@ const About = lazy(() => import("./pages/About"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const Terms = lazy(() => import("./pages/Terms"));
+
+// Private and transactional pages: rendered with a robots noindex tag so they
+// stay out of search results even when a crawler reaches them by a link.
+const noindex = (title: string, page: ReactNode) => (
+  <>
+    <PageSeo title={title} noindex />
+    {page}
+  </>
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -70,18 +80,18 @@ const App = () => (
                 <Route path="/products/:slug" element={<ProductDetail />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
-                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/checkout" element={noindex("Checkout", <Checkout />)} />
                 <Route
                   path="/order-confirmation/:id"
-                  element={<OrderConfirmation />}
+                  element={noindex("Order Confirmation", <OrderConfirmation />)}
                 />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/account" element={<Account />} />
-                <Route path="/account/orders" element={<Account />} />
-                <Route path="/gift-cards/balance" element={<GiftCardBalance />} />
-                <Route path="/rewards" element={<Layout><LoyaltyDashboard /></Layout>} />
-                <Route path="/admin" element={<Admin />} />
+                <Route path="/auth" element={noindex("Sign In", <Auth />)} />
+                <Route path="/reset-password" element={noindex("Reset Password", <ResetPassword />)} />
+                <Route path="/account" element={noindex("My Account", <Account />)} />
+                <Route path="/account/orders" element={noindex("My Account", <Account />)} />
+                <Route path="/gift-cards/balance" element={noindex("Check Gift Card Balance", <GiftCardBalance />)} />
+                <Route path="/rewards" element={noindex("Rewards", <Layout><LoyaltyDashboard /></Layout>)} />
+                <Route path="/admin" element={noindex("Admin", <Admin />)} />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/terms" element={<Terms />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

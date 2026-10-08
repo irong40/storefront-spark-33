@@ -248,6 +248,7 @@ export default function ProductDetail() {
   if (error || !product) {
     return (
       <Layout>
+        <PageSeo title="Product not found" noindex />
         <div className="container px-4 py-12 text-center">
           <h1 className="text-2xl font-heading font-bold text-brand-brown mb-4">
             Product Not Found
@@ -278,6 +279,7 @@ export default function ProductDetail() {
         description={seoDescription.slice(0, 200)}
         ogImage={product.image_url || undefined}
         type="product"
+        noindex={!product.is_available}
       />
       <div className="container px-4 py-8">
         <Breadcrumb className="mb-6">

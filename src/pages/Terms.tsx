@@ -1,10 +1,13 @@
-import { useDocumentTitle } from "@/hooks/use-document-title";
 import { Layout } from "@/components/layout/Layout";
+import { PageSeo } from "@/components/PageSeo";
 
 export default function Terms() {
-  useDocumentTitle("Terms of Service | imPRESSive Juice Bar");
   return (
     <Layout>
+      <PageSeo
+        title="Terms of Service"
+        description="The terms that apply when you use the imPRESSive Juice Bar website and place orders for pickup in Portsmouth, VA."
+      />
       <div className="container mx-auto px-4 py-16 max-w-3xl">
         <h1 className="text-3xl font-bold mb-8">Terms of Service</h1>
         <p className="text-muted-foreground mb-4">Last updated: April 2026</p>

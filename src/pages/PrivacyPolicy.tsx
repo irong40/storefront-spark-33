@@ -1,10 +1,13 @@
-import { useDocumentTitle } from "@/hooks/use-document-title";
 import { Layout } from "@/components/layout/Layout";
+import { PageSeo } from "@/components/PageSeo";
 
 export default function PrivacyPolicy() {
-  useDocumentTitle("Privacy Policy | imPRESSive Juice Bar");
   return (
     <Layout>
+      <PageSeo
+        title="Privacy Policy"
+        description="How imPRESSive Juice Bar collects, uses and protects the information you share when you order online or contact us."
+      />
       <div className="container mx-auto px-4 py-16 max-w-3xl">
         <h1 className="text-3xl font-bold mb-8">Privacy Policy</h1>
         <p className="text-muted-foreground mb-4">Last updated: April 2026</p>

@@ -1,12 +1,11 @@
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { logger } from "@/lib/logger";
-import { useDocumentTitle } from "@/hooks/use-document-title";
 import { Layout } from "@/components/layout/Layout";
+import { PageSeo } from "@/components/PageSeo";
 
 const NotFound = () => {
   const location = useLocation();
-  useDocumentTitle("Page Not Found | imPRESSive Juice Bar");
 
   useEffect(() => {
     logger.error(
@@ -17,6 +16,7 @@ const NotFound = () => {
 
   return (
     <Layout>
+      <PageSeo title="Page Not Found" noindex />
       <div className="flex min-h-[60vh] items-center justify-center bg-muted">
         <div className="text-center">
           <h1 className="mb-4 text-4xl font-bold">404</h1>

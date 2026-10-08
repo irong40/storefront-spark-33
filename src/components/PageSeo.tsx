@@ -8,6 +8,13 @@ const DEFAULT_DESCRIPTION =
   `Fresh cold-pressed juices, wellness shots, and detox packages from imPRESSive Juice Bar in Portsmouth, VA. ${FULFILLMENT_SNIPPET}`;
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.jpg`;
 
+/** Social scrapers need absolute image URLs; DB rows can hold "/products/x.png". */
+function absoluteUrl(url: string): string {
+  if (/^https?:\/\//i.test(url)) return url;
+  if (url.startsWith("//")) return `https:${url}`;
+  return `${SITE_URL}${url.startsWith("/") ? "" : "/"}${url}`;
+}
+
 interface PageSeoProps {
   title: string;
   description?: string;
@@ -36,6 +43,7 @@ export function PageSeo({
     ? title
     : `${title} | ${SITE_NAME}`;
   const canonical = `${SITE_URL}${canonicalPath ?? location.pathname}`;
+  const image = absoluteUrl(ogImage);
 
   return (
     <Helmet>
@@ -45,11 +53,11 @@ export function PageSeo({
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />
       <meta property="og:url" content={canonical} />
-      <meta property="og:image" content={ogImage} />
+      <meta property="og:image" content={image} />
       <meta property="og:type" content={type} />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
-      <meta name="twitter:image" content={ogImage} />
+      <meta name="twitter:image" content={image} />
       {noindex && <meta name="robots" content="noindex, nofollow" />}
     </Helmet>
   );

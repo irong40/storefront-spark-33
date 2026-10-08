@@ -1,0 +1,30 @@
+# imPRESSive Juice Bar
+
+> Cold-pressed juice bar at 719 High St, Portsmouth, VA 23704, inside Bloom Market. Cold-pressed juices, wellness shots, detox packages, food and gift cards. Orders are for in-store pickup only; the shop does not deliver. Phone (757) 381-6980. Email info@impressivejb.com.
+
+## Visit and order
+
+- Address: imPRESSive Juice Bar, inside Bloom Market, 719 High St, Portsmouth, VA 23704
+- Hours: Tuesday to Friday 7am-7pm, Saturday 8am-5pm, closed Sunday and Monday
+- Ordering: order online at https://www.impressivejb.com/products and pick up at 719 High St. Pickup only, no delivery.
+- Phone: (757) 381-6980
+- Email: info@impressivejb.com
+
+## Menu
+
+- [Full menu](https://www.impressivejb.com/products)
+- [Wellness Shots](https://www.impressivejb.com/products?category=wellness-shots)
+- [Energy & Immunity Booster](https://www.impressivejb.com/products?category=energy-immunity-booster)
+- [Detox & Fat Burners](https://www.impressivejb.com/products?category=detox-fat-burners)
+- [Sweet Treats](https://www.impressivejb.com/products?category=sweet-treats)
+- [Detox Packages](https://www.impressivejb.com/products?category=detox-packages)
+- [Food](https://www.impressivejb.com/products?category=food)
+- [Subscriptions](https://www.impressivejb.com/products?category=subscriptions)
+- [eGift Card](https://www.impressivejb.com/products/egift-card)
+
+## About
+
+- [Our story](https://www.impressivejb.com/about): founded by Delisea Jackson
+- [Contact and hours](https://www.impressivejb.com/contact)
+- [Instagram](https://www.instagram.com/impressive_jb/)
+- [Facebook](https://www.facebook.com/impressivejb)
