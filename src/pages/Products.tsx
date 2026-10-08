@@ -5,50 +5,7 @@ import { ProductGrid } from "@/components/products/ProductGrid";
 import { CategoryFilter } from "@/components/products/CategoryFilter";
 import { useProducts } from "@/hooks/use-products";
 import { PageSeo } from "@/components/PageSeo";
-import { FULFILLMENT_SNIPPET } from "@/config/business";
-
-const CATEGORY_SEO: Record<string, { title: string; description: string }> = {
-  "cold-pressed-juices": {
-    title: "Cold-Pressed Juices",
-    description:
-      "Fresh-pressed fruit and vegetable juices made daily at imPRESSive Juice Bar in Portsmouth, VA. No added sugar, no preservatives. Pickup only.",
-  },
-  "wellness-shots": {
-    title: "Wellness Shots — Beet, Ginger, Turmeric, Kale",
-    description:
-      `Single-serve wellness shots from imPRESSive Juice Bar in Portsmouth, VA. $4 each. ${FULFILLMENT_SNIPPET}`,
-  },
-  "detox-packages": {
-    title: "1-Day & 3-Day Juice Detox Packages",
-    description:
-      `Reset with a cold-pressed juice detox from imPRESSive Juice Bar in Portsmouth, VA. 1-day and 3-day packages. ${FULFILLMENT_SNIPPET}`,
-  },
-  "energy-immunity-booster": {
-    title: "Energy & Immunity Booster Juices",
-    description:
-      `Energy and immunity-focused cold-pressed juices in Portsmouth, VA. Made fresh at imPRESSive Juice Bar. ${FULFILLMENT_SNIPPET}`,
-  },
-  "detox-fat-burners": {
-    title: "Detox & Fat-Burner Juices",
-    description:
-      `Detox and fat-burner cold-pressed juices in Portsmouth, VA. Fresh, no added sugar. ${FULFILLMENT_SNIPPET}`,
-  },
-  "sweet-treats": {
-    title: "Sweet Treat Juices",
-    description:
-      `Crowd-pleaser cold-pressed juices in Portsmouth, VA. ${FULFILLMENT_SNIPPET}`,
-  },
-  subscriptions: {
-    title: "Juice Subscriptions",
-    description:
-      `Weekly cold-pressed juice and wellness-shot subscriptions in Portsmouth, VA. ${FULFILLMENT_SNIPPET}`,
-  },
-  food: {
-    title: "Salads, Parfaits & Muffins",
-    description:
-      `Light food options from imPRESSive Juice Bar in Portsmouth, VA. Salads, parfaits, muffins. ${FULFILLMENT_SNIPPET}`,
-  },
-};
+import { CATEGORY_SEO } from "@/config/category-seo";
 
 export default function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -73,18 +30,24 @@ export default function Products() {
     }
   };
 
-  const seo =
-    (categoryParam && CATEGORY_SEO[categoryParam]) || {
-      title: "All Juices, Wellness Shots & Food",
-      description: `Browse the full menu at imPRESSive Juice Bar in Portsmouth, VA. Cold-pressed juices, wellness shots, salads. ${FULFILLMENT_SNIPPET}`,
-    };
+  // A known category is its own page: own title, H1, intro and a canonical
+  // that points at itself. Anything else canonicalizes to /products.
+  const categorySeo = categoryParam ? CATEGORY_SEO[categoryParam] : undefined;
+  const seo = categorySeo ?? {
+    title: "Juice Bar Menu, Portsmouth VA | imPRESSive Juice Bar",
+    description:
+      "Full menu: cold-pressed juices, $4 wellness shots, juice cleanse packages, salads and parfaits. Pressed fresh in Portsmouth, VA. Order ahead for pickup.",
+  };
+  const canonicalPath = categorySeo
+    ? `/products?category=${categoryParam}`
+    : "/products";
 
   return (
     <Layout>
       <PageSeo
         title={seo.title}
         description={seo.description}
-        canonicalPath="/products"
+        canonicalPath={canonicalPath}
       />
       {/* Hero Section */}
       <div className="bg-brand-kraft relative overflow-hidden py-12">
@@ -99,12 +62,21 @@ export default function Products() {
             Fresh & Natural
           </span>
           <h1 className="text-4xl md:text-5xl font-heading font-bold text-brand-brown mb-4">
-            Fresh Cold-Pressed Juices, Wellness Shots &amp; Cleanses
+            {categorySeo?.h1 ??
+              "Fresh Cold-Pressed Juices, Wellness Shots & Cleanses"}
           </h1>
-          <p className="text-muted-foreground text-lg max-w-2xl">
-            Fresh cold-pressed juices made daily. Choose from our selection of
-            juices, wellness shots, and cleanse programs.
-          </p>
+          {categorySeo ? (
+            <div className="text-muted-foreground text-base md:text-lg max-w-3xl space-y-3">
+              {categorySeo.intro.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-lg max-w-2xl">
+              Fresh cold-pressed juices made daily. Choose from our selection of
+              juices, wellness shots, and cleanse programs.
+            </p>
+          )}
         </div>
       </div>
 

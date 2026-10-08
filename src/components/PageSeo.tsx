@@ -39,7 +39,9 @@ export function PageSeo({
   noindex,
 }: PageSeoProps) {
   const location = useLocation();
-  const fullTitle = title.includes(SITE_NAME)
+  // Titles that already carry the brand ("| imPRESSive Portsmouth") keep
+  // their own form so they stay near 60 characters.
+  const fullTitle = title.includes("imPRESSive")
     ? title
     : `${title} | ${SITE_NAME}`;
   const canonical = `${SITE_URL}${canonicalPath ?? location.pathname}`;

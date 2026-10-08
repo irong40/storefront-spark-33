@@ -64,8 +64,8 @@ export default function About() {
   return (
     <Layout>
       <PageSeo
-        title="About imPRESSive Juice Bar — Portsmouth's Cold-Pressed Juice Shop"
-        description="Family-owned cold-pressed juice bar at 719 High St in Portsmouth, VA. Fresh, no added sugar, no preservatives. Serving Hampton Roads since 2024."
+        title="Our Story | imPRESSive Juice Bar, Portsmouth VA"
+        description="Founder Delisea Jackson started imPRESSive after her own juice cleanse. A family-owned Portsmouth, VA juice bar pressing fresh juice at 719 High St."
       />
       {/* Hero Section - Kraft Paper Style */}
       <section className="relative pt-8 pb-20 overflow-hidden bg-brand-kraft">

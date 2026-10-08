@@ -119,6 +119,7 @@ export function CartItem({ item }: CartItemProps) {
             className="h-8 w-8"
             onClick={() => updateQuantity(item.id, quantity - 1)}
             disabled={isMutating}
+            aria-label="Decrease quantity"
           >
             <Minus className="h-4 w-4" />
           </Button>
@@ -129,6 +130,7 @@ export function CartItem({ item }: CartItemProps) {
             className="h-8 w-8"
             onClick={() => updateQuantity(item.id, quantity + 1)}
             disabled={isMutating}
+            aria-label="Increase quantity"
           >
             <Plus className="h-4 w-4" />
           </Button>

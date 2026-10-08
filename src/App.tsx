@@ -12,14 +12,15 @@ import { ScrollToTop } from "@/components/ScrollToTop";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PageSeo } from "@/components/PageSeo";
 
-// Critical path — eager imports
+// Critical path: eager imports (the home page and the shared layout)
 import Home from "./pages/Home";
-import Products from "./pages/Products";
-import Auth from "./pages/Auth";
 import { Layout } from "./components/layout/Layout";
 import NotFound from "./pages/NotFound";
 
-// Non-critical pages — lazy loaded
+// Every other route is lazy loaded so the entry bundle carries only Home.
+// The Suspense fallback below shows the existing spinner while a chunk loads.
+const Products = lazy(() => import("./pages/Products"));
+const Auth = lazy(() => import("./pages/Auth"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const OrderConfirmation = lazy(() => import("./pages/OrderConfirmation"));

@@ -12,7 +12,7 @@ import { PageSeo } from "@/components/PageSeo";
 import { formatHoursLines } from "@/lib/format-hours";
 import {
   FALLBACK_HOURS,
-  FULFILLMENT_SNIPPET,
+  HOURS_SUMMARY,
   STREET_ADDRESS,
 } from "@/config/business";
 import { GoogleMapEmbed } from "@/components/ui/google-map-embed";
@@ -79,8 +79,8 @@ export default function Contact() {
   return (
     <Layout>
       <PageSeo
-        title="Contact imPRESSive Juice Bar — Portsmouth, VA"
-        description={`Contact imPRESSive Juice Bar at 719 High St, Portsmouth, VA 23704. Call 757.381.6980 or email info@impressivejb.com. ${FULFILLMENT_SNIPPET}`}
+        title="Hours & Pickup, 719 High St | imPRESSive Portsmouth"
+        description={`imPRESSive Juice Bar, 719 High St, Portsmouth, VA 23704. Open ${HOURS_SUMMARY}. Call (757) 381-6980 or order online for pickup.`}
       />
       {/* Hero */}
       <section className="bg-gradient-to-br from-primary/10 via-secondary to-accent/10 py-16">

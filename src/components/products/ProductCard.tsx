@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { Product } from "@/hooks/use-products";
 import { ProductImage } from "@/components/ui/ProductImage";
+import { productImageAlt } from "@/lib/product-seo";
 
 interface ProductCardProps {
   product: Product;
@@ -20,7 +21,7 @@ export function ProductCard({ product }: ProductCardProps) {
           {product.image_url ? (
             <ProductImage
               src={product.image_url}
-              alt={product.name}
+              alt={productImageAlt(product)}
               className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
           ) : (

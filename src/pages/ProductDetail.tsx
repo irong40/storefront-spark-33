@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Layout } from "@/components/layout/Layout";
 import { useProduct, Product, useAddons } from "@/hooks/use-products";
 import { useEffectiveProductSizes } from "@/hooks/use-product-variants";
@@ -21,7 +22,14 @@ import {
 } from "@/components/ui/breadcrumb";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { PageSeo } from "@/components/PageSeo";
-import { STREET_ADDRESS } from "@/config/business";
+import {
+  SITE_URL,
+  jsonLdString,
+  productDescription,
+  productImageAlt,
+  productJsonLd,
+  productTitle,
+} from "@/lib/product-seo";
 
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -267,20 +275,47 @@ export default function ProductDetail() {
   const hasDiscount =
     product.compare_at_price && product.compare_at_price > currentPrice;
 
-  const seoDescription =
-    product.short_description ||
-    product.description ||
-    `Order ${product.name} from imPRESSive Juice Bar in Portsmouth, VA. Cold-pressed, made fresh, ready for pickup at ${STREET_ADDRESS}.`;
+  // Every price a shopper can pick on this page, from the same branches as
+  // currentPrice above. Empty while the size table loads so search tags never
+  // carry the products.price placeholder for a sized item.
+  const offeredPrices: number[] = sizesLoading
+    ? []
+    : isWellnessShot
+      ? [Number(product.price)]
+      : product.variants && product.variants.length > 0
+        ? product.variants.map((v) => Number(v.price))
+        : product.slug !== "egift-card" && allowsGlobalSize && showSizeSelector
+          ? globalSizes.map((s) => Number(s.price))
+          : [Number(product.price)];
+
+  const canonicalUrl = `${SITE_URL}/products/${product.slug}`;
+  const seoImage = product.image_url;
+  const imageAlt = productImageAlt(product);
 
   return (
     <Layout>
       <PageSeo
-        title={`${product.name} — Cold-Pressed Juice`}
-        description={seoDescription.slice(0, 200)}
-        ogImage={product.image_url || undefined}
+        title={productTitle(product)}
+        description={productDescription(product, offeredPrices)}
+        canonicalPath={`/products/${product.slug}`}
+        ogImage={seoImage || undefined}
         type="product"
         noindex={!product.is_available}
       />
+      {offeredPrices.length > 0 && (
+        <Helmet>
+          <script type="application/ld+json">
+            {jsonLdString(
+              productJsonLd({
+                product,
+                prices: offeredPrices,
+                canonicalUrl,
+                imageUrl: seoImage,
+              }),
+            )}
+          </script>
+        </Helmet>
+      )}
       <div className="container px-4 py-8">
         <Breadcrumb className="mb-6">
           <BreadcrumbList>
@@ -289,9 +324,21 @@ export default function ProductDetail() {
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbLink href="/products">Products</BreadcrumbLink>
+              <BreadcrumbLink href="/products">Menu</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
+            {product.category && (
+              <>
+                <BreadcrumbItem>
+                  <BreadcrumbLink
+                    href={`/products?category=${product.category.slug}`}
+                  >
+                    {product.category.name}
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+              </>
+            )}
             <BreadcrumbItem>
               <BreadcrumbPage>{product?.name}</BreadcrumbPage>
             </BreadcrumbItem>
@@ -305,7 +352,7 @@ export default function ProductDetail() {
               {displayImage ? (
                 <ProductImage
                   src={displayImage}
-                  alt={product.name}
+                  alt={imageAlt}
                   className="w-full h-full object-cover transition-all duration-300"
                 />
               ) : (
@@ -425,9 +472,9 @@ export default function ProductDetail() {
             {/* Add-ons Selector */}
             {showAddons && addons && addons.length > 0 && (
               <div className="mb-8 p-5 bg-brand-olive/5 rounded-2xl border border-brand-olive/10">
-                <h3 className="font-heading font-semibold text-lg text-brand-brown mb-3">
+                <h2 className="font-heading font-semibold text-lg text-brand-brown mb-3">
                   Add Extra Goodness
-                </h3>
+                </h2>
                 <div className="grid grid-cols-2 gap-3">
                   {addons.map((addon) => (
                     <div key={addon.id} className="flex items-center space-x-2">
@@ -452,12 +499,12 @@ export default function ProductDetail() {
             {/* Flavor Selector */}
             {requiresFlavors && (
               <div className="mb-8">
-                <h3 className="font-heading font-semibold text-lg text-brand-brown mb-3">
+                <h2 className="font-heading font-semibold text-lg text-brand-brown mb-3">
                   Choose Flavors{" "}
                   <span className="text-sm font-normal text-muted-foreground">
                     (Select {flavorLimit})
                   </span>
-                </h3>
+                </h2>
                 <FlavorSelector
                   selectedFlavors={selectedFlavors}
                   onFlavorsChange={setSelectedFlavors}
@@ -469,9 +516,9 @@ export default function ProductDetail() {
             {/* Gift Card Form */}
             {product.slug === "egift-card" && (
               <div className="mb-8 p-6 bg-brand-kraft/20 rounded-2xl border border-brand-olive/10 space-y-4">
-                <h3 className="font-heading font-semibold text-brand-brown">
+                <h2 className="font-heading font-semibold text-brand-brown">
                   Recipient Details
-                </h3>
+                </h2>
 
                 <div className="grid gap-4">
                   <div>
@@ -580,17 +627,22 @@ export default function ProductDetail() {
                   size="icon"
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   disabled={quantity <= 1}
+                  aria-label="Decrease quantity"
                   className="border-brand-terracotta/30 text-brand-olive hover:bg-brand-olive hover:text-white hover:border-brand-olive"
                 >
                   <Minus className="h-4 w-4" />
                 </Button>
-                <span className="w-12 text-center font-heading font-medium text-brand-brown">
+                <span
+                  className="w-12 text-center font-heading font-medium text-brand-brown"
+                  aria-live="polite"
+                >
                   {quantity}
                 </span>
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={() => setQuantity(quantity + 1)}
+                  aria-label="Increase quantity"
                   className="border-brand-terracotta/30 text-brand-olive hover:bg-brand-olive hover:text-white hover:border-brand-olive"
                 >
                   <Plus className="h-4 w-4" />
@@ -621,9 +673,9 @@ export default function ProductDetail() {
             {/* Features */}
             {product.features && product.features.length > 0 && (
               <div className="mb-8">
-                <h3 className="font-heading font-semibold text-lg text-brand-brown mb-3">
+                <h2 className="font-heading font-semibold text-lg text-brand-brown mb-3">
                   Benefits
-                </h3>
+                </h2>
                 <ul className="space-y-2">
                   {product.features.map((feature, index) => (
                     <li key={index} className="flex items-start gap-2">
@@ -644,9 +696,9 @@ export default function ProductDetail() {
                   <div className="w-8 h-8 rounded-full bg-brand-olive/10 text-brand-olive flex items-center justify-center">
                     <Leaf className="h-4 w-4" />
                   </div>
-                  <h3 className="font-heading font-semibold text-brand-brown">
+                  <h2 className="font-heading font-semibold text-brand-brown">
                     Ingredients
-                  </h3>
+                  </h2>
                 </div>
                 <p className="text-muted-foreground text-sm leading-relaxed">
                   {product.ingredients}

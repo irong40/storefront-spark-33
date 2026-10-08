@@ -79,7 +79,7 @@ export function Footer() {
                   All Products
                 </Link>
               </li>
-              {categories?.slice(0, 4).map((category) => (
+              {categories?.map((category) => (
                 <li key={category.id}>
                   <Link
                     to={`/products?category=${category.slug}`}

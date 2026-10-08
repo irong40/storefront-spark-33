@@ -1,6 +1,6 @@
 import { Layout } from "@/components/layout/Layout";
 import { PageSeo } from "@/components/PageSeo";
-import { FULFILLMENT_SNIPPET } from "@/config/business";
+import { HOURS_SUMMARY } from "@/config/business";
 import { Hero } from "@/components/home/Hero";
 import { AnnouncementBanner } from "@/components/home/AnnouncementBanner";
 import { BenefitsBar } from "@/components/home/BenefitsBar";
@@ -12,8 +12,8 @@ export default function Home() {
   return (
     <Layout>
       <PageSeo
-        title="imPRESSive Juice Bar | Cold-Pressed Juice Bar in Portsmouth, VA"
-        description={`Fresh cold-pressed juice and wellness shots in Portsmouth, VA. ${FULFILLMENT_SNIPPET}`}
+        title="Cold-Pressed Juice in Portsmouth, VA | imPRESSive Juice Bar"
+        description={`Cold-pressed juice, $4 wellness shots and juice cleanses at 719 High St, Portsmouth, VA. Order online for pickup, ${HOURS_SUMMARY}.`}
       />
       <AnnouncementBanner />
       <Hero />

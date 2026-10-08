@@ -102,16 +102,16 @@ export function Hero() {
 
             {/* Title */}
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-medium text-brand-brown mb-6 leading-tight">
-              Nourish Your Body,{" "}
+              Cold-Pressed Juice in{" "}
               <span className="relative inline-block text-brand-olive">
-                Elevate Your Day
+                Portsmouth, VA
                 <span className="absolute bottom-1 left-0 right-0 h-3 bg-brand-mustard/40 -z-10 rounded-full" />
               </span>
             </h1>
 
-            {/* Geo subtitle */}
+            {/* Subtitle (the H1 carries the keyword and the city) */}
             <p className="text-base text-brand-terracotta font-medium mb-4">
-              Fresh Cold-Pressed Juices in Portsmouth, VA
+              Nourish Your Body, Elevate Your Day
             </p>
 
             {/* Description */}

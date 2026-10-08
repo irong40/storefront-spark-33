@@ -7,8 +7,11 @@
     /* Core Palette - Sophisticated Neutrals */
     --color-ivory: 40 33% 97%;
     --color-stone: 36 21% 89%;
-    --color-taupe: 30 8% 57%;
-    --color-sage: 95 13% 55%;
+    /* taupe and sage darkened for WCAG AA text contrast (4.5:1).
+       taupe 39%: 5.5:1 on ivory, 4.6:1 on stone (kraft panels).
+       sage 41%: 4.6:1 on ivory, 4.9:1 for white text on sage buttons. */
+    --color-taupe: 30 8% 39%;
+    --color-sage: 95 13% 41%;
     --color-sage-muted: 95 13% 66%;
     --color-charcoal: 0 0% 17%;
     --color-ink: 0 0% 10%;
@@ -64,11 +67,11 @@
     --brand-terracotta-light: 30 40% 75%;
     --brand-olive: var(--color-sage);
     --brand-olive-light: var(--color-sage-muted);
-    --brand-olive-dark: 95 20% 40%;
+    --brand-olive-dark: 95 20% 32%;
     --brand-mustard: var(--color-champagne);
     --brand-mustard-light: 40 35% 82%;
     --brand-berry: var(--color-sage);
-    --brand-berry-dark: 95 18% 45%;
+    --brand-berry-dark: 95 18% 33%;
     --brand-berry-light: var(--color-sage-muted);
     --brand-brown: var(--color-charcoal);
     --brand-brown-light: 0 0% 28%;
