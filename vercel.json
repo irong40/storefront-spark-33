@@ -22,27 +22,23 @@
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
-    },
-    {
-      "source": "/app-shell",
-      "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }]
     }
   ],
   "rewrites": [
-    { "source": "/products", "destination": "/app-shell.html" },
-    { "source": "/products/:slug", "destination": "/app-shell.html" },
-    { "source": "/about", "destination": "/app-shell.html" },
-    { "source": "/contact", "destination": "/app-shell.html" },
-    { "source": "/privacy-policy", "destination": "/app-shell.html" },
-    { "source": "/terms", "destination": "/app-shell.html" },
-    { "source": "/checkout", "destination": "/app-shell.html" },
-    { "source": "/order-confirmation/:id", "destination": "/app-shell.html" },
-    { "source": "/auth", "destination": "/app-shell.html" },
-    { "source": "/reset-password", "destination": "/app-shell.html" },
-    { "source": "/account", "destination": "/app-shell.html" },
-    { "source": "/account/orders", "destination": "/app-shell.html" },
-    { "source": "/gift-cards/balance", "destination": "/app-shell.html" },
-    { "source": "/rewards", "destination": "/app-shell.html" },
-    { "source": "/admin", "destination": "/app-shell.html" }
+    { "source": "/products", "destination": "/app-shell" },
+    { "source": "/products/:slug", "destination": "/app-shell" },
+    { "source": "/about", "destination": "/app-shell" },
+    { "source": "/contact", "destination": "/app-shell" },
+    { "source": "/privacy-policy", "destination": "/app-shell" },
+    { "source": "/terms", "destination": "/app-shell" },
+    { "source": "/checkout", "destination": "/app-shell" },
+    { "source": "/order-confirmation/:id", "destination": "/app-shell" },
+    { "source": "/auth", "destination": "/app-shell" },
+    { "source": "/reset-password", "destination": "/app-shell" },
+    { "source": "/account", "destination": "/app-shell" },
+    { "source": "/account/orders", "destination": "/app-shell" },
+    { "source": "/gift-cards/balance", "destination": "/app-shell" },
+    { "source": "/rewards", "destination": "/app-shell" },
+    { "source": "/admin", "destination": "/app-shell" }
   ]
 }

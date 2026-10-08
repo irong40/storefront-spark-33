@@ -9,6 +9,8 @@
  * about.html answers /about):
  *   app-shell.html            the untouched SPA shell; vercel.json rewrites
  *                             every app route without its own file to it
+ *                             (destination "/app-shell": with cleanUrls a
+ *                             ".html" destination does not resolve)
  *   index.html                /            (home)
  *   products.html             /products    (also answers ?category=...)
  *   about.html, contact.html, privacy-policy.html, terms.html
