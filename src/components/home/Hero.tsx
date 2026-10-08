@@ -2,11 +2,24 @@ import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
-import { useFeaturedProducts } from "@/hooks/use-products";
+import { useFeaturedProducts, useProducts } from "@/hooks/use-products";
 import { Skeleton } from "@/components/ui/skeleton";
+
+// Categories whose products are juice blends (same set the size picker uses).
+const JUICE_CATEGORY_SLUGS = new Set([
+  "sweet-treats",
+  "energy-immunity-booster",
+  "detox-fat-burners",
+]);
 
 export function Hero() {
   const { data: products, isLoading } = useFeaturedProducts();
+  // Count juice blends from the live menu instead of hardcoding a number.
+  const { data: menu } = useProducts();
+  const juiceBlendCount =
+    menu?.products.filter((p) =>
+      JUICE_CATEGORY_SLUGS.has(p.category?.slug ?? ""),
+    ).length ?? 0;
 
   // Track which product index each card shows
   const [cardIndices, setCardIndices] = useState([0, 1, 2]);
@@ -139,14 +152,16 @@ export function Hero() {
                   Fresh Produce
                 </div>
               </div>
-              <div className="text-center">
-                <div className="font-display text-3xl md:text-4xl font-semibold text-brand-brown">
-                  24
+              {juiceBlendCount > 0 && (
+                <div className="text-center">
+                  <div className="font-display text-3xl md:text-4xl font-semibold text-brand-brown">
+                    {juiceBlendCount}
+                  </div>
+                  <div className="text-sm text-brand-warm-gray mt-1">
+                    Juice Blends
+                  </div>
                 </div>
-                <div className="text-sm text-brand-warm-gray mt-1">
-                  Unique Blends
-                </div>
-              </div>
+              )}
             </div>
           </div>
 

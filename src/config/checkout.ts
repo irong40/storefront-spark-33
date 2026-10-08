@@ -1,6 +1,8 @@
 // Checkout configuration constants
 // These values can be adjusted based on business requirements
 
+import { PICKUP_LOCATION } from "@/config/business";
+
 export const CHECKOUT_CONFIG = {
   // Tax rate as a decimal (e.g., 0.08 = 8%)
   TAX_RATE: 0.08,
@@ -23,13 +25,14 @@ export const CHECKOUT_CONFIG = {
   ] as string[],
 
   // Pickup hours by day (0 = Sunday, 1 = Monday, etc.)
-  // Tuesday-Friday: 10 AM - 6 PM, Saturday: 10 AM - 5 PM
+  // Must match business_settings.hours (see src/config/business.ts):
+  // Tuesday-Friday: 7 AM - 7 PM, Saturday: 8 AM - 5 PM
   PICKUP_HOURS: {
-    2: { open: "10:00", close: "18:00", label: "Tuesday" },
-    3: { open: "10:00", close: "18:00", label: "Wednesday" },
-    4: { open: "10:00", close: "18:00", label: "Thursday" },
-    5: { open: "10:00", close: "18:00", label: "Friday" },
-    6: { open: "10:00", close: "17:00", label: "Saturday" },
+    2: { open: "07:00", close: "19:00", label: "Tuesday" },
+    3: { open: "07:00", close: "19:00", label: "Wednesday" },
+    4: { open: "07:00", close: "19:00", label: "Thursday" },
+    5: { open: "07:00", close: "19:00", label: "Friday" },
+    6: { open: "08:00", close: "17:00", label: "Saturday" },
   } as Record<number, { open: string; close: string; label: string }>,
 
   // Delivery available days (Monday-Friday)
@@ -37,6 +40,11 @@ export const CHECKOUT_CONFIG = {
 } as const;
 
 export type FulfillmentMode = "pickup" | "delivery";
+
+// The one switch for offering delivery at checkout. The shop is pickup only
+// (owner decision, 2026-10-07), so delivery is never offered. The delivery code
+// path, including its date gate, stays intact for if this is turned back on.
+export const DELIVERY_OFFERED = false;
 
 // ---------------------------------------------------------------------------
 // Renovation window
@@ -80,8 +88,7 @@ const DELIVERY_ONLY_NOTICE =
   `right now. In-store pickup returns ${CUTOVER_LABEL}.`;
 
 const PICKUP_ONLY_NOTICE =
-  `We're back open at 719 High St.! Pickup only for the moment — delivery is ` +
-  `paused while we get fully settled back in.`;
+  `All orders are for pickup at ${PICKUP_LOCATION}, Portsmouth.`;
 
 // Calendar parts for a moment as observed in America/New_York.
 function getEtDateParts(now: Date): {
@@ -196,7 +203,7 @@ export function getFulfillmentAvailability(
   now: Date = new Date(),
 ): FulfillmentAvailability {
   const pickupDates = getAvailablePickupDates(now);
-  const deliveryDates = getAvailableDeliveryDates(now);
+  const deliveryDates = DELIVERY_OFFERED ? getAvailableDeliveryDates(now) : [];
 
   // Pickup first so the existing left/right card order is preserved.
   const modes: FulfillmentMode[] = [];

@@ -5,47 +5,48 @@ import { ProductGrid } from "@/components/products/ProductGrid";
 import { CategoryFilter } from "@/components/products/CategoryFilter";
 import { useProducts } from "@/hooks/use-products";
 import { PageSeo } from "@/components/PageSeo";
+import { FULFILLMENT_SNIPPET } from "@/config/business";
 
 const CATEGORY_SEO: Record<string, { title: string; description: string }> = {
   "cold-pressed-juices": {
     title: "Cold-Pressed Juices",
     description:
-      "Fresh-pressed fruit and vegetable juices made daily at imPRESSive Juice Bar in Portsmouth, VA. No added sugar, no preservatives. Pickup or delivery.",
+      "Fresh-pressed fruit and vegetable juices made daily at imPRESSive Juice Bar in Portsmouth, VA. No added sugar, no preservatives. Pickup only.",
   },
   "wellness-shots": {
     title: "Wellness Shots — Beet, Ginger, Turmeric, Kale",
     description:
-      "Single-serve wellness shots from imPRESSive Juice Bar in Portsmouth, VA. $4 each. Pickup Tue-Sat or delivery across Hampton Roads.",
+      `Single-serve wellness shots from imPRESSive Juice Bar in Portsmouth, VA. $4 each. ${FULFILLMENT_SNIPPET}`,
   },
   "detox-packages": {
     title: "1-Day & 3-Day Juice Detox Packages",
     description:
-      "Reset with a cold-pressed juice detox from imPRESSive Juice Bar in Portsmouth, VA. 1-day and 3-day packages. Pickup or Hampton Roads delivery.",
+      `Reset with a cold-pressed juice detox from imPRESSive Juice Bar in Portsmouth, VA. 1-day and 3-day packages. ${FULFILLMENT_SNIPPET}`,
   },
   "energy-immunity-booster": {
     title: "Energy & Immunity Booster Juices",
     description:
-      "Energy and immunity-focused cold-pressed juices in Portsmouth, VA. Made fresh at imPRESSive Juice Bar. Pickup or Hampton Roads delivery.",
+      `Energy and immunity-focused cold-pressed juices in Portsmouth, VA. Made fresh at imPRESSive Juice Bar. ${FULFILLMENT_SNIPPET}`,
   },
   "detox-fat-burners": {
     title: "Detox & Fat-Burner Juices",
     description:
-      "Detox and fat-burner cold-pressed juices in Portsmouth, VA. Fresh, no added sugar. Pickup or delivery across Hampton Roads.",
+      `Detox and fat-burner cold-pressed juices in Portsmouth, VA. Fresh, no added sugar. ${FULFILLMENT_SNIPPET}`,
   },
   "sweet-treats": {
-    title: "Sweet Treat Juices & Smoothies",
+    title: "Sweet Treat Juices",
     description:
-      "Crowd-pleaser cold-pressed juices and smoothies in Portsmouth, VA. Pickup Tue-Sat or delivery across Hampton Roads.",
+      `Crowd-pleaser cold-pressed juices in Portsmouth, VA. ${FULFILLMENT_SNIPPET}`,
   },
   subscriptions: {
     title: "Juice Subscriptions",
     description:
-      "Weekly cold-pressed juice and wellness-shot subscriptions in Portsmouth, VA. Pickup or Hampton Roads delivery.",
+      `Weekly cold-pressed juice and wellness-shot subscriptions in Portsmouth, VA. ${FULFILLMENT_SNIPPET}`,
   },
   food: {
     title: "Salads, Parfaits & Muffins",
     description:
-      "Light food options from imPRESSive Juice Bar in Portsmouth, VA. Salads, parfaits, muffins. Pickup or Hampton Roads delivery.",
+      `Light food options from imPRESSive Juice Bar in Portsmouth, VA. Salads, parfaits, muffins. ${FULFILLMENT_SNIPPET}`,
   },
 };
 
@@ -74,9 +75,8 @@ export default function Products() {
 
   const seo =
     (categoryParam && CATEGORY_SEO[categoryParam]) || {
-      title: "All Juices, Wellness Shots & Smoothies",
-      description:
-        "Browse the full menu at imPRESSive Juice Bar in Portsmouth, VA. Cold-pressed juices, wellness shots, smoothies, salads. Pickup or Hampton Roads delivery.",
+      title: "All Juices, Wellness Shots & Food",
+      description: `Browse the full menu at imPRESSive Juice Bar in Portsmouth, VA. Cold-pressed juices, wellness shots, salads. ${FULFILLMENT_SNIPPET}`,
     };
 
   return (

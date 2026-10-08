@@ -2,9 +2,15 @@ import { MapPin, Clock, Phone } from "lucide-react";
 import { useBusinessSettings } from "@/hooks/use-business";
 import { formatHoursLines } from "@/lib/format-hours";
 import { GoogleMapEmbed } from "@/components/ui/google-map-embed";
+import {
+  FALLBACK_HOURS,
+  PICKUP_LOCATION_NAME,
+  STREET_ADDRESS,
+} from "@/config/business";
 
 export function Locations() {
   const { data: business } = useBusinessSettings();
+  const hoursLines = formatHoursLines(business?.hours ?? FALLBACK_HOURS);
 
   return (
     <section id="locations" className="py-24 bg-card">
@@ -22,7 +28,7 @@ export function Locations() {
           {/* Map */}
           <div className="h-64 overflow-hidden">
             <GoogleMapEmbed
-              address={`${business?.address_line1 || "719 High St."}, ${business?.city || "Portsmouth"}, ${business?.state || "VA"} ${business?.zip || "23704"}`}
+              address={`${business?.address_line1 || STREET_ADDRESS}, ${business?.city || "Portsmouth"}, ${business?.state || "VA"} ${business?.zip || "23704"}`}
               className="rounded-none rounded-t-3xl"
             />
           </div>
@@ -30,13 +36,13 @@ export function Locations() {
           {/* Content */}
           <div className="p-8">
             <h3 className="font-display text-3xl font-semibold text-brand-brown mb-6 text-center">
-              Bloom Market
+              {PICKUP_LOCATION_NAME}
             </h3>
             <div className="space-y-4 text-brand-warm-gray max-w-lg mx-auto">
               <div className="flex items-start gap-4">
                 <MapPin className="h-6 w-6 text-brand-olive mt-0.5 flex-shrink-0" />
                 <span className="text-lg">
-                  {business?.address_line1 || "719 High St."}
+                  {business?.address_line1 || STREET_ADDRESS}
                   <br />
                   {business?.city || "Portsmouth"}, {business?.state || "VA"}{" "}
                   {business?.zip || "23704"}
@@ -45,28 +51,12 @@ export function Locations() {
               <div className="flex items-start gap-4">
                 <Clock className="h-6 w-6 text-brand-olive mt-0.5 flex-shrink-0" />
                 <span className="text-lg">
-                  {business?.hours ? (
-                    formatHoursLines(
-                      business.hours as Record<string, string>,
-                    ).map((line, i) => (
-                      <span key={i}>
-                        {line}
-                        {i <
-                          formatHoursLines(
-                            business.hours as Record<string, string>,
-                          ).length -
-                            1 && <br />}
-                      </span>
-                    ))
-                  ) : (
-                    <>
-                      Tue - Fri: 10am - 6pm
-                      <br />
-                      Sat: 10am - 4pm
-                      <br />
-                      Sun - Mon: Closed
-                    </>
-                  )}
+                  {hoursLines.map((line, i) => (
+                    <span key={i}>
+                      {line}
+                      {i < hoursLines.length - 1 && <br />}
+                    </span>
+                  ))}
                 </span>
               </div>
               {business?.phone && (

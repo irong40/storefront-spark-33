@@ -4,9 +4,27 @@ import { useBusinessSettings } from "@/hooks/use-business";
 import { useCategories } from "@/hooks/use-categories";
 import logo from "@/assets/logo-transparent.png";
 
+// Only full http(s) URLs become links. A bare handle like "@name" or an empty
+// string would render a broken link, so those are skipped.
+function socialUrl(value: string | undefined): string | null {
+  return value && /^https?:\/\//i.test(value) ? value : null;
+}
+
 export function Footer() {
   const { data: business } = useBusinessSettings();
   const { data: categories } = useCategories();
+  const socialLinks = [
+    {
+      href: socialUrl(business?.social_links?.instagram),
+      label: "imPRESSive Juice Bar on Instagram",
+      Icon: Instagram,
+    },
+    {
+      href: socialUrl(business?.social_links?.facebook),
+      label: "imPRESSive Juice Bar on Facebook",
+      Icon: Facebook,
+    },
+  ].filter((link) => link.href);
 
   return (
     <footer className="bg-brand-brown text-white py-16">
@@ -29,20 +47,22 @@ export function Footer() {
                 "100% cold pressed juice. No added sugar. No dilution. No Preservatives."}
             </p>
             {/* Social */}
-            <div className="flex gap-3">
-              <a
-                href={business?.social_links?.instagram || "#"}
-                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center transition-all hover:bg-brand-berry hover:-translate-y-1"
-              >
-                <Instagram className="h-5 w-5" />
-              </a>
-              <a
-                href={business?.social_links?.facebook || "#"}
-                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center transition-all hover:bg-brand-berry hover:-translate-y-1"
-              >
-                <Facebook className="h-5 w-5" />
-              </a>
-            </div>
+            {socialLinks.length > 0 && (
+              <div className="flex gap-3">
+                {socialLinks.map(({ href, label, Icon }) => (
+                  <a
+                    key={label}
+                    href={href ?? undefined}
+                    target="_blank"
+                    rel="noopener me"
+                    aria-label={label}
+                    className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center transition-all hover:bg-brand-berry hover:-translate-y-1"
+                  >
+                    <Icon className="h-5 w-5" aria-hidden="true" />
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Menu Links */}

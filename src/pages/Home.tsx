@@ -1,5 +1,6 @@
 import { Layout } from "@/components/layout/Layout";
 import { PageSeo } from "@/components/PageSeo";
+import { FULFILLMENT_SNIPPET } from "@/config/business";
 import { Hero } from "@/components/home/Hero";
 import { AnnouncementBanner } from "@/components/home/AnnouncementBanner";
 import { BenefitsBar } from "@/components/home/BenefitsBar";
@@ -12,7 +13,7 @@ export default function Home() {
     <Layout>
       <PageSeo
         title="imPRESSive Juice Bar | Cold-Pressed Juice Bar in Portsmouth, VA"
-        description="Fresh cold-pressed juice, wellness shots, and smoothies in Portsmouth, VA. Pickup Tue-Sat at 719 High St. Delivery across Hampton Roads."
+        description={`Fresh cold-pressed juice and wellness shots in Portsmouth, VA. ${FULFILLMENT_SNIPPET}`}
       />
       <AnnouncementBanner />
       <Hero />

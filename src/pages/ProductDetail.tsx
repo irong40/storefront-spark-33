@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { PageSeo } from "@/components/PageSeo";
+import { STREET_ADDRESS } from "@/config/business";
 
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -268,7 +269,7 @@ export default function ProductDetail() {
   const seoDescription =
     product.short_description ||
     product.description ||
-    `Order ${product.name} from imPRESSive Juice Bar in Portsmouth, VA. Cold-pressed, made fresh, pickup or Hampton Roads delivery.`;
+    `Order ${product.name} from imPRESSive Juice Bar in Portsmouth, VA. Cold-pressed, made fresh, ready for pickup at ${STREET_ADDRESS}.`;
 
   return (
     <Layout>

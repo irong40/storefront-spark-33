@@ -5,6 +5,11 @@ import { Link } from "react-router-dom";
 import { MapPin, Clock } from "lucide-react";
 import { useBusinessSettings } from "@/hooks/use-business";
 import { formatHoursLines } from "@/lib/format-hours";
+import {
+  FALLBACK_HOURS,
+  PICKUP_LOCATION_NAME,
+  STREET_ADDRESS,
+} from "@/config/business";
 
 // Import value illustrations
 import valueOrganic from "@/assets/value-organic.png";
@@ -55,6 +60,7 @@ const values = [
 
 export default function About() {
   const { data: business } = useBusinessSettings();
+  const hoursLines = formatHoursLines(business?.hours ?? FALLBACK_HOURS);
   return (
     <Layout>
       <PageSeo
@@ -186,13 +192,13 @@ export default function About() {
                     </div>
                     <div>
                       <h4 className="font-semibold text-brand-brown">
-                        Bloom Market
+                        {PICKUP_LOCATION_NAME}
                       </h4>
                       <p className="text-muted-foreground text-sm">
-                        {business?.address_line1 || "719 High St."}
+                        {business?.address_line1 || STREET_ADDRESS}
                         <br />
                         {business?.city || "Portsmouth"},{" "}
-                        {business?.state || "VA"} {business?.zip || "23703"}
+                        {business?.state || "VA"} {business?.zip || "23704"}
                       </p>
                     </div>
                   </div>
@@ -206,19 +212,10 @@ export default function About() {
                         Hours of Operation
                       </h4>
                       <p className="text-muted-foreground text-sm">
-                        {formatHoursLines(
-                          business?.hours as Record<string, string> | null,
-                        ).map((line, i) => (
+                        {hoursLines.map((line, i) => (
                           <span key={i}>
                             {line}
-                            {i <
-                              formatHoursLines(
-                                business?.hours as Record<
-                                  string,
-                                  string
-                                > | null,
-                              ).length -
-                                1 && <br />}
+                            {i < hoursLines.length - 1 && <br />}
                           </span>
                         ))}
                       </p>

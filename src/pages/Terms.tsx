@@ -17,10 +17,11 @@ export default function Terms() {
           All orders are subject to availability. Payment is processed securely through Square.
           We reserve the right to cancel orders at our discretion.
         </p>
-        <h2 className="text-xl font-semibold mt-8 mb-4">Pickup and Delivery</h2>
+        <h2 className="text-xl font-semibold mt-8 mb-4">Pickup</h2>
         <p className="mb-4">
-          Available fulfillment options are shown at checkout and may change during store
-          closures, renovations, or holidays. See our Contact page for current hours.
+          Online orders are for in-store pickup. Available pickup dates and times are shown at
+          checkout and may change during store closures or holidays. See our Contact page for
+          current hours.
         </p>
         <h2 className="text-xl font-semibold mt-8 mb-4">Contact Us</h2>
         <p>For questions about these terms, contact us at the email or address on our Contact page.</p>

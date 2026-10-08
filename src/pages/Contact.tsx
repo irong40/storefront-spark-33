@@ -10,6 +10,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Mail, Phone, MapPin, Clock, Loader2, Send } from "lucide-react";
 import { PageSeo } from "@/components/PageSeo";
 import { formatHoursLines } from "@/lib/format-hours";
+import {
+  FALLBACK_HOURS,
+  FULFILLMENT_SNIPPET,
+  STREET_ADDRESS,
+} from "@/config/business";
 import { GoogleMapEmbed } from "@/components/ui/google-map-embed";
 
 export default function Contact() {
@@ -75,7 +80,7 @@ export default function Contact() {
     <Layout>
       <PageSeo
         title="Contact imPRESSive Juice Bar — Portsmouth, VA"
-        description="Contact imPRESSive Juice Bar at 719 High St, Portsmouth, VA 23704. Call 757.381.6980 or email info@impressivejb.com. Pickup Tue-Sat, delivery across Hampton Roads."
+        description={`Contact imPRESSive Juice Bar at 719 High St, Portsmouth, VA 23704. Call 757.381.6980 or email info@impressivejb.com. ${FULFILLMENT_SNIPPET}`}
       />
       {/* Hero */}
       <section className="bg-gradient-to-br from-primary/10 via-secondary to-accent/10 py-16">
@@ -237,9 +242,7 @@ export default function Contact() {
                   <div>
                     <h3 className="font-semibold mb-1">Hours</h3>
                     <div className="text-muted-foreground text-sm space-y-1">
-                      {formatHoursLines(
-                        business?.hours as Record<string, string> | null,
-                      ).map((line, i) => (
+                      {formatHoursLines(business?.hours ?? FALLBACK_HOURS).map((line, i) => (
                         <p key={i}>{line}</p>
                       ))}
                     </div>
@@ -250,7 +253,7 @@ export default function Contact() {
               {/* Map */}
               <div className="aspect-video rounded-2xl overflow-hidden border border-border">
                 <GoogleMapEmbed
-                  address={`${business?.address_line1 || "719 High St."}, ${business?.city || "Portsmouth"}, ${business?.state || "VA"} ${business?.zip || "23703"}`}
+                  address={`${business?.address_line1 || STREET_ADDRESS}, ${business?.city || "Portsmouth"}, ${business?.state || "VA"} ${business?.zip || "23704"}`}
                 />
               </div>
             </div>

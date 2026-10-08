@@ -1,10 +1,11 @@
 import { Helmet } from "react-helmet-async";
 import { useLocation } from "react-router-dom";
+import { FULFILLMENT_SNIPPET } from "@/config/business";
 
 const SITE_NAME = "imPRESSive Juice Bar";
 const SITE_URL = "https://www.impressivejb.com";
 const DEFAULT_DESCRIPTION =
-  "Fresh cold-pressed juices, wellness shots, and detox packages from imPRESSive Juice Bar in Portsmouth, VA. Pickup Tue-Sat. Delivery across Hampton Roads.";
+  `Fresh cold-pressed juices, wellness shots, and detox packages from imPRESSive Juice Bar in Portsmouth, VA. ${FULFILLMENT_SNIPPET}`;
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.jpg`;
 
 interface PageSeoProps {

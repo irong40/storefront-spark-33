@@ -167,6 +167,8 @@ import {
 } from "@/config/checkout";
 import { useGiftCard } from "@/hooks/use-gift-card";
 import { useBusinessSettings } from "@/hooks/use-business";
+import { FALLBACK_HOURS, PICKUP_LOCATION_NAME, STREET_ADDRESS } from "@/config/business";
+import { formatHoursLines } from "@/lib/format-hours";
 import { useLoyaltyRedemptions, type LoyaltyRedemption } from "@/hooks/use-loyalty";
 
 interface AppliedGiftCard {
@@ -191,6 +193,10 @@ export default function Checkout() {
     businessSettings?.tax_rate != null
       ? Number(businessSettings.tax_rate)
       : CHECKOUT_CONFIG.TAX_RATE;
+  // Pickup hours come from the business_settings row (same as the rest of the site).
+  const pickupHoursLabel = formatHoursLines(
+    businessSettings?.hours ?? FALLBACK_HOURS,
+  ).join(", ");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   // Which fulfillment modes are bookable right now, and the dates for each.
@@ -954,7 +960,7 @@ export default function Checkout() {
                           <div>
                             <div className="font-medium">Pickup</div>
                             <div className="text-xs text-muted-foreground">
-                              Free • Tue-Fri 10-6, Sat 10-5
+                              Free • {pickupHoursLabel}
                             </div>
                           </div>
                         </>
@@ -993,7 +999,7 @@ export default function Checkout() {
                       <div>
                         <div className="font-medium">Pickup</div>
                         <div className="text-xs text-muted-foreground">
-                          Free • Tue-Fri 10-6, Sat 10-5
+                          Free • {pickupHoursLabel}
                         </div>
                       </div>
                     </div>
@@ -1037,10 +1043,10 @@ export default function Checkout() {
                   <MapPin className="h-5 w-5 text-brand-olive mt-0.5 flex-shrink-0" />
                   <div className="text-sm">
                     <p className="font-semibold text-brand-brown mb-1">
-                      Pick up at Bloom Market
+                      Pick up at {PICKUP_LOCATION_NAME}
                     </p>
                     <p className="text-brand-warm-gray">
-                      719 High St, Portsmouth, VA 23704
+                      {STREET_ADDRESS}, Portsmouth, VA 23704
                     </p>
                     <a
                       href="https://www.google.com/maps/search/?api=1&query=719+High+St+Portsmouth+VA+23704"
