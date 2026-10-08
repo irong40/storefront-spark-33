@@ -3,6 +3,7 @@ import { Instagram, Facebook } from "lucide-react";
 import { useBusinessSettings } from "@/hooks/use-business";
 import { useCategories } from "@/hooks/use-categories";
 import logo from "@/assets/logo-transparent.png";
+import logoWebp from "@/assets/logo-transparent.webp";
 
 // Only full http(s) URLs become links. A bare handle like "@name" or an empty
 // string would render a broken link, so those are skipped.
@@ -33,11 +34,18 @@ export function Footer() {
           {/* Brand */}
           <div className="lg:col-span-1">
             <Link to="/" className="flex items-center mb-4">
-              <img
-                src={logo}
-                alt="imPRESSive Juice Bar"
-                className="h-24 w-auto object-contain mix-blend-multiply"
-              />
+              <picture>
+                <source srcSet={logoWebp} type="image/webp" />
+                <img
+                  src={logo}
+                  alt="imPRESSive Juice Bar"
+                  width={400}
+                  height={348}
+                  loading="lazy"
+                  decoding="async"
+                  className="h-24 w-auto object-contain mix-blend-multiply"
+                />
+              </picture>
             </Link>
             <p className="font-script text-lg text-brand-mustard mb-4">
               Cold-Pressed Happiness

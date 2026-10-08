@@ -354,6 +354,7 @@ export default function ProductDetail() {
                   src={displayImage}
                   alt={imageAlt}
                   className="w-full h-full object-cover transition-all duration-300"
+                  priority
                 />
               ) : (
                 <div className="text-8xl bg-gradient-to-br from-brand-olive/10 via-brand-kraft to-brand-mustard/10 w-full h-full flex items-center justify-center">

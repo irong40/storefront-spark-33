@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ShoppingCart, User, Settings } from "lucide-react";
 import logo from "@/assets/logo-transparent.png";
+import logoWebp from "@/assets/logo-transparent.webp";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsAdmin } from "@/hooks/use-admin";
@@ -48,15 +49,21 @@ export function Header() {
         {/* Logo */}
         <Link to="/" className="flex items-center p-3 group">
           <span className="inline-block motion-safe:animate-logo-float">
-            <img
-              src={logo}
-              alt="imPRESSive Juice Bar"
-              className={`w-auto object-contain mix-blend-multiply transition-all duration-300 group-hover:scale-105 group-hover:drop-shadow-[0_8px_20px_rgba(0,0,0,0.15)] ${
-                isScrolled
-                  ? "h-10 md:h-12 lg:h-14"
-                  : "h-[70px] md:h-[90px] lg:h-[100px]"
-              }`}
-            />
+            <picture>
+              <source srcSet={logoWebp} type="image/webp" />
+              <img
+                src={logo}
+                alt="imPRESSive Juice Bar"
+                width={400}
+                height={348}
+                fetchPriority="high"
+                className={`w-auto object-contain mix-blend-multiply transition-all duration-300 group-hover:scale-105 group-hover:drop-shadow-[0_8px_20px_rgba(0,0,0,0.15)] ${
+                  isScrolled
+                    ? "h-10 md:h-12 lg:h-14"
+                    : "h-[70px] md:h-[90px] lg:h-[100px]"
+                }`}
+              />
+            </picture>
           </span>
         </Link>
 

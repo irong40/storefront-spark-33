@@ -1,18 +1,30 @@
 import { useState } from "react";
 import { ImageOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { optimizedImageSrc } from "@/lib/image-url";
 
 interface ProductImageProps {
   src: string | null | undefined;
   alt: string;
   className?: string;
   priority?: boolean;
+  width?: number;
+  height?: number;
 }
 
-export function ProductImage({ src, alt, className, priority }: ProductImageProps) {
-  const [hasError, setHasError] = useState(false);
+export function ProductImage({ src, alt, className, priority, width, height }: ProductImageProps) {
+  // URLs that failed to load. The WebP is tried first, then the original, then the placeholder.
+  const [failed, setFailed] = useState<string[]>([]);
 
-  if (!src || hasError) {
+  const optimized = src ? optimizedImageSrc(src) : null;
+  const current =
+    optimized && !failed.includes(optimized)
+      ? optimized
+      : src && !failed.includes(src)
+        ? src
+        : null;
+
+  if (!current) {
     return (
       <div
         className={cn("flex items-center justify-center bg-muted", className)}
@@ -26,11 +38,14 @@ export function ProductImage({ src, alt, className, priority }: ProductImageProp
 
   return (
     <img
-      src={src}
+      src={current}
       alt={alt}
       className={className}
-      onError={() => setHasError(true)}
+      width={width}
+      height={height}
+      onError={() => setFailed((prev) => [...prev, current])}
       loading={priority ? "eager" : "lazy"}
+      decoding={priority ? undefined : "async"}
       fetchPriority={priority ? "high" : undefined}
     />
   );

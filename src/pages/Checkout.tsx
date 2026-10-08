@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
+import { ProductImage } from "@/components/ui/ProductImage";
 import {
   Select,
   SelectContent,
@@ -1407,10 +1408,12 @@ export default function Checkout() {
                   <div key={item.id} className="flex gap-4">
                     <div className="w-16 h-16 rounded-lg bg-secondary flex items-center justify-center shrink-0">
                       {item.product.image_url ? (
-                        <img
+                        <ProductImage
                           src={item.product.image_url}
                           alt={item.product.name}
                           className="w-full h-full object-cover rounded-lg"
+                          width={64}
+                          height={64}
                         />
                       ) : (
                         <span className="text-2xl">🍹</span>

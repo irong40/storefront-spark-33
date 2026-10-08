@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { useFeaturedProducts, useProducts } from "@/hooks/use-products";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ProductImage } from "@/components/ui/ProductImage";
 
 // Categories whose products are juice blends (same set the size picker uses).
 const JUICE_CATEGORY_SLUGS = new Set([
@@ -206,10 +207,13 @@ export function Hero() {
                         className="bg-card rounded-lg p-2.5 shadow-lifted hover:shadow-xl"
                       >
                         <div className="aspect-[4/5] rounded overflow-hidden mb-2">
-                          <img
+                          <ProductImage
                             src={product.image_url || "/placeholder.svg"}
                             alt={product.name}
                             className="w-full h-full object-cover"
+                            width={124}
+                            height={155}
+                            priority={cardNum === 0}
                           />
                         </div>
                         <div className="font-display text-sm text-charcoal truncate">
