@@ -1079,6 +1079,7 @@ export type Database = {
       cleanup_old_sync_logs: { Args: never; Returns: undefined }
       generate_gift_card_code: { Args: never; Returns: string }
       generate_reward_code: { Args: never; Returns: string }
+      get_guest_order: { Args: { p_order_id: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1229,4 +1230,3 @@ export const Constants = {
     },
   },
 } as const
-<claude-code-hint v="1" type="plugin" value="supabase@claude-plugins-official" />

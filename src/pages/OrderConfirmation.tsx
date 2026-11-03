@@ -72,6 +72,16 @@ export default function OrderConfirmation() {
         if (itemsData) {
           setItems(itemsData);
         }
+      } else {
+        // Guest orders are not readable through RLS; look this one up by its exact id.
+        const { data: guest } = await supabase.rpc("get_guest_order", {
+          p_order_id: id,
+        });
+        const guestOrder = guest as { order: Order; items: OrderItem[] } | null;
+        if (guestOrder) {
+          setOrder(guestOrder.order);
+          setItems(guestOrder.items);
+        }
       }
 
       setIsLoading(false);
