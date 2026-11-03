@@ -157,6 +157,8 @@ import { Link } from "react-router-dom";
 import {
   SquarePaymentForm,
   PaymentResult,
+  type CheckoutOrderDetails,
+  type ServerCreatedOrder,
 } from "@/components/checkout/SquarePaymentForm";
 import {
   CHECKOUT_CONFIG,
@@ -546,13 +548,90 @@ export default function Checkout() {
     return true;
   };
 
+  // Details process-payment needs to create the order. Items, prices and gift card
+  // balances are not sent: the server reads them from the cart and the database.
+  const orderDetails: CheckoutOrderDetails = {
+    email: formData.email,
+    phone: formData.phone || null,
+    customerName: formData.customerName || null,
+    notes: formData.notes || null,
+    pickupDate: fulfillmentType === "pickup" ? formData.pickupDate : null,
+    pickupTime: fulfillmentType === "pickup" ? formData.pickupTime : null,
+    deliveryDate: fulfillmentType === "delivery" ? formData.deliveryDate : null,
+    deliveryTimeWindow:
+      fulfillmentType === "delivery" ? formData.deliveryTimeWindow || null : null,
+    shippingAddress:
+      fulfillmentType === "delivery"
+        ? {
+            line1: formData.addressLine1,
+            line2: formData.addressLine2,
+            city: formData.city,
+            state: formData.state,
+            zip: formData.zip,
+          }
+        : null,
+  };
+  const giftCardCodes = appliedGiftCards.map((gc) => gc.code);
+
   const handlePaymentSuccess = async (result: PaymentResult) => {
-    if (!validateForm()) return;
     setPaymentResult(result);
     setPaymentComplete(true);
 
-    // Now create the order with payment info
+    if (result.order) {
+      // The server already created the order; never bail out here.
+      await finishServerOrder(result.order);
+      return;
+    }
+
+    // Older process-payment without order creation: create the order with payment info
+    if (!validateForm()) return;
     await createOrder(result);
+  };
+
+  // After process-payment created the order: deliver due gift cards, email the
+  // confirmation, clear the cart and show the confirmation page.
+  const finishServerOrder = async (order: ServerCreatedOrder) => {
+    const today = new Date().toISOString().slice(0, 10);
+    for (const card of order.giftCards) {
+      if (card.delivery_date <= today) {
+        supabase.functions
+          .invoke("send-gift-card", { body: { giftCardId: card.id } })
+          .catch((err) =>
+            logger.error("Gift card immediate delivery failed (non-fatal):", err),
+          );
+      }
+    }
+
+    supabase.functions
+      .invoke("send-order-confirmation", {
+        body: {
+          email: formData.email,
+          customerName: formData.customerName || undefined,
+          orderNumber: order.orderNumber,
+          items: order.items,
+          subtotal: order.subtotal,
+          tax: order.tax,
+          shipping: order.shipping,
+          giftCardDiscount: order.giftCardDiscount,
+          total: order.total,
+          fulfillmentType,
+          pickupDate: orderDetails.pickupDate || undefined,
+          pickupTime: orderDetails.pickupTime || undefined,
+          deliveryDate: orderDetails.deliveryDate || undefined,
+          deliveryTimeWindow: orderDetails.deliveryTimeWindow || undefined,
+          shippingAddress: orderDetails.shippingAddress ?? undefined,
+          paymentStatus: "completed",
+        },
+      })
+      .then(({ error }) => {
+        if (error) {
+          logger.error("Failed to send order confirmation email:", error);
+        }
+      });
+
+    await clearCart();
+    try { localStorage.removeItem("checkout-form"); } catch { /* ignore */ }
+    navigate(`/order-confirmation/${order.id}`);
   };
 
   const handlePaymentError = (message: string) => {
@@ -564,13 +643,34 @@ export default function Checkout() {
   };
 
   // Handle zero-dollar orders (fully covered by gift cards)
+  // No card is charged; process-payment checks the gift card balances itself.
   const handleZeroPaymentOrder = async () => {
     if (!validateForm()) return;
-    await createOrder({
-      paymentId: `GC-${Date.now()}`, // Gift card payment reference
-      status: "COMPLETED",
-      cardDetails: undefined,
-    });
+    setIsSubmitting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("process-payment", {
+        body: {
+          sessionId,
+          fulfillmentType,
+          order: orderDetails,
+          giftCardCodes,
+        },
+      });
+      if (error) {
+        let detail = "";
+        try {
+          const body = await (error as { context?: Response }).context?.json();
+          if (body && typeof body.error === "string") detail = body.error;
+        } catch { /* body not JSON or already consumed */ }
+        throw new Error(detail || "Could not place the order");
+      }
+      if (!data?.order) throw new Error(data?.error || "Could not place the order");
+      await finishServerOrder(data.order as ServerCreatedOrder);
+    } catch (err) {
+      handlePaymentError(err instanceof Error ? err.message : "Could not place the order");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Compute the effective unit price for a cart item, matching CartContext subtotal logic
@@ -1393,6 +1493,8 @@ export default function Checkout() {
                   sessionId={sessionId}
                   redemptionId={appliedRedemption?.id ?? null}
                   fulfillmentType={fulfillmentType}
+                  orderDetails={orderDetails}
+                  giftCardCodes={giftCardCodes}
                   onSuccess={handlePaymentSuccess}
                   onError={handlePaymentError}
                   disabled={isSubmitting || cartLoading || giftCardLoading}

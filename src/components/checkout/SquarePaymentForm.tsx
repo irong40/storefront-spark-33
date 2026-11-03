@@ -20,6 +20,41 @@ interface SquarePaymentFormProps {
   redemptionId?: string | null;
   // Lets the server apply the delivery fee. Only the mode is sent, never an amount.
   fulfillmentType?: "pickup" | "delivery";
+  // Contact and pickup/delivery details; process-payment creates the order from
+  // these plus the server-side cart. Gift cards are applied by code on the server.
+  orderDetails?: CheckoutOrderDetails;
+  giftCardCodes?: string[];
+}
+
+export interface CheckoutOrderDetails {
+  email: string;
+  phone?: string | null;
+  customerName?: string | null;
+  notes?: string | null;
+  pickupDate?: string | null;
+  pickupTime?: string | null;
+  deliveryDate?: string | null;
+  deliveryTimeWindow?: string | null;
+  shippingAddress?: {
+    line1: string;
+    line2?: string;
+    city: string;
+    state: string;
+    zip: string;
+  } | null;
+}
+
+// The order process-payment created, with the server's own amounts.
+export interface ServerCreatedOrder {
+  id: string;
+  orderNumber: string;
+  subtotal: number;
+  tax: number;
+  shipping: number;
+  giftCardDiscount: number;
+  total: number;
+  items: { product_name: string; quantity: number; product_price: number; total: number }[];
+  giftCards: { id: string; delivery_date: string }[];
 }
 
 export interface AppliedLoyalty {
@@ -41,6 +76,8 @@ export interface PaymentResult {
   };
   walletType?: "apple_pay" | "google_pay" | "card";
   loyaltyApplied?: AppliedLoyalty | null;
+  // Set when process-payment created the order (current server); null from an older one.
+  order?: ServerCreatedOrder | null;
 }
 
 export function SquarePaymentForm({
@@ -51,6 +88,8 @@ export function SquarePaymentForm({
   disabled = false,
   redemptionId = null,
   fulfillmentType = "pickup",
+  orderDetails,
+  giftCardCodes = [],
 }: SquarePaymentFormProps) {
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -75,6 +114,8 @@ export function SquarePaymentForm({
             sessionId: sessionId,
             redemptionId: redemptionId || undefined,
             fulfillmentType,
+            order: orderDetails,
+            giftCardCodes,
           },
         },
       );
@@ -105,6 +146,7 @@ export function SquarePaymentForm({
           cardDetails: data.payment.cardDetails,
           walletType,
           loyaltyApplied: data.loyaltyApplied ?? null,
+          order: data.order ?? null,
         });
       } else {
         throw new Error("Unexpected payment response");
