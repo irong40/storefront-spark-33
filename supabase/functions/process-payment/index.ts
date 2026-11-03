@@ -535,6 +535,30 @@ serve(async (req) => {
 
     console.log("Payment successful:", squareData.payment?.id);
 
+    // Record the charge so the orders INSERT policy can require a real payment
+    // (payment_receipt_valid). The customer is already charged at this point, so
+    // a failure here must not fail the request: retry once, then log loudly.
+    // Without a receipt the client's order insert will be rejected.
+    const receipt = {
+      payment_id: squareData.payment?.id,
+      amount_cents: squareData.payment?.amount_money?.amount ?? amountInCents,
+      session_id: sessionId,
+      user_id: authenticatedUserId,
+    };
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const { error: receiptErr } = await supabase.from("payment_receipts").insert(receipt);
+      if (!receiptErr) break;
+      console.error(JSON.stringify({
+        event: "payment_receipt_insert_failed",
+        attempt,
+        paymentId: receipt.payment_id,
+        amountCents: receipt.amount_cents,
+        sessionId,
+        error: receiptErr.message,
+      }));
+      if (attempt === 0) await new Promise((r) => setTimeout(r, 500));
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
