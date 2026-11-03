@@ -731,6 +731,7 @@ export default function Checkout() {
       try {
         const today = new Date().toISOString().slice(0, 10);
         const giftCardsToInsert: Array<{
+          id: string;
           code: string;
           amount: number;
           balance: number;
@@ -750,6 +751,7 @@ export default function Checkout() {
           const deliveryDate = (gcd.deliveryDate || new Date().toISOString()).slice(0, 10);
           for (let i = 0; i < item.quantity; i++) {
             giftCardsToInsert.push({
+              id: crypto.randomUUID(),
               code: generateGiftCardCode(),
               amount: gcd.amount,
               balance: gcd.amount,
@@ -766,16 +768,17 @@ export default function Checkout() {
         }
 
         if (giftCardsToInsert.length > 0) {
-          const { data: insertedCards, error: gcInsertErr } = await supabase
+          // No .select(): guests cannot read gift_cards back through RLS, so the ids are
+          // generated here (same as orderId) instead of returned by the insert.
+          const { error: gcInsertErr } = await supabase
             .from("gift_cards")
-            .insert(giftCardsToInsert)
-            .select("id, delivery_date");
+            .insert(giftCardsToInsert);
           if (gcInsertErr) {
             logger.error("Gift card row insert failed (non-fatal):", gcInsertErr);
-          } else if (insertedCards) {
+          } else {
             // Fire immediate delivery for any card whose delivery_date is today/past.
             // Future-dated cards stay delivered=false and are picked up by the daily cron.
-            for (const card of insertedCards) {
+            for (const card of giftCardsToInsert) {
               if (card.delivery_date && card.delivery_date <= today) {
                 supabase.functions
                   .invoke("send-gift-card", { body: { giftCardId: card.id } })
